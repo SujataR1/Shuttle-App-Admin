@@ -1,0 +1,242 @@
+Alright—this is a serious goal (top tech interviews in ~3 months), so I’ll give you a focused, no-nonsense plan that actually works if you follow it consistently.
+
+This is designed specifically for you (developer background + Python + aiming for interviews).
+
+🚀 3-Month DSA Master Plan (90 Days)
+🎯 End Goal:
+Solve 250–300 quality problems
+Strong grip on patterns (not just topics)
+Ready for interviews at companies like Amazon / Flipkart / product startups
+⏱️ Daily Schedule (STRICT)
+
+Total: 3–4 hours/day
+
+⏱️ 1 hr → Learn concept
+💻 2 hr → Solve problems
+🔁 30 min → Revision (VERY IMPORTANT)
+📅 PHASE 1 (Day 1–30): Foundation + Patterns
+
+👉 Focus: Arrays, Strings, Hashing, Basic Patterns
+
+🔹 Week 1 (Day 1–7)
+
+Topics:
+
+Arrays
+Prefix Sum
+Sliding Window
+
+Practice:
+
+Subarray sum
+Max sum subarray
+Longest substring
+
+Platform:
+
+LeetCode
+
+👉 Solve ~5 problems/day
+
+🔹 Week 2 (Day 8–14)
+
+Topics:
+
+Two Pointer
+HashMap / Set
+
+Problems:
+
+Two Sum
+3Sum
+Remove duplicates
+🔹 Week 3 (Day 15–21)
+
+Topics:
+
+Strings
+Stack
+Queue
+
+Problems:
+
+Valid parentheses
+Next greater element
+Sliding window max
+🔹 Week 4 (Day 22–30)
+
+Topics:
+
+Linked List
+Recursion (basic)
+
+Problems:
+
+Reverse linked list
+Detect cycle
+Subsets
+📅 PHASE 2 (Day 31–60): Core DSA
+
+👉 Focus: Trees, Binary Search, Heap
+
+🔹 Week 5–6
+
+Topics:
+
+Binary Tree
+DFS / BFS
+
+Problems:
+
+Traversals
+Height / diameter
+Level order
+🔹 Week 7
+
+Topics:
+
+Binary Search (VERY IMPORTANT)
+
+👉 Learn this concept deeply:
+
+𝑓
+(
+𝑥
+)
+=
+condition monotonic function for binary search
+f(x)=condition monotonic function for binary search
+
+Practice:
+
+Search in rotated array
+Binary search on answer
+🔹 Week 8
+
+Topics:
+
+Heap (Priority Queue)
+
+Problems:
+
+Top K elements
+Kth largest
+📅 PHASE 3 (Day 61–90): Advanced + Interview Prep
+
+👉 Focus: Graph + DP + Mock Interviews
+
+🔹 Week 9
+
+Topics:
+
+Graphs
+
+Problems:
+
+BFS / DFS
+Cycle detection
+Number of islands
+🔹 Week 10–11
+
+Topics:
+
+Dynamic Programming (DP)
+
+Start:
+
+Fibonacci
+Climbing stairs
+
+Then:
+
+Knapsack
+Longest Increasing Subsequence
+🔹 Week 12 (FINAL 🔥)
+
+👉 Interview simulation week
+
+Solve 2 problems/day (timed)
+Give mock interviews
+Revise all patterns
+
+Use:
+
+Pramp
+Interviewing.io
+📊 Problem Count Strategy
+Difficulty	Count
+Easy	50
+Medium	150
+Hard	30–50
+
+👉 Focus mainly on MEDIUM
+
+🧠 Must-Know Patterns (CORE 🔥)
+
+You MUST master these:
+
+Sliding Window
+Two Pointer
+Binary Search
+DFS / BFS
+Backtracking
+DP
+
+👉 Interviews = pattern recognition, not random questions
+
+📘 Best Resources (Don’t Overload Yourself)
+Learning
+Take U Forward (Striver A2Z Sheet 🔥)
+GeeksforGeeks
+Practice
+LeetCode (PRIMARY)
+HackerRank (optional)
+🔁 Revision Strategy (GAME CHANGER)
+
+👉 Follow this rule:
+
+Day 1 → Solve problem
+Day 3 → Re-solve
+Day 7 → Re-solve
+
+👉 This is how you become proficient, not just “familiar”
+
+🧪 Weekly Routine
+
+Every Sunday:
+
+Revise all topics
+Re-solve 10 old problems
+Do 1 mock test
+💬 Interview Readiness (IMPORTANT)
+
+While solving, always:
+
+Speak your approach
+Explain time complexity
+Think out loud
+❌ Common Mistakes (Avoid These)
+Watching videos all day ❌
+Not revising ❌
+Jumping to hard problems ❌
+Giving up after 1–2 attempts ❌
+🔥 Realistic Expectation
+
+If you follow this strictly:
+
+In 1 month → Comfortable
+In 2 months → Strong
+In 3 months → Interview ready
+🎯 Final Advice (Very Important)
+
+Consistency > Intelligence
+
+Even 3 hours daily for 90 days = huge transformation
+
+👉 Next Step
+
+If you want, I can give you:
+
+📅 Day 1–Day 7 exact question list (with links)
+💻 Python-specific solved examples for each topic
+🧪 Mock interview questions (real company level)
