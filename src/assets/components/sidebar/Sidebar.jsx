@@ -210,6 +210,7 @@ const menuSections = [
       { name: "Dashboard", path: "/admin/dashboard", icon: HomeIcon },
       { name: "Driver Inspection", path: "/admin/inspection", icon: TruckIcon },
       { name: "Heat Map", path: "/admin/heatmap", icon: MapIcon },
+      { name: "Driver Payments", path: "/admin/payments", icon: DocumentTextIcon },
     ],
   },
   {
@@ -252,7 +253,7 @@ const menuSections = [
     title: "GENERAL",
     items: [
       { name: "Payout Service", path: "/admin/payouts", icon: Cog6ToothIcon },
-      { name: "Documents", path: "/admin/documents", icon: DocumentTextIcon },
+      { name: "Cancellation Fine", path: "/admin/cancellation-fine", icon: DocumentTextIcon },
     ],
   },
 ];
@@ -372,7 +373,7 @@ const Sidebar = () => {
                 <span className="text-white font-bold text-xl">T</span>
               </div>
               <span className={`text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-300 ${!open && 'hidden'}`}>
-                TransEv
+                TransEV
               </span>
             </div>
             <button
@@ -537,7 +538,7 @@ const Sidebar = () => {
           {/* Copyright */}
           {open && (
             <div className="relative px-4 pb-4 text-xs text-center text-gray-500">
-              © 2026 TransEv. All rights reserved.
+              © 2026 TransEV. All rights reserved.
             </div>
           )}
         </div>

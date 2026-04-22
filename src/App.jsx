@@ -19,6 +19,8 @@ import PayoutService from "./pages/admin/PayoutService/PayoutService";
 import PassengerRatingsReviews from "./pages/admin/PassengerRatingsReviews/PassengerRatingsReviews";
 import DriverInspectionPage from "./pages/admin/DriverInspectionPage/DriverInspectionPage";
 import DriverRatingsReviewPage from "./pages/admin/DriverRatingsReviewPage";
+import CancellationFine from "./pages/admin/CancellationFine";
+import DriverPayments from "./pages/admin/DriverPayments";
 function App() {
   return (
     <Routes>
@@ -44,6 +46,8 @@ function App() {
       <Route path="/admin/review" element={<PassengerRatingsReviews />} />
       <Route path="/admin/inspection" element={<DriverInspectionPage />} />
       <Route path="/admin/driver-review" element={<DriverRatingsReviewPage />} />
+      <Route path="/admin/cancellation-fine" element={<CancellationFine />} />
+      <Route path="/admin/payments" element={<DriverPayments />} />
     </Routes>
   );
 }

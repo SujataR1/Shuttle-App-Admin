@@ -14,13 +14,132 @@
 //     EnvelopeIcon,
 //     CalendarDaysIcon,
 //     CurrencyRupeeIcon,
-//     FlagIcon
+//     FlagIcon,
+//     MapPinIcon,
+//     SignalIcon,
+//     ArrowRightIcon
 // } from "@heroicons/react/24/solid";
 // import {
 //     ArrowPathIcon,
 //     MagnifyingGlassIcon,
 //     XMarkIcon
 // } from "@heroicons/react/24/outline";
+// import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Polyline } from "react-leaflet";
+// import "leaflet/dist/leaflet.css";
+// import L from "leaflet";
+
+// // Fix Leaflet icon issue
+// delete L.Icon.Default.prototype._getIconUrl;
+// L.Icon.Default.mergeOptions({
+//     iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+//     iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+//     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+// });
+
+// // Custom bus icon
+// const busIcon = new L.Icon({
+//     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+//     iconSize: [32, 32],
+//     iconAnchor: [16, 32],
+//     popupAnchor: [1, -34],
+//     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+//     shadowSize: [41, 41],
+// });
+
+// // Stop marker icon - different colors based on status
+// const getStopIcon = (isCurrent = false, isPassed = false) => {
+//     let color = "green";
+//     if (isCurrent) color = "blue";
+//     else if (isPassed) color = "gray";
+
+//     return new L.Icon({
+//         iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+//         iconSize: [25, 41],
+//         iconAnchor: [12, 41],
+//         popupAnchor: [1, -34],
+//         shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+//         shadowSize: [41, 41],
+//     });
+// };
+
+// // Function to calculate distance between two coordinates (Haversine formula)
+// const calculateDistance = (lat1, lon1, lat2, lon2) => {
+//     const R = 6371;
+//     const dLat = (lat2 - lat1) * Math.PI / 180;
+//     const dLon = (lon2 - lon1) * Math.PI / 180;
+//     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+//         Math.sin(dLon / 2) * Math.sin(dLon / 2);
+//     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//     return R * c;
+// };
+
+// // Function to find nearest stop and determine if driver has arrived
+// const findNearestStopWithArrival = (currentLat, currentLng, stops) => {
+//     if (!stops || stops.length === 0) return null;
+
+//     let nearestStop = null;
+//     let minDistance = Infinity;
+
+//     for (const stop of stops) {
+//         const stopLat = stop.latitude || stop.lat;
+//         const stopLng = stop.longitude || stop.lng;
+
+//         if (stopLat && stopLng) {
+//             const distance = calculateDistance(
+//                 currentLat, currentLng,
+//                 parseFloat(stopLat), parseFloat(stopLng)
+//             );
+//             if (distance < minDistance) {
+//                 minDistance = distance;
+//                 const distanceInMeters = distance * 1000;
+//                 nearestStop = {
+//                     ...stop,
+//                     id: stop.id || stop.stop_id,
+//                     stop_name: stop.stop_name || stop.name,
+//                     sequence: stop.sequence || stop.stop_sequence || 0,
+//                     distance_km: distance,
+//                     distance_meters: distanceInMeters,
+//                     has_arrived: distanceInMeters <= 50,
+//                     is_approaching: distanceInMeters > 50 && distanceInMeters <= 200,
+//                     eta_minutes: Math.ceil(distanceInMeters / 200)
+//                 };
+//             }
+//         }
+//     }
+
+//     return nearestStop;
+// };
+
+// // Function to get location name from coordinates using reverse geocoding
+// const getLocationName = async (lat, lng) => {
+//     try {
+//         const response = await fetch(
+//             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+//             {
+//                 headers: {
+//                     'User-Agent': 'ShuttleApp/1.0'
+//                 }
+//             }
+//         );
+//         const data = await response.json();
+
+//         if (data && data.display_name) {
+//             const address = data.address;
+//             let locationName = "";
+
+//             if (address.road) locationName += address.road;
+//             if (address.suburb) locationName += locationName ? `, ${address.suburb}` : address.suburb;
+//             if (address.city) locationName += locationName ? `, ${address.city}` : address.city;
+
+//             return locationName || data.display_name.split(',')[0];
+//         }
+//         return null;
+//     } catch (error) {
+//         console.error("Error getting location name:", error);
+//         return null;
+//     }
+// };
 
 // const TripDetailsPage = () => {
 //     const BASE_URL = "https://be.shuttleapp.transev.site/admin";
@@ -44,11 +163,29 @@
 //     const [statusFilter, setStatusFilter] = useState("all");
 //     const [tripLoadError, setTripLoadError] = useState(null);
 
+//     // Live tracking states
+//     const [liveTracking, setLiveTracking] = useState(null);
+//     const [trackingLoading, setTrackingLoading] = useState(false);
+//     const [trackingError, setTrackingError] = useState(null);
+//     const [lastUpdated, setLastUpdated] = useState(null);
+//     const [currentStop, setCurrentStop] = useState(null);
+//     const [locationName, setLocationName] = useState(null);
+//     const [routeStops, setRouteStops] = useState([]);
+//     const [routeCoordinates, setRouteCoordinates] = useState([]);
+//     const [syncing, setSyncing] = useState(false);
+//     const [passedStopIds, setPassedStopIds] = useState([]);
+
+//     // Premature end states
+//     const [showPrematureEndModal, setShowPrematureEndModal] = useState(false);
+//     const [prematureEndReason, setPrematureEndReason] = useState("");
+//     const [endingTrip, setEndingTrip] = useState(false);
+//     const [prematureEndError, setPrematureEndError] = useState("");
+
 //     // Manual completion states
 //     const [showCompleteModal, setShowCompleteModal] = useState(false);
 //     const [completionNote, setCompletionNote] = useState("");
 //     const [completingTrip, setCompletingTrip] = useState(false);
-//     const [completionError, setCompletionError] = useState("");
+//     const [completionError, setCompletionError] = useState(null);
 
 //     // Passenger modal states
 //     const [selectedPassenger, setSelectedPassenger] = useState(null);
@@ -56,19 +193,86 @@
 //     const [loadingPassenger, setLoadingPassenger] = useState(false);
 //     const [passengerDetails, setPassengerDetails] = useState(null);
 
+//     // Fetch route stops
+//     const fetchRouteStops = async (routeId) => {
+//         if (!routeId) return [];
+//         try {
+//             const response = await axios.get(`${BASE_URL}/routes/${routeId}/stops`, axiosConfig);
+//             console.log("Route stops:", response.data);
+//             return response.data || [];
+//         } catch (err) {
+//             console.error("Error fetching route stops:", err);
+//             return [];
+//         }
+//     };
+
+//     // Fetch live tracking status
+//     const fetchLiveTracking = useCallback(async (tripId, showLoading = true) => {
+//         if (!tripId) return;
+
+//         if (showLoading) {
+//             setSyncing(true);
+//         }
+//         setTrackingError(null);
+
+//         try {
+//             const url = `${BASE_URL}/trip/${tripId}/status-only`;
+//             console.log("Fetching live tracking from:", url);
+//             const response = await axios.get(url, axiosConfig);
+//             console.log("Live tracking response:", response.data);
+//             setLiveTracking(response.data);
+//             setLastUpdated(new Date());
+
+//             if (response.data.last_known_location) {
+//                 const name = await getLocationName(
+//                     response.data.last_known_location.lat,
+//                     response.data.last_known_location.lng
+//                 );
+//                 setLocationName(name);
+//             }
+
+//             if (routeStops.length > 0 && response.data.last_known_location) {
+//                 const nearest = findNearestStopWithArrival(
+//                     response.data.last_known_location.lat,
+//                     response.data.last_known_location.lng,
+//                     routeStops
+//                 );
+//                 setCurrentStop(nearest);
+
+//                 if (nearest && nearest.has_arrived) {
+//                     setPassedStopIds(prev => {
+//                         if (!prev.includes(nearest.id)) {
+//                             return [...prev, nearest.id];
+//                         }
+//                         return prev;
+//                     });
+//                 }
+
+//                 console.log("Current stop info:", nearest);
+//             }
+//         } catch (err) {
+//             console.error("Error fetching live tracking:", err);
+//             if (err.response?.status === 404) {
+//                 setTrackingError("Trip not found or tracking not available");
+//             } else if (err.response?.status === 401) {
+//                 setTrackingError("Authentication failed. Please login again.");
+//             } else {
+//                 setTrackingError("Unable to fetch bus location");
+//             }
+//             setLiveTracking(null);
+//         } finally {
+//             if (showLoading) {
+//                 setSyncing(false);
+//             }
+//         }
+//     }, [BASE_URL, axiosConfig, routeStops]);
+
 //     const fetchTrips = async () => {
 //         setLoadingTrips(true);
 //         setTripLoadError(null);
 //         try {
 //             console.log("Fetching trips from:", `${BASE_URL}/trips/monitor`);
-//             const res = await axios.get(`${BASE_URL}/trips/monitor`, {
-//                 ...axiosConfig,
-//                 headers: {
-//                     ...axiosConfig.headers,
-//                     'Cache-Control': 'no-cache',
-//                     'Pragma': 'no-cache'
-//                 }
-//             });
+//             const res = await axios.get(`${BASE_URL}/trips/monitor`, axiosConfig);
 //             console.log("Trips fetched successfully:", res.data);
 //             setTrips(res.data);
 //         } catch (err) {
@@ -93,26 +297,27 @@
 //         try {
 //             const url = `${BASE_URL}/trips/${trip_id}`;
 //             console.log("Fetching trip details from:", url);
-//             console.log("Using token:", token ? "Token exists" : "No token");
-
-//             const response = await axios.get(url, {
-//                 ...axiosConfig,
-//                 headers: {
-//                     ...axiosConfig.headers,
-//                     'Cache-Control': 'no-cache',
-//                     'Pragma': 'no-cache',
-//                     'Expires': '0'
-//                 }
-//             });
-
+//             const response = await axios.get(url, axiosConfig);
 //             console.log("Trip details response:", response.data);
 //             setSelectedTrip(response.data);
+
+//             if (response.data.route?.id) {
+//                 const stops = await fetchRouteStops(response.data.route.id);
+//                 setRouteStops(stops);
+
+//                 const coords = stops
+//                     .filter(stop => (stop.latitude || stop.lat) && (stop.longitude || stop.lng))
+//                     .map(stop => [parseFloat(stop.latitude || stop.lat), parseFloat(stop.longitude || stop.lng)]);
+//                 setRouteCoordinates(coords);
+//             }
+
+//             setLiveTracking(null);
+//             setCurrentStop(null);
+//             setLocationName(null);
+//             setTrackingError(null);
+//             setPassedStopIds([]);
 //         } catch (err) {
 //             console.error("Error fetching trip details:", err);
-//             console.error("Error response:", err.response);
-//             console.error("Error status:", err.response?.status);
-//             console.error("Error data:", err.response?.data);
-
 //             let errorMessage = "Failed to load trip details";
 //             if (err.response?.status === 401) {
 //                 errorMessage = "Authentication failed. Please login again.";
@@ -121,13 +326,21 @@
 //             } else if (err.response?.status === 403) {
 //                 errorMessage = "You don't have permission to view this trip.";
 //             }
-
 //             setTripLoadError(errorMessage);
 //             alert(errorMessage);
 //         } finally {
 //             setLoading(false);
 //         }
-//     }, [axiosConfig, token]);
+//     }, [axiosConfig]);
+
+//     const handleSyncLocation = async () => {
+//         if (selectedTrip?.trip_id && selectedTrip.status === "in_progress") {
+//             await fetchLiveTracking(selectedTrip.trip_id, true);
+//         } else if (selectedTrip?.status !== "in_progress") {
+//             setTrackingError("Trip is not in progress. Live tracking only available for active trips.");
+//             setTimeout(() => setTrackingError(null), 3000);
+//         }
+//     };
 
 //     const fetchPassengerDetails = async (passengerId) => {
 //         if (!passengerId || passengerId === 'undefined') {
@@ -140,14 +353,7 @@
 //         try {
 //             const url = `${BASE_URL}/passenger/${passengerId}`;
 //             console.log("Fetching passenger details from:", url);
-//             const res = await axios.get(url, {
-//                 ...axiosConfig,
-//                 headers: {
-//                     ...axiosConfig.headers,
-//                     'Cache-Control': 'no-cache',
-//                     'Pragma': 'no-cache'
-//                 }
-//             });
+//             const res = await axios.get(url, axiosConfig);
 //             console.log("Passenger details:", res.data);
 //             setPassengerDetails(res.data);
 //         } catch (err) {
@@ -191,14 +397,7 @@
 //             await axios.patch(
 //                 url,
 //                 { reason: cancelReason },
-//                 {
-//                     ...axiosConfig,
-//                     headers: {
-//                         ...axiosConfig.headers,
-//                         'Cache-Control': 'no-cache',
-//                         'Pragma': 'no-cache'
-//                     }
-//                 }
+//                 axiosConfig
 //             );
 //             alert("✅ Trip cancelled successfully");
 //             await fetchTrips();
@@ -207,13 +406,10 @@
 //             setCancelError("");
 //         } catch (err) {
 //             console.error("Error cancelling trip:", err);
-
 //             let errorMessage = "Failed to cancel trip";
-
 //             if (err.response) {
 //                 const statusCode = err.response.status;
 //                 const errorData = err.response.data;
-
 //                 if (errorData?.detail) {
 //                     errorMessage = errorData.detail;
 //                 } else if (typeof errorData === 'string') {
@@ -221,10 +417,7 @@
 //                 } else if (errorData?.message) {
 //                     errorMessage = errorData.message;
 //                 }
-
-//                 if (statusCode === 400) {
-//                     errorMessage = `❌ ${errorMessage}`;
-//                 } else if (statusCode === 401) {
+//                 if (statusCode === 401) {
 //                     errorMessage = "❌ Unauthorized. Please login again.";
 //                 } else if (statusCode === 403) {
 //                     errorMessage = "❌ You don't have permission to cancel this trip.";
@@ -234,14 +427,71 @@
 //             } else if (err.request) {
 //                 errorMessage = "❌ Network error. Please check your connection.";
 //             }
-
 //             setCancelError(errorMessage);
 //         }
 //     };
 
-//     // Manual completion function
+//     const prematureEndTrip = async () => {
+//         if (!prematureEndReason) {
+//             setPrematureEndError("Please provide a reason for ending the trip prematurely");
+//             return;
+//         }
+
+//         setPrematureEndError("");
+//         setEndingTrip(true);
+
+//         try {
+//             const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/premature-end`;
+//             console.log("Ending trip prematurely:", url);
+
+//             const response = await axios.post(url, {
+//                 reason: prematureEndReason
+//             }, axiosConfig);
+
+//             console.log("Premature end response:", response.data);
+
+//             if (response.data?.status === "success") {
+//                 alert(`✅ Trip ended prematurely!\nCancelled bookings: ${response.data.cancelled_bookings || 0}\nTrip status: ${response.data.trip_status}`);
+//                 setShowPrematureEndModal(false);
+//                 setPrematureEndReason("");
+//                 await fetchTrips();
+//                 if (selectedTrip) {
+//                     await fetchTripDetails(selectedTrip.trip_id);
+//                 }
+//             } else {
+//                 throw new Error("Unexpected response from server");
+//             }
+//         } catch (err) {
+//             console.error("Error ending trip prematurely:", err);
+//             let errorMessage = "Failed to end trip prematurely";
+//             if (err.response) {
+//                 const statusCode = err.response.status;
+//                 const errorData = err.response.data;
+//                 if (errorData?.detail) {
+//                     errorMessage = errorData.detail;
+//                 } else if (typeof errorData === 'string') {
+//                     errorMessage = errorData;
+//                 } else if (errorData?.message) {
+//                     errorMessage = errorData.message;
+//                 }
+//                 if (statusCode === 401) {
+//                     errorMessage = "❌ Unauthorized. Please login again.";
+//                 } else if (statusCode === 403) {
+//                     errorMessage = "❌ You don't have permission to end this trip.";
+//                 } else if (statusCode === 404) {
+//                     errorMessage = "❌ Trip not found.";
+//                 }
+//             } else if (err.request) {
+//                 errorMessage = "❌ Network error. Please check your connection.";
+//             }
+//             setPrematureEndError(errorMessage);
+//         } finally {
+//             setEndingTrip(false);
+//         }
+//     };
+
 //     const completeTripManually = async () => {
-//         setCompletionError("");
+//         setCompletionError(null);
 
 //         try {
 //             setCompletingTrip(true);
@@ -249,14 +499,7 @@
 //             const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/complete-manually`;
 //             console.log("Completing trip:", url);
 
-//             const response = await axios.post(url, requestBody, {
-//                 ...axiosConfig,
-//                 headers: {
-//                     ...axiosConfig.headers,
-//                     'Cache-Control': 'no-cache',
-//                     'Pragma': 'no-cache'
-//                 }
-//             });
+//             const response = await axios.post(url, requestBody, axiosConfig);
 
 //             console.log("Complete trip response:", response.data);
 
@@ -279,14 +522,17 @@
 //             }
 //         } catch (err) {
 //             console.error("Error completing trip:", err);
-
 //             let errorMessage = "Failed to complete trip";
+//             let errorTitle = "Cannot Complete Trip";
 
 //             if (err.response) {
 //                 const statusCode = err.response.status;
 //                 const errorData = err.response.data;
 
-//                 if (errorData?.detail) {
+//                 if (errorData?.detail?.error === "passengers_still_on_board") {
+//                     errorTitle = "⚠️ Passengers Still On Board";
+//                     errorMessage = errorData.detail?.message || "Cannot complete the trip while passengers are still on board. Please ensure all passengers have disembarked before completing the trip.";
+//                 } else if (errorData?.detail) {
 //                     errorMessage = errorData.detail;
 //                 } else if (typeof errorData === 'string') {
 //                     errorMessage = errorData;
@@ -294,25 +540,26 @@
 //                     errorMessage = errorData.message;
 //                 }
 
-//                 if (statusCode === 400) {
-//                     errorMessage = `❌ ${errorMessage}`;
-//                 } else if (statusCode === 401) {
+//                 if (statusCode === 401) {
 //                     errorMessage = "❌ Unauthorized. Please login again.";
+//                     errorTitle = "Authentication Error";
 //                 } else if (statusCode === 403) {
 //                     errorMessage = "❌ You don't have permission to complete this trip.";
+//                     errorTitle = "Permission Denied";
 //                 } else if (statusCode === 404) {
 //                     errorMessage = "❌ Trip not found.";
+//                     errorTitle = "Not Found";
 //                 }
 //             } else if (err.request) {
 //                 errorMessage = "❌ Network error. Please check your connection.";
+//                 errorTitle = "Network Error";
 //             }
 
-//             setCompletionError(errorMessage);
+//             setCompletionError({ title: errorTitle, message: errorMessage });
 //         } finally {
 //             setCompletingTrip(false);
 //         }
 //     };
-
 
 //     useEffect(() => {
 //         fetchTrips();
@@ -337,9 +584,7 @@
 
 //     const getDelayTag = (planned, actual) => {
 //         if (!planned || !actual) return { label: "Not started", color: "text-gray-400", bg: "bg-gray-50" };
-
 //         const diff = (new Date(actual) - new Date(planned)) / 60000;
-
 //         if (diff <= 5 && diff >= -5) {
 //             return { label: "On Time", color: "text-emerald-600", bg: "bg-emerald-50" };
 //         } else if (diff > 5) {
@@ -351,30 +596,14 @@
 
 //     const getCriticalAlert = () => {
 //         if (!selectedTrip) return null;
-
-
-//         const startDelay = getDelayTag(
-//             selectedTrip?.timing?.planned_start,
-//             selectedTrip?.timing?.actual_start
-//         );
-
-
-//         const endDelay = getDelayTag(
-//             selectedTrip?.timing?.planned_end,
-//             selectedTrip?.timing?.actual_end
-//         );
-
-//         if (
-//             startDelay?.label?.includes("Critical") ||
-//             endDelay?.label?.includes("Critical")
-//         ) {
+//         const startDelay = getDelayTag(selectedTrip?.timing?.planned_start, selectedTrip?.timing?.actual_start);
+//         const endDelay = getDelayTag(selectedTrip?.timing?.planned_end, selectedTrip?.timing?.actual_end);
+//         if (startDelay?.label?.includes("Critical") || endDelay?.label?.includes("Critical")) {
 //             return "⚠️ Trip is critically delayed";
 //         }
-
 //         return null;
 //     };
 
-//     // Filter trips based on search and status
 //     const filteredTrips = trips.filter(trip => {
 //         const matchesSearch = trip.route_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //             trip.driver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -426,7 +655,6 @@
 //                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
 //                                 <h2 className="text-lg font-bold text-gray-800">Active Trips</h2>
 //                                 <p className="text-xs text-gray-500 mt-1">{filteredTrips.length} trips available</p>
-
 //                                 <div className="mt-4 relative">
 //                                     <input
 //                                         type="text"
@@ -437,9 +665,8 @@
 //                                     />
 //                                     <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
 //                                 </div>
-
 //                                 <div className="flex gap-2 mt-3 flex-wrap">
-//                                     {["all", "scheduled", "in_progress", "completed", "cancelled"].map((status) => (
+//                                     {["all", "scheduled", "in_progress", "completed", "cancelled", "premature_end"].map((status) => (
 //                                         <button
 //                                             key={status}
 //                                             onClick={() => setStatusFilter(status)}
@@ -536,7 +763,313 @@
 //                                         </div>
 //                                     </div>
 
-//                                     {/* STATS GRID - 4 columns */}
+//                                     {/* LIVE TRACKING SECTION */}
+//                                     {selectedTrip.status === "in_progress" && (
+//                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+//                                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white flex justify-between items-center">
+//                                                 <div className="flex items-center gap-2">
+//                                                     <SignalIcon className="h-5 w-5 text-blue-600" />
+//                                                     <h3 className="font-semibold text-gray-800">Live Bus Tracking</h3>
+//                                                 </div>
+//                                                 <button
+//                                                     onClick={handleSyncLocation}
+//                                                     disabled={syncing}
+//                                                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
+//                                                 >
+//                                                     <ArrowPathIcon className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+//                                                     {syncing ? "Syncing..." : "Sync Location"}
+//                                                 </button>
+//                                             </div>
+//                                             <div className="p-5">
+//                                                 {!liveTracking && !trackingError && (
+//                                                     <div className="text-center py-8">
+//                                                         <TruckIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+//                                                         <p className="text-gray-500">Click "Sync Location" to see current bus position</p>
+//                                                         <button
+//                                                             onClick={handleSyncLocation}
+//                                                             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+//                                                         >
+//                                                             Sync Now
+//                                                         </button>
+//                                                     </div>
+//                                                 )}
+
+//                                                 {trackingError && (
+//                                                     <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+//                                                         <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+//                                                         <p className="text-yellow-700 text-sm">{trackingError}</p>
+//                                                         <button
+//                                                             onClick={handleSyncLocation}
+//                                                             className="mt-3 px-4 py-1.5 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-all"
+//                                                         >
+//                                                             Try Again
+//                                                         </button>
+//                                                     </div>
+//                                                 )}
+
+//                                                 {liveTracking && (
+//                                                     <div className="space-y-4">
+//                                                         <div className={`rounded-xl p-5 border ${currentStop?.has_arrived
+//                                                             ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+//                                                             : currentStop?.is_approaching
+//                                                                 ? "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200"
+//                                                                 : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+//                                                             }`}>
+//                                                             <div className="flex items-start gap-3">
+//                                                                 <div className={`p-3 rounded-full ${currentStop?.has_arrived ? "bg-green-100" :
+//                                                                     currentStop?.is_approaching ? "bg-yellow-100" : "bg-blue-100"
+//                                                                     }`}>
+//                                                                     <MapPinIcon className={`h-6 w-6 ${currentStop?.has_arrived ? "text-green-600" :
+//                                                                         currentStop?.is_approaching ? "text-yellow-600" : "text-blue-600"
+//                                                                         }`} />
+//                                                                 </div>
+//                                                                 <div className="flex-1">
+//                                                                     <p className="text-xs text-gray-500 uppercase tracking-wide">
+//                                                                         {currentStop?.has_arrived ? "Current Stop (Arrived)" :
+//                                                                             currentStop?.is_approaching ? "Next Stop (Approaching)" :
+//                                                                                 "Current Location"}
+//                                                                     </p>
+
+//                                                                     {currentStop ? (
+//                                                                         <>
+//                                                                             <p className="text-xl font-bold text-gray-800 mt-1">
+//                                                                                 {currentStop.stop_name}
+//                                                                             </p>
+//                                                                             <div className="mt-2 space-y-1">
+//                                                                                 {currentStop.has_arrived ? (
+//                                                                                     <div>
+//                                                                                         <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+//                                                                                             <CheckCircleIcon className="w-3 h-3" />
+//                                                                                             ✓ Driver has arrived at this stop
+//                                                                                         </span>
+//                                                                                         <p className="text-xs text-green-600 mt-1">
+//                                                                                             Stop #{currentStop.sequence} • Arrival confirmed
+//                                                                                         </p>
+//                                                                                     </div>
+//                                                                                 ) : currentStop.is_approaching ? (
+//                                                                                     <div>
+//                                                                                         <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+//                                                                                             <ClockIcon className="w-3 h-3" />
+//                                                                                             Approaching stop
+//                                                                                         </span>
+//                                                                                         <p className="text-xs text-yellow-600 mt-1">
+//                                                                                             {currentStop.distance_meters.toFixed(0)}m away • ETA: ~{currentStop.eta_minutes} min
+//                                                                                         </p>
+//                                                                                     </div>
+//                                                                                 ) : (
+//                                                                                     <div>
+//                                                                                         <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+//                                                                                             <TruckIcon className="w-3 h-3" />
+//                                                                                             En route to next stop
+//                                                                                         </span>
+//                                                                                         <p className="text-xs text-blue-600 mt-1">
+//                                                                                             {currentStop.distance_meters.toFixed(0)}m to {currentStop.stop_name}
+//                                                                                         </p>
+//                                                                                     </div>
+//                                                                                 )}
+//                                                                             </div>
+//                                                                             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+//                                                                                 <span>Stop #{currentStop.sequence}</span>
+//                                                                                 <span>•</span>
+//                                                                                 <span>Distance: {currentStop.distance_meters.toFixed(0)}m</span>
+//                                                                             </div>
+//                                                                         </>
+//                                                                     ) : locationName ? (
+//                                                                         <>
+//                                                                             <p className="text-lg font-bold text-gray-800 mt-1">
+//                                                                                 {locationName}
+//                                                                             </p>
+//                                                                             <p className="text-xs text-gray-500 mt-1">
+//                                                                                 📍 Bus is between stops
+//                                                                             </p>
+//                                                                         </>
+//                                                                     ) : (
+//                                                                         <p className="text-sm text-gray-500 mt-1">
+//                                                                             Loading stop information...
+//                                                                         </p>
+//                                                                     )}
+//                                                                     {lastUpdated && (
+//                                                                         <p className="text-xs text-gray-400 mt-2">
+//                                                                             Last synced: {lastUpdated.toLocaleTimeString()}
+//                                                                         </p>
+//                                                                     )}
+//                                                                 </div>
+//                                                             </div>
+//                                                         </div>
+
+//                                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+//                                                             <div className="bg-blue-50 rounded-lg p-3">
+//                                                                 <p className="text-xs text-gray-500">Trip Status</p>
+//                                                                 <p className="text-lg font-bold text-blue-600">
+//                                                                     {liveTracking.status?.replace("_", " ").toUpperCase()}
+//                                                                 </p>
+//                                                             </div>
+//                                                             <div className="bg-green-50 rounded-lg p-3">
+//                                                                 <p className="text-xs text-gray-500">Driver</p>
+//                                                                 <p className="text-sm font-semibold text-gray-800">{liveTracking.driver_name}</p>
+//                                                             </div>
+//                                                             <div className="bg-purple-50 rounded-lg p-3">
+//                                                                 <p className="text-xs text-gray-500">Route</p>
+//                                                                 <p className="text-sm font-semibold text-gray-800 truncate">{liveTracking.route_name}</p>
+//                                                             </div>
+//                                                         </div>
+
+//                                                         <div className="rounded-xl overflow-hidden border border-gray-200">
+//                                                             <div className="bg-gray-50 px-4 py-2 border-b">
+//                                                                 <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+//                                                                     <MapPinIcon className="h-4 w-4 text-red-500" />
+//                                                                     Route Map with Bus Location
+//                                                                 </p>
+//                                                             </div>
+//                                                             <div className="h-[400px] w-full">
+//                                                                 <MapContainer
+//                                                                     center={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+//                                                                     zoom={13}
+//                                                                     className="h-full w-full"
+//                                                                     style={{ background: "#f0f0f0" }}
+//                                                                 >
+//                                                                     <TileLayer
+//                                                                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+//                                                                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+//                                                                     />
+
+//                                                                     {routeCoordinates.length > 0 && (
+//                                                                         <Polyline
+//                                                                             positions={routeCoordinates}
+//                                                                             color="#3b82f6"
+//                                                                             weight={4}
+//                                                                             opacity={0.7}
+//                                                                         />
+//                                                                     )}
+
+//                                                                     {routeStops.map((stop, idx) => {
+//                                                                         const stopLat = stop.latitude || stop.lat;
+//                                                                         const stopLng = stop.longitude || stop.lng;
+//                                                                         if (stopLat && stopLng) {
+//                                                                             const isCurrentStop = currentStop && (currentStop.id === stop.id || currentStop.stop_name === stop.stop_name);
+//                                                                             const isPassed = passedStopIds.includes(stop.id);
+//                                                                             return (
+//                                                                                 <Marker
+//                                                                                     key={idx}
+//                                                                                     position={[parseFloat(stopLat), parseFloat(stopLng)]}
+//                                                                                     icon={getStopIcon(isCurrentStop, isPassed)}
+//                                                                                 >
+//                                                                                     <Popup>
+//                                                                                         <div className="text-center">
+//                                                                                             <p className="font-bold text-gray-800">{stop.stop_name || stop.name}</p>
+//                                                                                             <p className="text-xs text-gray-500">Stop #{stop.sequence || stop.stop_sequence}</p>
+//                                                                                             {isCurrentStop && currentStop?.has_arrived && (
+//                                                                                                 <p className="text-xs text-green-600 font-semibold mt-1">📍 Current Location (Arrived)</p>
+//                                                                                             )}
+//                                                                                             {isCurrentStop && !currentStop?.has_arrived && (
+//                                                                                                 <p className="text-xs text-blue-600 font-semibold mt-1">📍 Approaching</p>
+//                                                                                             )}
+//                                                                                             {isPassed && !isCurrentStop && (
+//                                                                                                 <p className="text-xs text-gray-500 mt-1">✓ Passed</p>
+//                                                                                             )}
+//                                                                                         </div>
+//                                                                                     </Popup>
+//                                                                                 </Marker>
+//                                                                             );
+//                                                                         }
+//                                                                         return null;
+//                                                                     })}
+
+//                                                                     <Marker
+//                                                                         position={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+//                                                                         icon={busIcon}
+//                                                                     >
+//                                                                         <Popup>
+//                                                                             <div className="text-center">
+//                                                                                 <p className="font-bold text-gray-800">{liveTracking.route_name}</p>
+//                                                                                 <p className="text-sm text-gray-600">Driver: {liveTracking.driver_name}</p>
+//                                                                                 <p className="text-xs text-gray-500 mt-1">
+//                                                                                     Status: {liveTracking.status}
+//                                                                                 </p>
+//                                                                                 {currentStop && (
+//                                                                                     <p className="text-xs text-green-600 mt-1">
+//                                                                                         {currentStop.has_arrived ? `At: ${currentStop.stop_name}` : `Next: ${currentStop.stop_name}`}
+//                                                                                     </p>
+//                                                                                 )}
+//                                                                             </div>
+//                                                                         </Popup>
+//                                                                     </Marker>
+
+//                                                                     <CircleMarker
+//                                                                         center={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+//                                                                         radius={50}
+//                                                                         fillColor="#3b82f6"
+//                                                                         color="transparent"
+//                                                                         fillOpacity={0.1}
+//                                                                     />
+//                                                                 </MapContainer>
+//                                                             </div>
+//                                                         </div>
+
+//                                                         {routeStops.length > 0 && currentStop && (
+//                                                             <div className="bg-gray-50 rounded-xl p-4">
+//                                                                 <p className="text-sm font-medium text-gray-700 mb-3">Stop Progress</p>
+//                                                                 <div className="flex items-center justify-between flex-wrap gap-2">
+//                                                                     {routeStops.map((stop, idx) => {
+//                                                                         const isPassed = currentStop.sequence > stop.sequence || passedStopIds.includes(stop.id);
+//                                                                         const isCurrent = currentStop.id === stop.id;
+//                                                                         const isCompleted = isPassed && !isCurrent;
+//                                                                         return (
+//                                                                             <div key={idx} className="flex items-center">
+//                                                                                 <div className={`text-center ${isCompleted || isPassed ? 'text-green-600' : isCurrent ? 'text-blue-600' : 'text-gray-400'}`}>
+//                                                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent && currentStop?.has_arrived ? 'bg-green-500 text-white ring-4 ring-green-200' :
+//                                                                                         isCurrent ? 'bg-blue-500 text-white ring-4 ring-blue-200' :
+//                                                                                             isCompleted ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+//                                                                                         }`}>
+//                                                                                         {stop.sequence}
+//                                                                                     </div>
+//                                                                                     <p className="text-xs mt-1 max-w-[60px] truncate">{stop.stop_name?.split(' ')[0]}</p>
+//                                                                                     {isCurrent && currentStop?.has_arrived && (
+//                                                                                         <p className="text-xs text-green-600">Arrived ✓</p>
+//                                                                                     )}
+//                                                                                 </div>
+//                                                                                 {idx < routeStops.length - 1 && (
+//                                                                                     <ArrowRightIcon className={`w-4 h-4 mx-1 ${isCompleted ? 'text-green-500' : 'text-gray-300'}`} />
+//                                                                                 )}
+//                                                                             </div>
+//                                                                         );
+//                                                                     })}
+//                                                                 </div>
+//                                                             </div>
+//                                                         )}
+
+//                                                         <div className="bg-gray-50 rounded-xl p-4">
+//                                                             <p className="text-sm font-medium text-gray-700 mb-3">Trip Timeline</p>
+//                                                             <div className="space-y-2">
+//                                                                 <div className="flex justify-between text-sm">
+//                                                                     <span className="text-gray-500">Planned Start:</span>
+//                                                                     <span className="font-medium">{new Date(liveTracking.planned_times?.start).toLocaleString()}</span>
+//                                                                 </div>
+//                                                                 <div className="flex justify-between text-sm">
+//                                                                     <span className="text-gray-500">Actual Start:</span>
+//                                                                     <span className="font-medium text-green-600">
+//                                                                         {liveTracking.actual_times?.start ? new Date(liveTracking.actual_times.start).toLocaleString() : "Not started"}
+//                                                                     </span>
+//                                                                 </div>
+//                                                                 <div className="flex justify-between text-sm">
+//                                                                     <span className="text-gray-500">Planned End:</span>
+//                                                                     <span className="font-medium">{new Date(liveTracking.planned_times?.end).toLocaleString()}</span>
+//                                                                 </div>
+//                                                                 <div className="flex justify-between text-sm">
+//                                                                     <span className="text-gray-500">Actual End:</span>
+//                                                                     <span className="font-medium text-orange-600">
+//                                                                         {liveTracking.actual_times?.end ? new Date(liveTracking.actual_times.end).toLocaleString() : "In progress"}
+//                                                                     </span>
+//                                                                 </div>
+//                                                             </div>
+//                                                         </div>
+//                                                     </div>
+//                                                 )}
+//                                             </div>
+//                                         </div>
+//                                     )}
+
+//                                     {/* STATS GRID */}
 //                                     <div className="grid grid-cols-4 gap-4">
 //                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
 //                                             <div className="flex items-center justify-between">
@@ -562,40 +1095,80 @@
 //                                             </div>
 //                                         </div>
 
-//                                         {(() => {
-//                                             const startStatus = getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start);
-//                                             return (
-//                                                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-//                                                     <div className="flex items-center justify-between">
-//                                                         <div>
-//                                                             <p className="text-xs text-gray-500 uppercase tracking-wide">Start Status</p>
-//                                                             <p className={`text-lg font-bold mt-1 ${startStatus.color}`}>{startStatus.label}</p>
-//                                                         </div>
-//                                                         <div className={`p-2 rounded-lg ${startStatus.bg}`}>
-//                                                             <ClockIcon className="h-5 w-5" />
-//                                                         </div>
-//                                                     </div>
+//                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+//                                             <div className="flex items-center justify-between">
+//                                                 <div>
+//                                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Start Status</p>
+//                                                     <p className={`text-lg font-bold mt-1 ${getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start).color}`}>
+//                                                         {getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start).label}
+//                                                     </p>
 //                                                 </div>
-//                                             );
-//                                         })()}
+//                                                 <ClockIcon className="h-8 w-8 text-indigo-400" />
+//                                             </div>
+//                                         </div>
 
-//                                         {(() => {
-//                                             const endStatus = getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end);
-//                                             return (
-//                                                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-//                                                     <div className="flex items-center justify-between">
-//                                                         <div>
-//                                                             <p className="text-xs text-gray-500 uppercase tracking-wide">End Status</p>
-//                                                             <p className={`text-lg font-bold mt-1 ${endStatus.color}`}>{endStatus.label}</p>
-//                                                         </div>
-//                                                         <div className={`p-2 rounded-lg ${endStatus.bg}`}>
-//                                                             <ClockIcon className="h-5 w-5" />
-//                                                         </div>
-//                                                     </div>
+//                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+//                                             <div className="flex items-center justify-between">
+//                                                 <div>
+//                                                     <p className="text-xs text-gray-500 uppercase tracking-wide">End Status</p>
+//                                                     <p className={`text-lg font-bold mt-1 ${getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end).color}`}>
+//                                                         {getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end).label}
+//                                                     </p>
 //                                                 </div>
-//                                             );
-//                                         })()}
+//                                                 <ClockIcon className="h-8 w-8 text-indigo-400" />
+//                                             </div>
+//                                         </div>
 //                                     </div>
+
+//                                     {/* ROUTE STOPS SUMMARY - NEW */}
+//                                     {/* ROUTE STOPS SUMMARY - UPDATED WITH ACTUAL DROP */}
+//                                     {selectedTrip.occupancy?.passengers?.length > 0 && (
+//                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+//                                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+//                                                 <div className="flex items-center gap-2">
+//                                                     <MapPinIcon className="w-5 h-5 text-gray-600" />
+//                                                     <h3 className="font-semibold text-gray-800">Passenger Pickup/Dropoff Summary</h3>
+//                                                 </div>
+//                                                 <p className="text-xs text-gray-500 mt-1">Stops for each passenger on this trip</p>
+//                                             </div>
+//                                             <div className="p-5">
+//                                                 <div className="space-y-3">
+//                                                     {selectedTrip.occupancy.passengers.map((passenger, idx) => (
+//                                                         <div key={idx} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+//                                                             <div className="flex items-center justify-between">
+//                                                                 <div className="flex-1">
+//                                                                     <p className="font-medium text-gray-800">{passenger.name}</p>
+//                                                                     <div className="flex items-center gap-2 mt-1 text-sm">
+//                                                                         <span className="text-green-600">🚏 Pickup: {passenger.pickup_stop_name || 'N/A'}</span>
+//                                                                         <span className="text-gray-400">→</span>
+//                                                                         <span className="text-red-600">📍 Dropoff: {passenger.dropoff_stop_name || 'N/A'}</span>
+//                                                                     </div>
+//                                                                     {/* NEW: Actual Drop Stop */}
+//                                                                     {passenger.actual_drop_stop_name && (
+//                                                                         <div className="flex items-center gap-2 mt-2 text-sm">
+//                                                                             <span className="text-blue-600">🔽 Actual Drop: {passenger.actual_drop_stop_name}</span>
+//                                                                             {passenger.actual_dropped_at && (
+//                                                                                 <span className="text-gray-400 text-xs">
+//                                                                                     at {new Date(passenger.actual_dropped_at).toLocaleTimeString()}
+//                                                                                 </span>
+//                                                                             )}
+//                                                                         </div>
+//                                                                     )}
+//                                                                 </div>
+//                                                                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked" ? "bg-emerald-100 text-emerald-700" :
+//                                                                     passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+//                                                                         passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+//                                                                             "bg-gray-100 text-gray-600"
+//                                                                     }`}>
+//                                                                     {passenger.status}
+//                                                                 </span>
+//                                                             </div>
+//                                                         </div>
+//                                                     ))}
+//                                                 </div>
+//                                             </div>
+//                                         </div>
+//                                     )}
 
 //                                     {/* TRIP DETAILS SECTION */}
 //                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -692,9 +1265,16 @@
 //                                         </div>
 //                                     </div>
 
-//                                     {/* ACTION BUTTONS - Only for in_progress status */}
+//                                     {/* ACTION BUTTONS */}
 //                                     {selectedTrip.status === "in_progress" && (
 //                                         <div className="flex gap-4">
+//                                             <button
+//                                                 onClick={() => setShowPrematureEndModal(true)}
+//                                                 className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white px-6 py-3 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex items-center justify-center gap-2"
+//                                             >
+//                                                 <ExclamationTriangleIcon className="h-5 w-5" />
+//                                                 End Trip Prematurely
+//                                             </button>
 //                                             <button
 //                                                 onClick={() => setShowCompleteModal(true)}
 //                                                 className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex items-center justify-center gap-2"
@@ -705,7 +1285,7 @@
 //                                         </div>
 //                                     )}
 
-//                                     {/* CANCEL SECTION - Only for scheduled trips */}
+//                                     {/* CANCEL SECTION */}
 //                                     {selectedTrip.status === "scheduled" && (
 //                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 //                                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-red-50 to-white">
@@ -747,7 +1327,8 @@
 //                                         </div>
 //                                     )}
 
-//                                     {/* PASSENGERS SECTION */}
+//                                     {/* PASSENGERS SECTION - UPDATED WITH PICKUP/DROPOFF */}
+//                                     {/* PASSENGERS SECTION - UPDATED WITH ACTUAL DROP STOP */}
 //                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 //                                         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
 //                                             <div className="flex items-center justify-between">
@@ -768,23 +1349,42 @@
 //                                                             onClick={() => handlePassengerClick(passenger)}
 //                                                             className="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-indigo-50 hover:shadow-md transition-all duration-200 cursor-pointer group"
 //                                                         >
-//                                                             <div className="flex items-center gap-3">
+//                                                             <div className="flex items-center gap-3 flex-1">
 //                                                                 <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-200 transition-all">
 //                                                                     <span className="text-indigo-600 font-semibold text-sm">
 //                                                                         {passenger.name?.charAt(0) || "?"}
 //                                                                     </span>
 //                                                                 </div>
-//                                                                 <div>
+//                                                                 <div className="flex-1">
 //                                                                     <p className="text-sm font-medium text-gray-800 group-hover:text-indigo-700">{passenger.name}</p>
 //                                                                     <p className="text-xs text-gray-400">ID: {passenger.passenger_id?.slice(0, 13)}...</p>
+//                                                                     {/* Pickup and Dropoff Stops */}
+//                                                                     <div className="flex flex-col gap-1 mt-1 text-xs">
+//                                                                         <div className="flex items-center gap-2">
+//                                                                             <span className="text-green-600">🚏 Pickup: {passenger.pickup_stop_name || 'N/A'}</span>
+//                                                                         </div>
+//                                                                         <div className="flex items-center gap-2">
+//                                                                             <span className="text-red-600">📍 Dropoff: {passenger.dropoff_stop_name || 'N/A'}</span>
+//                                                                         </div>
+//                                                                         {/* NEW: Actual Drop Stop (where passenger actually got off) */}
+//                                                                         {passenger.actual_drop_stop_name && (
+//                                                                             <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-200">
+//                                                                                 <span className="text-blue-600">🔽 Actual Drop: {passenger.actual_drop_stop_name}</span>
+//                                                                                 {passenger.actual_dropped_at && (
+//                                                                                     <span className="text-gray-400 text-xs">
+//                                                                                         at {new Date(passenger.actual_dropped_at).toLocaleTimeString()}
+//                                                                                     </span>
+//                                                                                 )}
+//                                                                             </div>
+//                                                                         )}
+//                                                                     </div>
 //                                                                 </div>
 //                                                             </div>
 //                                                             <div className="flex items-center gap-2">
-//                                                                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked"
-//                                                                     ? "bg-emerald-100 text-emerald-700"
-//                                                                     : passenger.status === "cancelled"
-//                                                                         ? "bg-red-100 text-red-700"
-//                                                                         : "bg-gray-100 text-gray-600"
+//                                                                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked" ? "bg-emerald-100 text-emerald-700" :
+//                                                                     passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+//                                                                         passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+//                                                                             "bg-gray-100 text-gray-600"
 //                                                                     }`}>
 //                                                                     {passenger.status}
 //                                                                 </span>
@@ -808,87 +1408,79 @@
 //                 </div>
 //             </div>
 
-//             {/* MANUAL COMPLETION MODAL */}
-//             {showCompleteModal && selectedTrip && (
-//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCompleteModal(false)}>
+//             {/* PREMATURE END MODAL */}
+//             {showPrematureEndModal && selectedTrip && (
+//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowPrematureEndModal(false)}>
 //                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
-//                         {/* Modal Header */}
-//                         <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4">
+//                         <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
 //                             <div className="flex items-center gap-3">
 //                                 <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center">
-//                                     <FlagIcon className="h-5 w-5 text-white" />
+//                                     <ExclamationTriangleIcon className="h-5 w-5 text-white" />
 //                                 </div>
 //                                 <div>
-//                                     <h2 className="text-lg font-bold text-white">Complete Trip</h2>
-//                                     <p className="text-emerald-100 text-xs">{selectedTrip.route?.name}</p>
+//                                     <h2 className="text-lg font-bold text-white">End Trip Prematurely</h2>
+//                                     <p className="text-orange-100 text-xs">{selectedTrip.route?.name}</p>
 //                                 </div>
 //                             </div>
 //                         </div>
-
-//                         {/* Modal Content */}
 //                         <div className="p-6">
-//                             {completionError && (
+//                             {prematureEndError && (
 //                                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
 //                                     <div className="flex items-start gap-2">
 //                                         <ExclamationTriangleIcon className="h-4 w-4 text-red-500 mt-0.5" />
-//                                         <p className="text-sm text-red-600">{completionError}</p>
+//                                         <p className="text-sm text-red-600">{prematureEndError}</p>
 //                                     </div>
 //                                 </div>
 //                             )}
-
 //                             <div className="mb-4">
 //                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-//                                     Completion Note (Optional)
+//                                     Reason for premature end <span className="text-red-500">*</span>
 //                                 </label>
 //                                 <textarea
-//                                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
-//                                     placeholder="Add a note about why this trip is being completed..."
-//                                     value={completionNote}
-//                                     onChange={(e) => setCompletionNote(e.target.value)}
+//                                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+//                                     placeholder="Please provide a reason why this trip is ending prematurely..."
+//                                     value={prematureEndReason}
+//                                     onChange={(e) => {
+//                                         setPrematureEndReason(e.target.value);
+//                                         if (prematureEndError) setPrematureEndError("");
+//                                     }}
 //                                     rows="4"
 //                                 />
-//                                 <p className="text-xs text-gray-400 mt-2">
-//                                     This note will be recorded with the trip completion. You can leave it empty if not needed.
-//                                 </p>
 //                             </div>
-
-//                             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+//                             <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
 //                                 <div className="flex items-start gap-2">
-//                                     <ExclamationTriangleIcon className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-//                                     <p className="text-xs text-amber-700">
-//                                         <span className="font-semibold">Warning:</span> This action will mark the trip as completed.
-//                                         This cannot be undone. Please ensure the trip has actually been completed before proceeding.
+//                                     <ExclamationTriangleIcon className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+//                                     <p className="text-xs text-red-700">
+//                                         <span className="font-semibold">Warning:</span> This action will end the trip immediately and cancel all active bookings.
 //                                     </p>
 //                                 </div>
 //                             </div>
 //                         </div>
-
-//                         {/* Modal Footer */}
 //                         <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end gap-3">
 //                             <button
 //                                 onClick={() => {
-//                                     setShowCompleteModal(false);
-//                                     setCompletionNote("");
-//                                     setCompletionError("");
+//                                     setShowPrematureEndModal(false);
+//                                     setPrematureEndReason("");
+//                                     setPrematureEndError("");
 //                                 }}
 //                                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
 //                             >
 //                                 Cancel
 //                             </button>
 //                             <button
-//                                 onClick={completeTripManually}
-//                                 disabled={completingTrip}
-//                                 className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+//                                 onClick={prematureEndTrip}
+//                                 disabled={endingTrip}
+//                                 className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 //                             >
-//                                 {completingTrip ? (
+//                                 {endingTrip ? (
 //                                     <>
 //                                         <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-//                                         Completing...
+//                                         Ending Trip...
 //                                     </>
 //                                 ) : (
 //                                     <>
-//                                         <FlagIcon className="h-4 w-4" />
-//                                         Complete Trip
+//                                         <ExclamationTriangleIcon className="h-4 w-4" />
+//                                         End Trip Prematurely
 //                                     </>
 //                                 )}
 //                             </button>
@@ -897,11 +1489,129 @@
 //                 </div>
 //             )}
 
-//             {/* PASSENGER DETAILS MODAL */}
+//             {/* MANUAL COMPLETION MODAL */}
+//             {showCompleteModal && selectedTrip && (
+//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCompleteModal(false)}>
+//                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
+//                         <div className={`px-6 py-4 ${completionError?.title?.includes("Passengers")
+//                             ? "bg-amber-600"
+//                             : "bg-gradient-to-r from-emerald-600 to-emerald-700"}`}>
+//                             <div className="flex items-center gap-3">
+//                                 <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center">
+//                                     {completionError?.title?.includes("Passengers") ? (
+//                                         <ExclamationTriangleIcon className="h-5 w-5 text-white" />
+//                                     ) : (
+//                                         <FlagIcon className="h-5 w-5 text-white" />
+//                                     )}
+//                                 </div>
+//                                 <div>
+//                                     <h2 className="text-lg font-bold text-white">
+//                                         {completionError?.title?.includes("Passengers") ? "Cannot Complete Trip" : "Complete Trip"}
+//                                     </h2>
+//                                     <p className="text-emerald-100 text-xs">{selectedTrip.route?.name}</p>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                         <div className="p-6">
+//                             {completionError && (
+//                                 <div className={`mb-4 p-4 rounded-xl ${completionError.title?.includes("Passengers")
+//                                     ? "bg-amber-50 border border-amber-200"
+//                                     : "bg-red-50 border border-red-200"}`}>
+//                                     <div className="flex items-start gap-3">
+//                                         {completionError.title?.includes("Passengers") ? (
+//                                             <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+//                                         ) : (
+//                                             <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+//                                         )}
+//                                         <div className="flex-1">
+//                                             <p className={`text-sm font-semibold ${completionError.title?.includes("Passengers") ? "text-amber-800" : "text-red-800"}`}>
+//                                                 {completionError.title || "Error"}
+//                                             </p>
+//                                             <p className={`text-sm mt-1 ${completionError.title?.includes("Passengers") ? "text-amber-700" : "text-red-600"}`}>
+//                                                 {completionError.message}
+//                                             </p>
+//                                             {completionError.title?.includes("Passengers") && (
+//                                                 <div className="mt-3">
+//                                                     <button
+//                                                         onClick={() => {
+//                                                             setShowCompleteModal(false);
+//                                                             setCompletionError(null);
+//                                                             setCompletionNote("");
+//                                                         }}
+//                                                         className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-colors"
+//                                                     >
+//                                                         Close
+//                                                     </button>
+//                                                 </div>
+//                                             )}
+//                                         </div>
+//                                     </div>
+//                                 </div>
+//                             )}
+//                             {(!completionError || !completionError.title?.includes("Passengers")) ? (
+//                                 <>
+//                                     <div className="mb-4">
+//                                         <label className="block text-sm font-medium text-gray-700 mb-2">
+//                                             Completion Note (Optional)
+//                                         </label>
+//                                         <textarea
+//                                             className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+//                                             placeholder="Add a note about why this trip is being completed..."
+//                                             value={completionNote}
+//                                             onChange={(e) => setCompletionNote(e.target.value)}
+//                                             rows="4"
+//                                         />
+//                                     </div>
+//                                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+//                                         <div className="flex items-start gap-2">
+//                                             <ExclamationTriangleIcon className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+//                                             <p className="text-xs text-amber-700">
+//                                                 <span className="font-semibold">Warning:</span> This action will mark the trip as completed.
+//                                             </p>
+//                                         </div>
+//                                     </div>
+//                                 </>
+//                             ) : null}
+//                         </div>
+//                         {(!completionError || !completionError.title?.includes("Passengers")) && (
+//                             <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end gap-3">
+//                                 <button
+//                                     onClick={() => {
+//                                         setShowCompleteModal(false);
+//                                         setCompletionNote("");
+//                                         setCompletionError(null);
+//                                     }}
+//                                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+//                                 >
+//                                     Cancel
+//                                 </button>
+//                                 <button
+//                                     onClick={completeTripManually}
+//                                     disabled={completingTrip}
+//                                     className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+//                                 >
+//                                     {completingTrip ? (
+//                                         <>
+//                                             <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+//                                             Completing...
+//                                         </>
+//                                     ) : (
+//                                         <>
+//                                             <FlagIcon className="h-4 w-4" />
+//                                             Complete Trip
+//                                         </>
+//                                     )}
+//                                 </button>
+//                             </div>
+//                         )}
+//                     </div>
+//                 </div>
+//             )}
+
+//             {/* PASSENGER DETAILS MODAL - UPDATED */}
 //             {showPassengerModal && selectedPassenger && (
 //                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowPassengerModal(false)}>
 //                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
-//                         {/* Modal Header */}
 //                         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
 //                             <div className="flex items-center gap-3">
 //                                 <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -919,8 +1629,6 @@
 //                                 <XMarkIcon className="h-6 w-6" />
 //                             </button>
 //                         </div>
-
-//                         {/* Modal Content */}
 //                         <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
 //                             {loadingPassenger ? (
 //                                 <div className="flex items-center justify-center py-12">
@@ -929,7 +1637,6 @@
 //                                 </div>
 //                             ) : passengerDetails ? (
 //                                 <div className="space-y-6">
-//                                     {/* Profile Section */}
 //                                     <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-6 border border-indigo-100">
 //                                         <div className="flex items-start gap-6">
 //                                             <div className="relative">
@@ -945,7 +1652,7 @@
 //                                                             if (parent) {
 //                                                                 const fallback = document.createElement('div');
 //                                                                 fallback.className = "h-24 w-24 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-lg";
-//                                                                 fallback.innerHTML = `<span class="text-3xl font-bold text-white">${passengerDetails.profile?.full_name?.charAt(0) || "?"}</span>`;
+//                                                                 fallback.innerHTML = `<span className="text-3xl font-bold text-white">${passengerDetails.profile?.full_name?.charAt(0) || "?"}</span>`;
 //                                                                 parent.appendChild(fallback);
 //                                                             }
 //                                                         }}
@@ -986,7 +1693,89 @@
 //                                         </div>
 //                                     </div>
 
-//                                     {/* Statistics Cards */}
+//                                     {/* Booking History with Stops */}
+//                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+//                                         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+//                                             <h3 className="font-semibold text-gray-800">Booking History</h3>
+//                                             <p className="text-xs text-gray-500 mt-1">All passenger bookings with stop details</p>
+//                                         </div>
+//                                         <div className="overflow-x-auto">
+//                                             <table className="w-full text-sm">
+//                                                 <thead className="bg-gray-50">
+//                                                     <tr>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pickup Stop</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dropoff Stop</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actual Drop</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fare</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+//                                                     </tr>
+//                                                 </thead>
+//                                                 <tbody className="divide-y divide-gray-100">
+//                                                     {passengerDetails.booking_history?.bookings?.map((booking, idx) => (
+//                                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
+//                                                             <td className="px-4 py-3">
+//                                                                 <p className="text-xs font-mono text-gray-600">{booking.booking_id?.slice(0, 13)}...</p>
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 <div className="flex items-center gap-1">
+//                                                                     <span className="text-green-600">🚏</span>
+//                                                                     <p className="text-sm text-gray-800">{booking.pickup_stop?.name || "N/A"}</p>
+//                                                                 </div>
+//                                                                 {booking.pickup_stop?.sequence && (
+//                                                                     <p className="text-xs text-gray-400">Stop #{booking.pickup_stop.sequence}</p>
+//                                                                 )}
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 <div className="flex items-center gap-1">
+//                                                                     <span className="text-red-600">📍</span>
+//                                                                     <p className="text-sm text-gray-800">{booking.dropoff_stop?.name || "N/A"}</p>
+//                                                                 </div>
+//                                                                 {booking.dropoff_stop?.sequence && (
+//                                                                     <p className="text-xs text-gray-400">Stop #{booking.dropoff_stop.sequence}</p>
+//                                                                 )}
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 {booking.actual_drop_stop_name ? (
+//                                                                     <div>
+//                                                                         <p className="text-sm text-blue-600">{booking.actual_drop_stop_name}</p>
+//                                                                         {booking.actual_dropped_at && (
+//                                                                             <p className="text-xs text-gray-400">{new Date(booking.actual_dropped_at).toLocaleTimeString()}</p>
+//                                                                         )}
+//                                                                     </div>
+//                                                                 ) : (
+//                                                                     <span className="text-xs text-gray-400">Not dropped</span>
+//                                                                 )}
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 <p className="font-medium text-gray-900">₹{booking.fare?.toLocaleString() || 0}</p>
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+//                                                                     booking.status === "cancelled" ? "bg-red-100 text-red-700" :
+//                                                                         "bg-amber-100 text-amber-700"
+//                                                                     }`}>
+//                                                                     {booking.status}
+//                                                                 </span>
+//                                                             </td>
+//                                                             <td className="px-4 py-3">
+//                                                                 <p className="text-xs text-gray-500">{new Date(booking.created_at).toLocaleDateString("en-IN")}</p>
+//                                                                 <p className="text-xs text-gray-400">{new Date(booking.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
+//                                                             </td>
+//                                                         </tr>
+//                                                     ))}
+//                                                 </tbody>
+//                                             </table>
+//                                         </div>
+//                                         {(!passengerDetails.booking_history?.bookings || passengerDetails.booking_history.bookings.length === 0) && (
+//                                             <div className="text-center py-8">
+//                                                 <p className="text-gray-400 text-sm">No booking history found</p>
+//                                             </div>
+//                                         )}
+//                                     </div>
+
+//                                     {/* Stats Cards */}
 //                                     <div className="grid grid-cols-3 gap-4">
 //                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
 //                                             <p className="text-xs text-gray-500 uppercase tracking-wide">Total Bookings</p>
@@ -1007,65 +1796,6 @@
 //                                             </p>
 //                                         </div>
 //                                     </div>
-
-//                                     {/* Booking History */}
-//                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-//                                         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-//                                             <h3 className="font-semibold text-gray-800">Booking History</h3>
-//                                             <p className="text-xs text-gray-500 mt-1">All passenger bookings</p>
-//                                         </div>
-//                                         <div className="overflow-x-auto">
-//                                             <table className="w-full text-sm">
-//                                                 <thead className="bg-gray-50">
-//                                                     <tr>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pickup</th>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dropoff</th>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fare</th>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-//                                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-//                                                     </tr>
-//                                                 </thead>
-//                                                 <tbody className="divide-y divide-gray-100">
-//                                                     {passengerDetails.booking_history?.bookings?.map((booking, idx) => (
-//                                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
-//                                                             <td className="px-4 py-3">
-//                                                                 <p className="text-xs font-mono text-gray-600">{booking.booking_id?.slice(0, 13)}...</p>
-//                                                             </td>
-//                                                             <td className="px-4 py-3">
-//                                                                 <p className="text-sm text-gray-800">{booking.pickup_stop?.name || "N/A"}</p>
-//                                                             </td>
-//                                                             <td className="px-4 py-3">
-//                                                                 <p className="text-sm text-gray-800">{booking.dropoff_stop?.name || "N/A"}</p>
-//                                                             </td>
-//                                                             <td className="px-4 py-3">
-//                                                                 <p className="font-medium text-gray-900">₹{booking.fare?.toLocaleString() || 0}</p>
-//                                                             </td>
-//                                                             <td className="px-4 py-3">
-//                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "completed"
-//                                                                     ? "bg-emerald-100 text-emerald-700"
-//                                                                     : booking.status === "cancelled"
-//                                                                         ? "bg-red-100 text-red-700"
-//                                                                         : "bg-amber-100 text-amber-700"
-//                                                                     }`}>
-//                                                                     {booking.status}
-//                                                                 </span>
-//                                                             </td>
-//                                                             <td className="px-4 py-3">
-//                                                                 <p className="text-xs text-gray-500">{new Date(booking.created_at).toLocaleDateString("en-IN")}</p>
-//                                                                 <p className="text-xs text-gray-400">{new Date(booking.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
-//                                                             </td>
-//                                                         </tr>
-//                                                     ))}
-//                                                 </tbody>
-//                                             </table>
-//                                         </div>
-//                                         {(!passengerDetails.booking_history?.bookings || passengerDetails.booking_history.bookings.length === 0) && (
-//                                             <div className="text-center py-8">
-//                                                 <p className="text-gray-400 text-sm">No booking history found</p>
-//                                             </div>
-//                                         )}
-//                                     </div>
 //                                 </div>
 //                             ) : (
 //                                 <div className="text-center py-12">
@@ -1075,8 +1805,6 @@
 //                                 </div>
 //                             )}
 //                         </div>
-
-//                         {/* Modal Footer */}
 //                         <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end">
 //                             <button
 //                                 onClick={() => setShowPassengerModal(false)}
@@ -1109,13 +1837,181 @@ import {
     EnvelopeIcon,
     CalendarDaysIcon,
     CurrencyRupeeIcon,
-    FlagIcon
+    FlagIcon,
+    MapPinIcon,
+    SignalIcon,
+    ArrowRightIcon
 } from "@heroicons/react/24/solid";
 import {
     ArrowPathIcon,
     MagnifyingGlassIcon,
     XMarkIcon
 } from "@heroicons/react/24/outline";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Polyline } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix Leaflet icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+// Custom bus icon
+const busIcon = new L.Icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [1, -34],
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+    shadowSize: [41, 41],
+});
+
+// Stop marker icon - different colors based on status
+const getStopIcon = (isCurrent = false, isPassed = false) => {
+    let color = "green";
+    if (isCurrent) color = "blue";
+    else if (isPassed) color = "gray";
+
+    return new L.Icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+        shadowSize: [41, 41],
+    });
+};
+
+// Function to calculate distance between two coordinates (Haversine formula)
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+// Function to find nearest stop and determine if driver has arrived
+const findNearestStopWithArrival = (currentLat, currentLng, stops) => {
+    if (!stops || stops.length === 0) return null;
+
+    let nearestStop = null;
+    let minDistance = Infinity;
+
+    for (const stop of stops) {
+        const stopLat = stop.latitude || stop.lat;
+        const stopLng = stop.longitude || stop.lng;
+
+        if (stopLat && stopLng) {
+            const distance = calculateDistance(
+                currentLat, currentLng,
+                parseFloat(stopLat), parseFloat(stopLng)
+            );
+            if (distance < minDistance) {
+                minDistance = distance;
+                const distanceInMeters = distance * 1000;
+                nearestStop = {
+                    ...stop,
+                    id: stop.id || stop.stop_id,
+                    stop_name: stop.stop_name || stop.name,
+                    sequence: stop.sequence || stop.stop_sequence || 0,
+                    distance_km: distance,
+                    distance_meters: distanceInMeters,
+                    has_arrived: distanceInMeters <= 50,
+                    is_approaching: distanceInMeters > 50 && distanceInMeters <= 200,
+                    eta_minutes: Math.ceil(distanceInMeters / 200)
+                };
+            }
+        }
+    }
+
+    return nearestStop;
+};
+
+// Function to get location name from coordinates using reverse geocoding
+const getLocationName = async (lat, lng) => {
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+            {
+                headers: {
+                    'User-Agent': 'ShuttleApp/1.0'
+                }
+            }
+        );
+        const data = await response.json();
+
+        if (data && data.display_name) {
+            const address = data.address;
+            let locationName = "";
+
+            if (address.road) locationName += address.road;
+            if (address.suburb) locationName += locationName ? `, ${address.suburb}` : address.suburb;
+            if (address.city) locationName += locationName ? `, ${address.city}` : address.city;
+
+            return locationName || data.display_name.split(',')[0];
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting location name:", error);
+        return null;
+    }
+};
+
+// Helper function to group and sort bookings by date
+const groupAndSortBookingsByDate = (bookings) => {
+    if (!bookings || bookings.length === 0) return [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const grouped = {
+        today: [],
+        yesterday: [],
+        older: []
+    };
+    
+    bookings.forEach(booking => {
+        const bookingDate = new Date(booking.created_at);
+        bookingDate.setHours(0, 0, 0, 0);
+        
+        if (bookingDate.getTime() === today.getTime()) {
+            grouped.today.push(booking);
+        } else if (bookingDate.getTime() === yesterday.getTime()) {
+            grouped.yesterday.push(booking);
+        } else {
+            grouped.older.push(booking);
+        }
+    });
+    
+    // Sort each group by date (newest first)
+    grouped.today.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    grouped.yesterday.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    grouped.older.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    const result = [];
+    
+    if (grouped.today.length > 0) {
+        result.push({ title: "Today", bookings: grouped.today });
+    }
+    if (grouped.yesterday.length > 0) {
+        result.push({ title: "Yesterday", bookings: grouped.yesterday });
+    }
+    if (grouped.older.length > 0) {
+        result.push({ title: "Previous Bookings", bookings: grouped.older });
+    }
+    
+    return result;
+};
 
 const TripDetailsPage = () => {
     const BASE_URL = "https://be.shuttleapp.transev.site/admin";
@@ -1139,6 +2035,18 @@ const TripDetailsPage = () => {
     const [statusFilter, setStatusFilter] = useState("all");
     const [tripLoadError, setTripLoadError] = useState(null);
 
+    // Live tracking states
+    const [liveTracking, setLiveTracking] = useState(null);
+    const [trackingLoading, setTrackingLoading] = useState(false);
+    const [trackingError, setTrackingError] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [currentStop, setCurrentStop] = useState(null);
+    const [locationName, setLocationName] = useState(null);
+    const [routeStops, setRouteStops] = useState([]);
+    const [routeCoordinates, setRouteCoordinates] = useState([]);
+    const [syncing, setSyncing] = useState(false);
+    const [passedStopIds, setPassedStopIds] = useState([]);
+
     // Premature end states
     const [showPrematureEndModal, setShowPrematureEndModal] = useState(false);
     const [prematureEndReason, setPrematureEndReason] = useState("");
@@ -1149,7 +2057,7 @@ const TripDetailsPage = () => {
     const [showCompleteModal, setShowCompleteModal] = useState(false);
     const [completionNote, setCompletionNote] = useState("");
     const [completingTrip, setCompletingTrip] = useState(false);
-    const [completionError, setCompletionError] = useState("");
+    const [completionError, setCompletionError] = useState(null);
 
     // Passenger modal states
     const [selectedPassenger, setSelectedPassenger] = useState(null);
@@ -1157,19 +2065,86 @@ const TripDetailsPage = () => {
     const [loadingPassenger, setLoadingPassenger] = useState(false);
     const [passengerDetails, setPassengerDetails] = useState(null);
 
+    // Fetch route stops
+    const fetchRouteStops = async (routeId) => {
+        if (!routeId) return [];
+        try {
+            const response = await axios.get(`${BASE_URL}/routes/${routeId}/stops`, axiosConfig);
+            console.log("Route stops:", response.data);
+            return response.data || [];
+        } catch (err) {
+            console.error("Error fetching route stops:", err);
+            return [];
+        }
+    };
+
+    // Fetch live tracking status
+    const fetchLiveTracking = useCallback(async (tripId, showLoading = true) => {
+        if (!tripId) return;
+
+        if (showLoading) {
+            setSyncing(true);
+        }
+        setTrackingError(null);
+
+        try {
+            const url = `${BASE_URL}/trip/${tripId}/status-only`;
+            console.log("Fetching live tracking from:", url);
+            const response = await axios.get(url, axiosConfig);
+            console.log("Live tracking response:", response.data);
+            setLiveTracking(response.data);
+            setLastUpdated(new Date());
+
+            if (response.data.last_known_location) {
+                const name = await getLocationName(
+                    response.data.last_known_location.lat,
+                    response.data.last_known_location.lng
+                );
+                setLocationName(name);
+            }
+
+            if (routeStops.length > 0 && response.data.last_known_location) {
+                const nearest = findNearestStopWithArrival(
+                    response.data.last_known_location.lat,
+                    response.data.last_known_location.lng,
+                    routeStops
+                );
+                setCurrentStop(nearest);
+
+                if (nearest && nearest.has_arrived) {
+                    setPassedStopIds(prev => {
+                        if (!prev.includes(nearest.id)) {
+                            return [...prev, nearest.id];
+                        }
+                        return prev;
+                    });
+                }
+
+                console.log("Current stop info:", nearest);
+            }
+        } catch (err) {
+            console.error("Error fetching live tracking:", err);
+            if (err.response?.status === 404) {
+                setTrackingError("Trip not found or tracking not available");
+            } else if (err.response?.status === 401) {
+                setTrackingError("Authentication failed. Please login again.");
+            } else {
+                setTrackingError("Unable to fetch bus location");
+            }
+            setLiveTracking(null);
+        } finally {
+            if (showLoading) {
+                setSyncing(false);
+            }
+        }
+    }, [BASE_URL, axiosConfig, routeStops]);
+
     const fetchTrips = async () => {
         setLoadingTrips(true);
         setTripLoadError(null);
         try {
             console.log("Fetching trips from:", `${BASE_URL}/trips/monitor`);
-            const res = await axios.get(`${BASE_URL}/trips/monitor`, {
-                ...axiosConfig,
-                headers: {
-                    ...axiosConfig.headers,
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
+            const res = await axios.get(`${BASE_URL}/trips/monitor`, axiosConfig);
             console.log("Trips fetched successfully:", res.data);
             setTrips(res.data);
         } catch (err) {
@@ -1194,26 +2169,27 @@ const TripDetailsPage = () => {
         try {
             const url = `${BASE_URL}/trips/${trip_id}`;
             console.log("Fetching trip details from:", url);
-            console.log("Using token:", token ? "Token exists" : "No token");
-
-            const response = await axios.get(url, {
-                ...axiosConfig,
-                headers: {
-                    ...axiosConfig.headers,
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
-            });
-
+            const response = await axios.get(url, axiosConfig);
             console.log("Trip details response:", response.data);
             setSelectedTrip(response.data);
+
+            if (response.data.route?.id) {
+                const stops = await fetchRouteStops(response.data.route.id);
+                setRouteStops(stops);
+
+                const coords = stops
+                    .filter(stop => (stop.latitude || stop.lat) && (stop.longitude || stop.lng))
+                    .map(stop => [parseFloat(stop.latitude || stop.lat), parseFloat(stop.longitude || stop.lng)]);
+                setRouteCoordinates(coords);
+            }
+
+            setLiveTracking(null);
+            setCurrentStop(null);
+            setLocationName(null);
+            setTrackingError(null);
+            setPassedStopIds([]);
         } catch (err) {
             console.error("Error fetching trip details:", err);
-            console.error("Error response:", err.response);
-            console.error("Error status:", err.response?.status);
-            console.error("Error data:", err.response?.data);
-
             let errorMessage = "Failed to load trip details";
             if (err.response?.status === 401) {
                 errorMessage = "Authentication failed. Please login again.";
@@ -1222,13 +2198,21 @@ const TripDetailsPage = () => {
             } else if (err.response?.status === 403) {
                 errorMessage = "You don't have permission to view this trip.";
             }
-
             setTripLoadError(errorMessage);
             alert(errorMessage);
         } finally {
             setLoading(false);
         }
-    }, [axiosConfig, token]);
+    }, [axiosConfig]);
+
+    const handleSyncLocation = async () => {
+        if (selectedTrip?.trip_id && selectedTrip.status === "in_progress") {
+            await fetchLiveTracking(selectedTrip.trip_id, true);
+        } else if (selectedTrip?.status !== "in_progress") {
+            setTrackingError("Trip is not in progress. Live tracking only available for active trips.");
+            setTimeout(() => setTrackingError(null), 3000);
+        }
+    };
 
     const fetchPassengerDetails = async (passengerId) => {
         if (!passengerId || passengerId === 'undefined') {
@@ -1241,14 +2225,7 @@ const TripDetailsPage = () => {
         try {
             const url = `${BASE_URL}/passenger/${passengerId}`;
             console.log("Fetching passenger details from:", url);
-            const res = await axios.get(url, {
-                ...axiosConfig,
-                headers: {
-                    ...axiosConfig.headers,
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
+            const res = await axios.get(url, axiosConfig);
             console.log("Passenger details:", res.data);
             setPassengerDetails(res.data);
         } catch (err) {
@@ -1292,14 +2269,7 @@ const TripDetailsPage = () => {
             await axios.patch(
                 url,
                 { reason: cancelReason },
-                {
-                    ...axiosConfig,
-                    headers: {
-                        ...axiosConfig.headers,
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                }
+                axiosConfig
             );
             alert("✅ Trip cancelled successfully");
             await fetchTrips();
@@ -1308,13 +2278,10 @@ const TripDetailsPage = () => {
             setCancelError("");
         } catch (err) {
             console.error("Error cancelling trip:", err);
-
             let errorMessage = "Failed to cancel trip";
-
             if (err.response) {
                 const statusCode = err.response.status;
                 const errorData = err.response.data;
-
                 if (errorData?.detail) {
                     errorMessage = errorData.detail;
                 } else if (typeof errorData === 'string') {
@@ -1322,10 +2289,7 @@ const TripDetailsPage = () => {
                 } else if (errorData?.message) {
                     errorMessage = errorData.message;
                 }
-
-                if (statusCode === 400) {
-                    errorMessage = `❌ ${errorMessage}`;
-                } else if (statusCode === 401) {
+                if (statusCode === 401) {
                     errorMessage = "❌ Unauthorized. Please login again.";
                 } else if (statusCode === 403) {
                     errorMessage = "❌ You don't have permission to cancel this trip.";
@@ -1335,94 +2299,71 @@ const TripDetailsPage = () => {
             } else if (err.request) {
                 errorMessage = "❌ Network error. Please check your connection.";
             }
-
             setCancelError(errorMessage);
         }
     };
 
-    // Premature end function
-
-const prematureEndTrip = async () => {
-    if (!prematureEndReason) {
-        setPrematureEndError("Please provide a reason for ending the trip prematurely");
-        return;
-    }
-
-    setPrematureEndError("");
-    setEndingTrip(true);
-
-    try {
-        const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/premature-end`;
-        console.log("Ending trip prematurely:", url);
-        
-        const response = await axios.post(url, {
-            reason: prematureEndReason
-        }, {
-            ...axiosConfig,
-            headers: {
-                ...axiosConfig.headers,
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
-
-        console.log("Premature end response:", response.data);
-
-        if (response.data?.status === "success") {
-            alert(`✅ Trip ended prematurely!\nCancelled bookings: ${response.data.cancelled_bookings || 0}\nTrip status: ${response.data.trip_status}`);
-            setShowPrematureEndModal(false);
-            setPrematureEndReason("");
-            
-            // Refresh the trips list
-            await fetchTrips();
-            
-            // IMPORTANT: Refresh the selected trip details to get updated actual_end
-            if (selectedTrip) {
-                await fetchTripDetails(selectedTrip.trip_id);
-            }
-        } else {
-            throw new Error("Unexpected response from server");
-        }
-    } catch (err) {
-        console.error("Error ending trip prematurely:", err);
-
-        let errorMessage = "Failed to end trip prematurely";
-
-        if (err.response) {
-            const statusCode = err.response.status;
-            const errorData = err.response.data;
-
-            if (errorData?.detail) {
-                errorMessage = errorData.detail;
-            } else if (typeof errorData === 'string') {
-                errorMessage = errorData;
-            } else if (errorData?.message) {
-                errorMessage = errorData.message;
-            }
-
-            if (statusCode === 400) {
-                errorMessage = `❌ ${errorMessage}`;
-            } else if (statusCode === 401) {
-                errorMessage = "❌ Unauthorized. Please login again.";
-            } else if (statusCode === 403) {
-                errorMessage = "❌ You don't have permission to end this trip.";
-            } else if (statusCode === 404) {
-                errorMessage = "❌ Trip not found.";
-            }
-        } else if (err.request) {
-            errorMessage = "❌ Network error. Please check your connection.";
+    const prematureEndTrip = async () => {
+        if (!prematureEndReason) {
+            setPrematureEndError("Please provide a reason for ending the trip prematurely");
+            return;
         }
 
-        setPrematureEndError(errorMessage);
-    } finally {
-        setEndingTrip(false);
-    }
-};
+        setPrematureEndError("");
+        setEndingTrip(true);
 
-    // Manual completion function
+        try {
+            const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/premature-end`;
+            console.log("Ending trip prematurely:", url);
+
+            const response = await axios.post(url, {
+                reason: prematureEndReason
+            }, axiosConfig);
+
+            console.log("Premature end response:", response.data);
+
+            if (response.data?.status === "success") {
+                alert(`✅ Trip ended prematurely!\nCancelled bookings: ${response.data.cancelled_bookings || 0}\nTrip status: ${response.data.trip_status}`);
+                setShowPrematureEndModal(false);
+                setPrematureEndReason("");
+                await fetchTrips();
+                if (selectedTrip) {
+                    await fetchTripDetails(selectedTrip.trip_id);
+                }
+            } else {
+                throw new Error("Unexpected response from server");
+            }
+        } catch (err) {
+            console.error("Error ending trip prematurely:", err);
+            let errorMessage = "Failed to end trip prematurely";
+            if (err.response) {
+                const statusCode = err.response.status;
+                const errorData = err.response.data;
+                if (errorData?.detail) {
+                    errorMessage = errorData.detail;
+                } else if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                } else if (errorData?.message) {
+                    errorMessage = errorData.message;
+                }
+                if (statusCode === 401) {
+                    errorMessage = "❌ Unauthorized. Please login again.";
+                } else if (statusCode === 403) {
+                    errorMessage = "❌ You don't have permission to end this trip.";
+                } else if (statusCode === 404) {
+                    errorMessage = "❌ Trip not found.";
+                }
+            } else if (err.request) {
+                errorMessage = "❌ Network error. Please check your connection.";
+            }
+            setPrematureEndError(errorMessage);
+        } finally {
+            setEndingTrip(false);
+        }
+    };
+
     const completeTripManually = async () => {
-        setCompletionError("");
+        setCompletionError(null);
 
         try {
             setCompletingTrip(true);
@@ -1430,14 +2371,7 @@ const prematureEndTrip = async () => {
             const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/complete-manually`;
             console.log("Completing trip:", url);
 
-            const response = await axios.post(url, requestBody, {
-                ...axiosConfig,
-                headers: {
-                    ...axiosConfig.headers,
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
+            const response = await axios.post(url, requestBody, axiosConfig);
 
             console.log("Complete trip response:", response.data);
 
@@ -1460,14 +2394,17 @@ const prematureEndTrip = async () => {
             }
         } catch (err) {
             console.error("Error completing trip:", err);
-
             let errorMessage = "Failed to complete trip";
+            let errorTitle = "Cannot Complete Trip";
 
             if (err.response) {
                 const statusCode = err.response.status;
                 const errorData = err.response.data;
 
-                if (errorData?.detail) {
+                if (errorData?.detail?.error === "passengers_still_on_board") {
+                    errorTitle = "⚠️ Passengers Still On Board";
+                    errorMessage = errorData.detail?.message || "Cannot complete the trip while passengers are still on board. Please ensure all passengers have disembarked before completing the trip.";
+                } else if (errorData?.detail) {
                     errorMessage = errorData.detail;
                 } else if (typeof errorData === 'string') {
                     errorMessage = errorData;
@@ -1475,20 +2412,22 @@ const prematureEndTrip = async () => {
                     errorMessage = errorData.message;
                 }
 
-                if (statusCode === 400) {
-                    errorMessage = `❌ ${errorMessage}`;
-                } else if (statusCode === 401) {
+                if (statusCode === 401) {
                     errorMessage = "❌ Unauthorized. Please login again.";
+                    errorTitle = "Authentication Error";
                 } else if (statusCode === 403) {
                     errorMessage = "❌ You don't have permission to complete this trip.";
+                    errorTitle = "Permission Denied";
                 } else if (statusCode === 404) {
                     errorMessage = "❌ Trip not found.";
+                    errorTitle = "Not Found";
                 }
             } else if (err.request) {
                 errorMessage = "❌ Network error. Please check your connection.";
+                errorTitle = "Network Error";
             }
 
-            setCompletionError(errorMessage);
+            setCompletionError({ title: errorTitle, message: errorMessage });
         } finally {
             setCompletingTrip(false);
         }
@@ -1517,9 +2456,7 @@ const prematureEndTrip = async () => {
 
     const getDelayTag = (planned, actual) => {
         if (!planned || !actual) return { label: "Not started", color: "text-gray-400", bg: "bg-gray-50" };
-
         const diff = (new Date(actual) - new Date(planned)) / 60000;
-
         if (diff <= 5 && diff >= -5) {
             return { label: "On Time", color: "text-emerald-600", bg: "bg-emerald-50" };
         } else if (diff > 5) {
@@ -1531,28 +2468,14 @@ const prematureEndTrip = async () => {
 
     const getCriticalAlert = () => {
         if (!selectedTrip) return null;
-
-        const startDelay = getDelayTag(
-            selectedTrip?.timing?.planned_start,
-            selectedTrip?.timing?.actual_start
-        );
-
-        const endDelay = getDelayTag(
-            selectedTrip?.timing?.planned_end,
-            selectedTrip?.timing?.actual_end
-        );
-
-        if (
-            startDelay?.label?.includes("Critical") ||
-            endDelay?.label?.includes("Critical")
-        ) {
+        const startDelay = getDelayTag(selectedTrip?.timing?.planned_start, selectedTrip?.timing?.actual_start);
+        const endDelay = getDelayTag(selectedTrip?.timing?.planned_end, selectedTrip?.timing?.actual_end);
+        if (startDelay?.label?.includes("Critical") || endDelay?.label?.includes("Critical")) {
             return "⚠️ Trip is critically delayed";
         }
-
         return null;
     };
 
-    // Filter trips based on search and status
     const filteredTrips = trips.filter(trip => {
         const matchesSearch = trip.route_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             trip.driver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1604,7 +2527,6 @@ const prematureEndTrip = async () => {
                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                                 <h2 className="text-lg font-bold text-gray-800">Active Trips</h2>
                                 <p className="text-xs text-gray-500 mt-1">{filteredTrips.length} trips available</p>
-
                                 <div className="mt-4 relative">
                                     <input
                                         type="text"
@@ -1615,7 +2537,6 @@ const prematureEndTrip = async () => {
                                     />
                                     <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                                 </div>
-
                                 <div className="flex gap-2 mt-3 flex-wrap">
                                     {["all", "scheduled", "in_progress", "completed", "cancelled", "premature_end"].map((status) => (
                                         <button
@@ -1714,7 +2635,313 @@ const prematureEndTrip = async () => {
                                         </div>
                                     </div>
 
-                                    {/* STATS GRID - 4 columns */}
+                                    {/* LIVE TRACKING SECTION */}
+                                    {selectedTrip.status === "in_progress" && (
+                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white flex justify-between items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <SignalIcon className="h-5 w-5 text-blue-600" />
+                                                    <h3 className="font-semibold text-gray-800">Live Bus Tracking</h3>
+                                                </div>
+                                                <button
+                                                    onClick={handleSyncLocation}
+                                                    disabled={syncing}
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
+                                                >
+                                                    <ArrowPathIcon className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                                                    {syncing ? "Syncing..." : "Sync Location"}
+                                                </button>
+                                            </div>
+                                            <div className="p-5">
+                                                {!liveTracking && !trackingError && (
+                                                    <div className="text-center py-8">
+                                                        <TruckIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                                                        <p className="text-gray-500">Click "Sync Location" to see current bus position</p>
+                                                        <button
+                                                            onClick={handleSyncLocation}
+                                                            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                                                        >
+                                                            Sync Now
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {trackingError && (
+                                                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+                                                        <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                                                        <p className="text-yellow-700 text-sm">{trackingError}</p>
+                                                        <button
+                                                            onClick={handleSyncLocation}
+                                                            className="mt-3 px-4 py-1.5 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-all"
+                                                        >
+                                                            Try Again
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {liveTracking && (
+                                                    <div className="space-y-4">
+                                                        <div className={`rounded-xl p-5 border ${currentStop?.has_arrived
+                                                            ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+                                                            : currentStop?.is_approaching
+                                                                ? "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200"
+                                                                : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+                                                            }`}>
+                                                            <div className="flex items-start gap-3">
+                                                                <div className={`p-3 rounded-full ${currentStop?.has_arrived ? "bg-green-100" :
+                                                                    currentStop?.is_approaching ? "bg-yellow-100" : "bg-blue-100"
+                                                                    }`}>
+                                                                    <MapPinIcon className={`h-6 w-6 ${currentStop?.has_arrived ? "text-green-600" :
+                                                                        currentStop?.is_approaching ? "text-yellow-600" : "text-blue-600"
+                                                                        }`} />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <p className="text-xs text-gray-500 uppercase tracking-wide">
+                                                                        {currentStop?.has_arrived ? "Current Stop (Arrived)" :
+                                                                            currentStop?.is_approaching ? "Next Stop (Approaching)" :
+                                                                                "Current Location"}
+                                                                    </p>
+
+                                                                    {currentStop ? (
+                                                                        <>
+                                                                            <p className="text-xl font-bold text-gray-800 mt-1">
+                                                                                {currentStop.stop_name}
+                                                                            </p>
+                                                                            <div className="mt-2 space-y-1">
+                                                                                {currentStop.has_arrived ? (
+                                                                                    <div>
+                                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                                                                                            <CheckCircleIcon className="w-3 h-3" />
+                                                                                            ✓ Driver has arrived at this stop
+                                                                                        </span>
+                                                                                        <p className="text-xs text-green-600 mt-1">
+                                                                                            Stop #{currentStop.sequence} • Arrival confirmed
+                                                                                        </p>
+                                                                                    </div>
+                                                                                ) : currentStop.is_approaching ? (
+                                                                                    <div>
+                                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                                                                                            <ClockIcon className="w-3 h-3" />
+                                                                                            Approaching stop
+                                                                                        </span>
+                                                                                        <p className="text-xs text-yellow-600 mt-1">
+                                                                                            {currentStop.distance_meters.toFixed(0)}m away • ETA: ~{currentStop.eta_minutes} min
+                                                                                        </p>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div>
+                                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                                                                                            <TruckIcon className="w-3 h-3" />
+                                                                                            En route to next stop
+                                                                                        </span>
+                                                                                        <p className="text-xs text-blue-600 mt-1">
+                                                                                            {currentStop.distance_meters.toFixed(0)}m to {currentStop.stop_name}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                                                                                <span>Stop #{currentStop.sequence}</span>
+                                                                                <span>•</span>
+                                                                                <span>Distance: {currentStop.distance_meters.toFixed(0)}m</span>
+                                                                            </div>
+                                                                        </>
+                                                                    ) : locationName ? (
+                                                                        <>
+                                                                            <p className="text-lg font-bold text-gray-800 mt-1">
+                                                                                {locationName}
+                                                                            </p>
+                                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                                📍 Bus is between stops
+                                                                            </p>
+                                                                        </>
+                                                                    ) : (
+                                                                        <p className="text-sm text-gray-500 mt-1">
+                                                                            Loading stop information...
+                                                                        </p>
+                                                                    )}
+                                                                    {lastUpdated && (
+                                                                        <p className="text-xs text-gray-400 mt-2">
+                                                                            Last synced: {lastUpdated.toLocaleTimeString()}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                            <div className="bg-blue-50 rounded-lg p-3">
+                                                                <p className="text-xs text-gray-500">Trip Status</p>
+                                                                <p className="text-lg font-bold text-blue-600">
+                                                                    {liveTracking.status?.replace("_", " ").toUpperCase()}
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-green-50 rounded-lg p-3">
+                                                                <p className="text-xs text-gray-500">Driver</p>
+                                                                <p className="text-sm font-semibold text-gray-800">{liveTracking.driver_name}</p>
+                                                            </div>
+                                                            <div className="bg-purple-50 rounded-lg p-3">
+                                                                <p className="text-xs text-gray-500">Route</p>
+                                                                <p className="text-sm font-semibold text-gray-800 truncate">{liveTracking.route_name}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="rounded-xl overflow-hidden border border-gray-200">
+                                                            <div className="bg-gray-50 px-4 py-2 border-b">
+                                                                <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                                                    <MapPinIcon className="h-4 w-4 text-red-500" />
+                                                                    Route Map with Bus Location
+                                                                </p>
+                                                            </div>
+                                                            <div className="h-[400px] w-full">
+                                                                <MapContainer
+                                                                    center={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+                                                                    zoom={13}
+                                                                    className="h-full w-full"
+                                                                    style={{ background: "#f0f0f0" }}
+                                                                >
+                                                                    <TileLayer
+                                                                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                                                                    />
+
+                                                                    {routeCoordinates.length > 0 && (
+                                                                        <Polyline
+                                                                            positions={routeCoordinates}
+                                                                            color="#3b82f6"
+                                                                            weight={4}
+                                                                            opacity={0.7}
+                                                                        />
+                                                                    )}
+
+                                                                    {routeStops.map((stop, idx) => {
+                                                                        const stopLat = stop.latitude || stop.lat;
+                                                                        const stopLng = stop.longitude || stop.lng;
+                                                                        if (stopLat && stopLng) {
+                                                                            const isCurrentStop = currentStop && (currentStop.id === stop.id || currentStop.stop_name === stop.stop_name);
+                                                                            const isPassed = passedStopIds.includes(stop.id);
+                                                                            return (
+                                                                                <Marker
+                                                                                    key={idx}
+                                                                                    position={[parseFloat(stopLat), parseFloat(stopLng)]}
+                                                                                    icon={getStopIcon(isCurrentStop, isPassed)}
+                                                                                >
+                                                                                    <Popup>
+                                                                                        <div className="text-center">
+                                                                                            <p className="font-bold text-gray-800">{stop.stop_name || stop.name}</p>
+                                                                                            <p className="text-xs text-gray-500">Stop #{stop.sequence || stop.stop_sequence}</p>
+                                                                                            {isCurrentStop && currentStop?.has_arrived && (
+                                                                                                <p className="text-xs text-green-600 font-semibold mt-1">📍 Current Location (Arrived)</p>
+                                                                                            )}
+                                                                                            {isCurrentStop && !currentStop?.has_arrived && (
+                                                                                                <p className="text-xs text-blue-600 font-semibold mt-1">📍 Approaching</p>
+                                                                                            )}
+                                                                                            {isPassed && !isCurrentStop && (
+                                                                                                <p className="text-xs text-gray-500 mt-1">✓ Passed</p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </Popup>
+                                                                                </Marker>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })}
+
+                                                                    <Marker
+                                                                        position={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+                                                                        icon={busIcon}
+                                                                    >
+                                                                        <Popup>
+                                                                            <div className="text-center">
+                                                                                <p className="font-bold text-gray-800">{liveTracking.route_name}</p>
+                                                                                <p className="text-sm text-gray-600">Driver: {liveTracking.driver_name}</p>
+                                                                                <p className="text-xs text-gray-500 mt-1">
+                                                                                    Status: {liveTracking.status}
+                                                                                </p>
+                                                                                {currentStop && (
+                                                                                    <p className="text-xs text-green-600 mt-1">
+                                                                                        {currentStop.has_arrived ? `At: ${currentStop.stop_name}` : `Next: ${currentStop.stop_name}`}
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
+                                                                        </Popup>
+                                                                    </Marker>
+
+                                                                    <CircleMarker
+                                                                        center={[liveTracking.last_known_location.lat, liveTracking.last_known_location.lng]}
+                                                                        radius={50}
+                                                                        fillColor="#3b82f6"
+                                                                        color="transparent"
+                                                                        fillOpacity={0.1}
+                                                                    />
+                                                                </MapContainer>
+                                                            </div>
+                                                        </div>
+
+                                                        {routeStops.length > 0 && currentStop && (
+                                                            <div className="bg-gray-50 rounded-xl p-4">
+                                                                <p className="text-sm font-medium text-gray-700 mb-3">Stop Progress</p>
+                                                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                                                    {routeStops.map((stop, idx) => {
+                                                                        const isPassed = currentStop.sequence > stop.sequence || passedStopIds.includes(stop.id);
+                                                                        const isCurrent = currentStop.id === stop.id;
+                                                                        const isCompleted = isPassed && !isCurrent;
+                                                                        return (
+                                                                            <div key={idx} className="flex items-center">
+                                                                                <div className={`text-center ${isCompleted || isPassed ? 'text-green-600' : isCurrent ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent && currentStop?.has_arrived ? 'bg-green-500 text-white ring-4 ring-green-200' :
+                                                                                        isCurrent ? 'bg-blue-500 text-white ring-4 ring-blue-200' :
+                                                                                            isCompleted ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                                                                                        }`}>
+                                                                                        {stop.sequence}
+                                                                                    </div>
+                                                                                    <p className="text-xs mt-1 max-w-[60px] truncate">{stop.stop_name?.split(' ')[0]}</p>
+                                                                                    {isCurrent && currentStop?.has_arrived && (
+                                                                                        <p className="text-xs text-green-600">Arrived ✓</p>
+                                                                                    )}
+                                                                                </div>
+                                                                                {idx < routeStops.length - 1 && (
+                                                                                    <ArrowRightIcon className={`w-4 h-4 mx-1 ${isCompleted ? 'text-green-500' : 'text-gray-300'}`} />
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="bg-gray-50 rounded-xl p-4">
+                                                            <p className="text-sm font-medium text-gray-700 mb-3">Trip Timeline</p>
+                                                            <div className="space-y-2">
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-500">Planned Start:</span>
+                                                                    <span className="font-medium">{new Date(liveTracking.planned_times?.start).toLocaleString()}</span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-500">Actual Start:</span>
+                                                                    <span className="font-medium text-green-600">
+                                                                        {liveTracking.actual_times?.start ? new Date(liveTracking.actual_times.start).toLocaleString() : "Not started"}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-500">Planned End:</span>
+                                                                    <span className="font-medium">{new Date(liveTracking.planned_times?.end).toLocaleString()}</span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-500">Actual End:</span>
+                                                                    <span className="font-medium text-orange-600">
+                                                                        {liveTracking.actual_times?.end ? new Date(liveTracking.actual_times.end).toLocaleString() : "In progress"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* STATS GRID */}
                                     <div className="grid grid-cols-4 gap-4">
                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between">
@@ -1740,40 +2967,80 @@ const prematureEndTrip = async () => {
                                             </div>
                                         </div>
 
-                                        {(() => {
-                                            const startStatus = getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start);
-                                            return (
-                                                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Start Status</p>
-                                                            <p className={`text-lg font-bold mt-1 ${startStatus.color}`}>{startStatus.label}</p>
-                                                        </div>
-                                                        <div className={`p-2 rounded-lg ${startStatus.bg}`}>
-                                                            <ClockIcon className="h-5 w-5" />
-                                                        </div>
-                                                    </div>
+                                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Start Status</p>
+                                                    <p className={`text-lg font-bold mt-1 ${getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start).color}`}>
+                                                        {getDelayTag(selectedTrip.timing?.planned_start, selectedTrip.timing?.actual_start).label}
+                                                    </p>
                                                 </div>
-                                            );
-                                        })()}
+                                                <ClockIcon className="h-8 w-8 text-indigo-400" />
+                                            </div>
+                                        </div>
 
-                                        {(() => {
-                                            const endStatus = getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end);
-                                            return (
-                                                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <p className="text-xs text-gray-500 uppercase tracking-wide">End Status</p>
-                                                            <p className={`text-lg font-bold mt-1 ${endStatus.color}`}>{endStatus.label}</p>
-                                                        </div>
-                                                        <div className={`p-2 rounded-lg ${endStatus.bg}`}>
-                                                            <ClockIcon className="h-5 w-5" />
-                                                        </div>
-                                                    </div>
+                                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 uppercase tracking-wide">End Status</p>
+                                                    <p className={`text-lg font-bold mt-1 ${getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end).color}`}>
+                                                        {getDelayTag(selectedTrip.timing?.planned_end, selectedTrip.timing?.actual_end).label}
+                                                    </p>
                                                 </div>
-                                            );
-                                        })()}
+                                                <ClockIcon className="h-8 w-8 text-indigo-400" />
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/* ROUTE STOPS SUMMARY - NEW */}
+                                    {/* ROUTE STOPS SUMMARY - UPDATED WITH ACTUAL DROP */}
+                                    {selectedTrip.occupancy?.passengers?.length > 0 && (
+                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                                <div className="flex items-center gap-2">
+                                                    <MapPinIcon className="w-5 h-5 text-gray-600" />
+                                                    <h3 className="font-semibold text-gray-800">Passenger Pickup/Dropoff Summary</h3>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1">Stops for each passenger on this trip</p>
+                                            </div>
+                                            <div className="p-5">
+                                                <div className="space-y-3">
+                                                    {selectedTrip.occupancy.passengers.map((passenger, idx) => (
+                                                        <div key={idx} className="flex flex-col p-3 bg-gray-50 rounded-xl">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-gray-800">{passenger.name}</p>
+                                                                    <div className="flex items-center gap-2 mt-1 text-sm">
+                                                                        <span className="text-green-600">🚏 Pickup: {passenger.pickup_stop_name || 'N/A'}</span>
+                                                                        <span className="text-gray-400">→</span>
+                                                                        <span className="text-red-600">📍 Dropoff: {passenger.dropoff_stop_name || 'N/A'}</span>
+                                                                    </div>
+                                                                    {/* NEW: Actual Drop Stop */}
+                                                                    {passenger.actual_drop_stop_name && (
+                                                                        <div className="flex items-center gap-2 mt-2 text-sm">
+                                                                            <span className="text-blue-600">🔽 Actual Drop: {passenger.actual_drop_stop_name}</span>
+                                                                            {passenger.actual_dropped_at && (
+                                                                                <span className="text-gray-400 text-xs">
+                                                                                    at {new Date(passenger.actual_dropped_at).toLocaleTimeString()}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked" ? "bg-emerald-100 text-emerald-700" :
+                                                                    passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                                                        passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+                                                                            "bg-gray-100 text-gray-600"
+                                                                    }`}>
+                                                                    {passenger.status}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* TRIP DETAILS SECTION */}
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -1870,7 +3137,7 @@ const prematureEndTrip = async () => {
                                         </div>
                                     </div>
 
-                                    {/* ACTION BUTTONS - Only for in_progress status */}
+                                    {/* ACTION BUTTONS */}
                                     {selectedTrip.status === "in_progress" && (
                                         <div className="flex gap-4">
                                             <button
@@ -1890,7 +3157,7 @@ const prematureEndTrip = async () => {
                                         </div>
                                     )}
 
-                                    {/* CANCEL SECTION - Only for scheduled trips */}
+                                    {/* CANCEL SECTION */}
                                     {selectedTrip.status === "scheduled" && (
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-red-50 to-white">
@@ -1932,7 +3199,8 @@ const prematureEndTrip = async () => {
                                         </div>
                                     )}
 
-                                    {/* PASSENGERS SECTION */}
+                                    {/* PASSENGERS SECTION - UPDATED WITH PICKUP/DROPOFF */}
+                                    {/* PASSENGERS SECTION - UPDATED WITH ACTUAL DROP STOP */}
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                                             <div className="flex items-center justify-between">
@@ -1953,23 +3221,42 @@ const prematureEndTrip = async () => {
                                                             onClick={() => handlePassengerClick(passenger)}
                                                             className="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-indigo-50 hover:shadow-md transition-all duration-200 cursor-pointer group"
                                                         >
-                                                            <div className="flex items-center gap-3">
+                                                            <div className="flex items-center gap-3 flex-1">
                                                                 <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-200 transition-all">
                                                                     <span className="text-indigo-600 font-semibold text-sm">
                                                                         {passenger.name?.charAt(0) || "?"}
                                                                     </span>
                                                                 </div>
-                                                                <div>
+                                                                <div className="flex-1">
                                                                     <p className="text-sm font-medium text-gray-800 group-hover:text-indigo-700">{passenger.name}</p>
                                                                     <p className="text-xs text-gray-400">ID: {passenger.passenger_id?.slice(0, 13)}...</p>
+                                                                    {/* Pickup and Dropoff Stops */}
+                                                                    <div className="flex flex-col gap-1 mt-1 text-xs">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-green-600">🚏 Pickup: {passenger.pickup_stop_name || 'N/A'}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-red-600">📍 Dropoff: {passenger.dropoff_stop_name || 'N/A'}</span>
+                                                                        </div>
+                                                                        {/* NEW: Actual Drop Stop (where passenger actually got off) */}
+                                                                        {passenger.actual_drop_stop_name && (
+                                                                            <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-200">
+                                                                                <span className="text-blue-600">🔽 Actual Drop: {passenger.actual_drop_stop_name}</span>
+                                                                                {passenger.actual_dropped_at && (
+                                                                                    <span className="text-gray-400 text-xs">
+                                                                                        at {new Date(passenger.actual_dropped_at).toLocaleTimeString()}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked"
-                                                                    ? "bg-emerald-100 text-emerald-700"
-                                                                    : passenger.status === "cancelled"
-                                                                        ? "bg-red-100 text-red-700"
-                                                                        : "bg-gray-100 text-gray-600"
+                                                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${passenger.status === "booked" ? "bg-emerald-100 text-emerald-700" :
+                                                                    passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                                                        passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+                                                                            "bg-gray-100 text-gray-600"
                                                                     }`}>
                                                                     {passenger.status}
                                                                 </span>
@@ -1997,7 +3284,6 @@ const prematureEndTrip = async () => {
             {showPrematureEndModal && selectedTrip && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowPrematureEndModal(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
-                        {/* Modal Header */}
                         <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -2009,8 +3295,6 @@ const prematureEndTrip = async () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Modal Content */}
                         <div className="p-6">
                             {prematureEndError && (
                                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
@@ -2020,14 +3304,13 @@ const prematureEndTrip = async () => {
                                     </div>
                                 </div>
                             )}
-
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Reason for premature end <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
                                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
-                                    placeholder="Please provide a reason why this trip is ending prematurely (e.g., vehicle breakdown, emergency, route issues, etc.)..."
+                                    placeholder="Please provide a reason why this trip is ending prematurely..."
                                     value={prematureEndReason}
                                     onChange={(e) => {
                                         setPrematureEndReason(e.target.value);
@@ -2035,23 +3318,16 @@ const prematureEndTrip = async () => {
                                     }}
                                     rows="4"
                                 />
-                                <p className="text-xs text-gray-400 mt-2">
-                                    This reason will be recorded and visible to admins. Any active bookings will be automatically cancelled.
-                                </p>
                             </div>
-
                             <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
                                 <div className="flex items-start gap-2">
                                     <ExclamationTriangleIcon className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                                     <p className="text-xs text-red-700">
-                                        <span className="font-semibold">Warning:</span> This action will end the trip immediately and cancel all active bookings. 
-                                        Passengers will be notified. This action cannot be undone.
+                                        <span className="font-semibold">Warning:</span> This action will end the trip immediately and cancel all active bookings.
                                     </p>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Modal Footer */}
                         <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end gap-3">
                             <button
                                 onClick={() => {
@@ -2089,96 +3365,125 @@ const prematureEndTrip = async () => {
             {showCompleteModal && selectedTrip && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCompleteModal(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
-                        {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4">
+                        <div className={`px-6 py-4 ${completionError?.title?.includes("Passengers")
+                            ? "bg-amber-600"
+                            : "bg-gradient-to-r from-emerald-600 to-emerald-700"}`}>
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center">
-                                    <FlagIcon className="h-5 w-5 text-white" />
+                                    {completionError?.title?.includes("Passengers") ? (
+                                        <ExclamationTriangleIcon className="h-5 w-5 text-white" />
+                                    ) : (
+                                        <FlagIcon className="h-5 w-5 text-white" />
+                                    )}
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-bold text-white">Complete Trip</h2>
+                                    <h2 className="text-lg font-bold text-white">
+                                        {completionError?.title?.includes("Passengers") ? "Cannot Complete Trip" : "Complete Trip"}
+                                    </h2>
                                     <p className="text-emerald-100 text-xs">{selectedTrip.route?.name}</p>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Modal Content */}
                         <div className="p-6">
                             {completionError && (
-                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                                    <div className="flex items-start gap-2">
-                                        <ExclamationTriangleIcon className="h-4 w-4 text-red-500 mt-0.5" />
-                                        <p className="text-sm text-red-600">{completionError}</p>
+                                <div className={`mb-4 p-4 rounded-xl ${completionError.title?.includes("Passengers")
+                                    ? "bg-amber-50 border border-amber-200"
+                                    : "bg-red-50 border border-red-200"}`}>
+                                    <div className="flex items-start gap-3">
+                                        {completionError.title?.includes("Passengers") ? (
+                                            <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                        ) : (
+                                            <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                                        )}
+                                        <div className="flex-1">
+                                            <p className={`text-sm font-semibold ${completionError.title?.includes("Passengers") ? "text-amber-800" : "text-red-800"}`}>
+                                                {completionError.title || "Error"}
+                                            </p>
+                                            <p className={`text-sm mt-1 ${completionError.title?.includes("Passengers") ? "text-amber-700" : "text-red-600"}`}>
+                                                {completionError.message}
+                                            </p>
+                                            {completionError.title?.includes("Passengers") && (
+                                                <div className="mt-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowCompleteModal(false);
+                                                            setCompletionError(null);
+                                                            setCompletionNote("");
+                                                        }}
+                                                        className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-colors"
+                                                    >
+                                                        Close
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Completion Note (Optional)
-                                </label>
-                                <textarea
-                                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
-                                    placeholder="Add a note about why this trip is being completed..."
-                                    value={completionNote}
-                                    onChange={(e) => setCompletionNote(e.target.value)}
-                                    rows="4"
-                                />
-                                <p className="text-xs text-gray-400 mt-2">
-                                    This note will be recorded with the trip completion. You can leave it empty if not needed.
-                                </p>
-                            </div>
-
-                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
-                                <div className="flex items-start gap-2">
-                                    <ExclamationTriangleIcon className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                    <p className="text-xs text-amber-700">
-                                        <span className="font-semibold">Warning:</span> This action will mark the trip as completed.
-                                        This cannot be undone. Please ensure the trip has actually been completed before proceeding.
-                                    </p>
-                                </div>
-                            </div>
+                            {(!completionError || !completionError.title?.includes("Passengers")) ? (
+                                <>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Completion Note (Optional)
+                                        </label>
+                                        <textarea
+                                            className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+                                            placeholder="Add a note about why this trip is being completed..."
+                                            value={completionNote}
+                                            onChange={(e) => setCompletionNote(e.target.value)}
+                                            rows="4"
+                                        />
+                                    </div>
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                                        <div className="flex items-start gap-2">
+                                            <ExclamationTriangleIcon className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                            <p className="text-xs text-amber-700">
+                                                <span className="font-semibold">Warning:</span> This action will mark the trip as completed.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : null}
                         </div>
-
-                        {/* Modal Footer */}
-                        <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowCompleteModal(false);
-                                    setCompletionNote("");
-                                    setCompletionError("");
-                                }}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={completeTripManually}
-                                disabled={completingTrip}
-                                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {completingTrip ? (
-                                    <>
-                                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                        Completing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FlagIcon className="h-4 w-4" />
-                                        Complete Trip
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        {(!completionError || !completionError.title?.includes("Passengers")) && (
+                            <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowCompleteModal(false);
+                                        setCompletionNote("");
+                                        setCompletionError(null);
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={completeTripManually}
+                                    disabled={completingTrip}
+                                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {completingTrip ? (
+                                        <>
+                                            <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                            Completing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FlagIcon className="h-4 w-4" />
+                                            Complete Trip
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
-            {/* PASSENGER DETAILS MODAL */}
+            {/* PASSENGER DETAILS MODAL - UPDATED WITH SORTED BOOKING HISTORY */}
             {showPassengerModal && selectedPassenger && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowPassengerModal(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
-                        {/* Modal Header */}
                         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -2196,8 +3501,6 @@ const prematureEndTrip = async () => {
                                 <XMarkIcon className="h-6 w-6" />
                             </button>
                         </div>
-
-                        {/* Modal Content */}
                         <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
                             {loadingPassenger ? (
                                 <div className="flex items-center justify-center py-12">
@@ -2206,7 +3509,6 @@ const prematureEndTrip = async () => {
                                 </div>
                             ) : passengerDetails ? (
                                 <div className="space-y-6">
-                                    {/* Profile Section */}
                                     <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-6 border border-indigo-100">
                                         <div className="flex items-start gap-6">
                                             <div className="relative">
@@ -2263,7 +3565,100 @@ const prematureEndTrip = async () => {
                                         </div>
                                     </div>
 
-                                    {/* Statistics Cards */}
+                                    {/* Booking History with Stops - Sorted by Date (Today > Yesterday > Older) */}
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                            <h3 className="font-semibold text-gray-800">Booking History</h3>
+                                            <p className="text-xs text-gray-500 mt-1">All passenger bookings with stop details (sorted by date)</p>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            {passengerDetails.booking_history?.bookings?.length > 0 ? (
+                                                (() => {
+                                                    const groupedBookings = groupAndSortBookingsByDate(passengerDetails.booking_history.bookings);
+                                                    return groupedBookings.map((group, groupIndex) => (
+                                                        <div key={groupIndex}>
+                                                            <div className="bg-gray-100 px-4 py-2 sticky top-0">
+                                                                <h4 className="text-sm font-semibold text-gray-700">{group.title}</h4>
+                                                            </div>
+                                                            <table className="w-full text-sm">
+                                                                <thead className="bg-gray-50">
+                                                                    <tr>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pickup Stop</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dropoff Stop</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actual Drop</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fare</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-100">
+                                                                    {group.bookings.map((booking, idx) => (
+                                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                            <td className="px-4 py-3">
+                                                                                <p className="text-xs font-mono text-gray-600">{booking.booking_id?.slice(0, 13)}...</p>
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <span className="text-green-600">🚏</span>
+                                                                                    <p className="text-sm text-gray-800">{booking.pickup_stop?.name || "N/A"}</p>
+                                                                                </div>
+                                                                                {booking.pickup_stop?.sequence && (
+                                                                                    <p className="text-xs text-gray-400">Stop #{booking.pickup_stop.sequence}</p>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <span className="text-red-600">📍</span>
+                                                                                    <p className="text-sm text-gray-800">{booking.dropoff_stop?.name || "N/A"}</p>
+                                                                                </div>
+                                                                                {booking.dropoff_stop?.sequence && (
+                                                                                    <p className="text-xs text-gray-400">Stop #{booking.dropoff_stop.sequence}</p>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                {booking.actual_drop_stop_name ? (
+                                                                                    <div>
+                                                                                        <p className="text-sm text-blue-600">{booking.actual_drop_stop_name}</p>
+                                                                                        {booking.actual_dropped_at && (
+                                                                                            <p className="text-xs text-gray-400">{new Date(booking.actual_dropped_at).toLocaleTimeString()}</p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <span className="text-xs text-gray-400">Not dropped</span>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <p className="font-medium text-gray-900">₹{booking.fare?.toLocaleString() || 0}</p>
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                                                                    booking.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                                                                        "bg-amber-100 text-amber-700"
+                                                                                    }`}>
+                                                                                    {booking.status}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <p className="text-xs text-gray-500">{new Date(booking.created_at).toLocaleDateString("en-IN")}</p>
+                                                                                <p className="text-xs text-gray-400">{new Date(booking.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    ));
+                                                })()
+                                            ) : (
+                                                <div className="text-center py-8">
+                                                    <p className="text-gray-400 text-sm">No booking history found</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Stats Cards */}
                                     <div className="grid grid-cols-3 gap-4">
                                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                                             <p className="text-xs text-gray-500 uppercase tracking-wide">Total Bookings</p>
@@ -2284,65 +3679,6 @@ const prematureEndTrip = async () => {
                                             </p>
                                         </div>
                                     </div>
-
-                                    {/* Booking History */}
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                            <h3 className="font-semibold text-gray-800">Booking History</h3>
-                                            <p className="text-xs text-gray-500 mt-1">All passenger bookings</p>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pickup</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dropoff</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fare</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100">
-                                                    {passengerDetails.booking_history?.bookings?.map((booking, idx) => (
-                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                                            <td className="px-4 py-3">
-                                                                <p className="text-xs font-mono text-gray-600">{booking.booking_id?.slice(0, 13)}...</p>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <p className="text-sm text-gray-800">{booking.pickup_stop?.name || "N/A"}</p>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <p className="text-sm text-gray-800">{booking.dropoff_stop?.name || "N/A"}</p>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <p className="font-medium text-gray-900">₹{booking.fare?.toLocaleString() || 0}</p>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === "completed"
-                                                                    ? "bg-emerald-100 text-emerald-700"
-                                                                    : booking.status === "cancelled"
-                                                                        ? "bg-red-100 text-red-700"
-                                                                        : "bg-amber-100 text-amber-700"
-                                                                    }`}>
-                                                                    {booking.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <p className="text-xs text-gray-500">{new Date(booking.created_at).toLocaleDateString("en-IN")}</p>
-                                                                <p className="text-xs text-gray-400">{new Date(booking.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {(!passengerDetails.booking_history?.bookings || passengerDetails.booking_history.bookings.length === 0) && (
-                                            <div className="text-center py-8">
-                                                <p className="text-gray-400 text-sm">No booking history found</p>
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
                             ) : (
                                 <div className="text-center py-12">
@@ -2352,8 +3688,6 @@ const prematureEndTrip = async () => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Modal Footer */}
                         <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex justify-end">
                             <button
                                 onClick={() => setShowPassengerModal(false)}
