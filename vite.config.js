@@ -23,7 +23,24 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     server: {
-      port: parseInt(env.PORT) || 5173, // Default to 3000 if PORT is not set
+      port: parseInt(env.PORT) || 5173, // Default to 5173 if PORT is not set
+      host: true, // Allows external access
+      allowedHosts: [
+        'admin.shuttleapp.transev.site',
+        '.transev.site', // Allows all subdomains of transev.site
+        'localhost',
+        '127.0.0.1',
+      ],
+    },
+    preview: {
+      port: parseInt(env.PORT) || 5173,
+      host: true,
+      allowedHosts: [
+        'admin.shuttleapp.transev.site',
+        '.transev.site',
+        'localhost',
+        '127.0.0.1',
+      ],
     },
     build: {
       commonjsOptions: {
