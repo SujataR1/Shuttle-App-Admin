@@ -191,16 +191,16 @@
 //     headers: getAuthHeaders(),
 //     body: JSON.stringify(adjustmentData),
 //   });
-  
+
 //   if (response.status === 404) {
 //     throw new Error("BOOKING_NOT_IN_PAYOUT_SYSTEM");
 //   }
-  
+
 //   if (!response.ok) {
 //     const errorData = await response.json();
 //     throw new Error(errorData.detail || "Failed to create adjustment");
 //   }
-  
+
 //   return response.json();
 // };
 
@@ -334,7 +334,7 @@
 // const PayoutService = () => {
 //   // Navigation State
 //   const [activeTab, setActiveTab] = useState("dashboard");
-  
+
 //   // UI State
 //   const [loading, setLoading] = useState(false);
 //   const [updating, setUpdating] = useState(false);
@@ -342,7 +342,7 @@
 //   const [successMessage, setSuccessMessage] = useState(null);
 //   const [showPayoutConfirmation, setShowPayoutConfirmation] = useState(false);
 //   const [pendingPayoutBooking, setPendingPayoutBooking] = useState(null);
-  
+
 //   // Data State
 //   const [dashboard, setDashboard] = useState(null);
 //   const [settings, setSettings] = useState(null);
@@ -356,7 +356,7 @@
 //   const [selectedAdjustments, setSelectedAdjustments] = useState({});
 //   const [transfers, setTransfers] = useState([]);
 //   const [refundQueue, setRefundQueue] = useState([]);
-  
+
 //   // Monthly Summary State
 //   const [showMonthlySummary, setShowMonthlySummary] = useState(false);
 //   const [monthlySummary, setMonthlySummary] = useState({
@@ -366,13 +366,13 @@
 //     totalNetAmount: 0,
 //     bookings: []
 //   });
-  
+
 //   // Enhanced Booking Details State
 //   const [showFullBookingModal, setShowFullBookingModal] = useState(false);
 //   const [fullBookingDetails, setFullBookingDetails] = useState(null);
 //   const [tripPassengers, setTripPassengers] = useState(null);
 //   const [showTripPassengersModal, setShowTripPassengersModal] = useState(false);
-  
+
 //   // Modal State
 //   const [showBankModal, setShowBankModal] = useState(false);
 //   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -382,7 +382,7 @@
 //   const [showMonthlyPayoutModal, setShowMonthlyPayoutModal] = useState(false);
 //   const [showBulkPayoutModal, setShowBulkPayoutModal] = useState(false);
 //   const [providerAccount, setProviderAccount] = useState(null);
-  
+
 //   // Form State
 //   const [commissionPercent, setCommissionPercent] = useState("");
 //   const [bankDetails, setBankDetails] = useState({
@@ -426,7 +426,7 @@
 //       setDashboard(dashboardData);
 //       setSettings(settingsData);
 //       setCommissionPercent(settingsData.commission_percent?.toString() || "0");
-      
+
 //       // Extract drivers array from response
 //       let driversList = [];
 //       if (driversData.items && Array.isArray(driversData.items)) {
@@ -454,7 +454,7 @@
 //       const details = await getDriverDetails(driver.user_id);
 //       console.log("Driver details:", details);
 //       setDriverDetails(details);
-      
+
 //       // Set bank details from response
 //       const payoutDetails = details.payout_details || {};
 //       setBankDetails({
@@ -463,10 +463,10 @@
 //         ifsc_code: payoutDetails.ifsc_code || "",
 //         phone_number: payoutDetails.phone_number || "",
 //       });
-      
+
 //       const adjustments = await getOpenAdjustmentsForDriver(driver.user_id);
 //       setOpenAdjustments(adjustments.items || []);
-      
+
 //       const bookings = await getPayoutBookings({ driver_user_id: driver.user_id });
 //       console.log("Fetched payout bookings:", bookings);
 //       setPayoutBookings(bookings.items || []);
@@ -486,17 +486,17 @@
 //       // Fetch latest booking status from main system
 //       const bookingDetails = await getBookingDetailsByBookingId(bookingId);
 //       console.log("Latest booking status from main system:", bookingDetails);
-      
+
 //       // Fetch latest trip passengers
 //       if (tripId) {
 //         const passengers = await getTripPassengers(tripId);
 //         console.log("Trip passengers status:", passengers);
-        
+
 //         // Check if this booking is completed in the trip
 //         const bookingInTrip = passengers.passengers?.find(p => p.booking_id === bookingId);
 //         if (bookingInTrip && bookingInTrip.status === 'completed') {
 //           setSuccessMessage(`✅ Booking ${bookingId.substring(0, 8)}... is COMPLETED in the main system! The payout system will update shortly.`);
-          
+
 //           // Refresh the driver's bookings to get latest status
 //           if (selectedDriver) {
 //             const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
@@ -507,7 +507,7 @@
 //           setErrorMessage(`Booking status in main system: ${bookingInTrip?.status || 'not found'}`);
 //         }
 //       }
-      
+
 //       setTimeout(() => setSuccessMessage(null), 5000);
 //     } catch (error) {
 //       console.error("Error syncing booking status:", error);
@@ -520,7 +520,7 @@
 //   // Force refresh payout bookings
 //   const refreshPayoutBookings = async () => {
 //     if (!selectedDriver) return;
-    
+
 //     setLoading(true);
 //     try {
 //       const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
@@ -538,7 +538,7 @@
 //   // Calculate monthly summary with proper amounts
 //   const calculateMonthlySummary = async () => {
 //     if (!selectedDriver) return;
-    
+
 //     setLoading(true);
 //     try {
 //       const response = await getPayoutBookings({ 
@@ -546,12 +546,12 @@
 //         month: monthlyPayoutConfig.month,
 //         year: monthlyPayoutConfig.year
 //       });
-      
+
 //       const bookings = response.items || [];
 //       console.log("Monthly bookings:", bookings);
-      
+
 //       const eligibleBookings = bookings.filter(b => b.transfer_status === 'ready');
-      
+
 //       const summary = {
 //         totalBookings: eligibleBookings.length,
 //         totalGrossAmount: 0,
@@ -559,7 +559,7 @@
 //         totalNetAmount: 0,
 //         bookings: eligibleBookings
 //       };
-      
+
 //       eligibleBookings.forEach(booking => {
 //         const gross = parseFloat(booking.driver_payout_amount) || 0;
 //         const deductions = parseFloat(booking.applied_adjustment_amount) || 0;
@@ -567,7 +567,7 @@
 //         summary.totalDeductions += deductions;
 //         summary.totalNetAmount += (gross - deductions);
 //       });
-      
+
 //       console.log("Monthly summary:", summary);
 //       setMonthlySummary(summary);
 //       setShowMonthlySummary(true);
@@ -600,7 +600,7 @@
 //       const enhancedData = await getBookingDetailsByBookingId(bookingId);
 //       setFullBookingDetails(enhancedData);
 //       setShowFullBookingModal(true);
-      
+
 //       if (enhancedData.trip_id) {
 //         const passengers = await getTripPassengers(enhancedData.trip_id);
 //         setTripPassengers(passengers);
@@ -621,7 +621,7 @@
 //       const passengers = await getTripPassengers(tripId);
 //       setTripPassengers(passengers);
 //       setShowTripPassengersModal(true);
-      
+
 //       // After viewing passengers, refresh the driver's bookings
 //       if (selectedDriver) {
 //         const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
@@ -708,26 +708,26 @@
 //       // Step 1: Create linked account
 //       const createResult = await createLinkedAccount(selectedDriver.user_id);
 //       console.log("Linked account created:", createResult);
-      
+
 //       // Step 2: Get the linked account ID
 //       const linkedAccountId = createResult.driver?.payout_details?.razorpay_linked_account_id;
-      
+
 //       if (linkedAccountId) {
 //         // Step 3: Update linked account status to active
 //         await updateLinkedAccountStatus(selectedDriver.user_id, linkedAccountId, "active");
-        
+
 //         // Step 4: Mark driver as payout eligible
 //         await updateDriverEligibility(selectedDriver.user_id, true);
-        
+
 //         setSuccessMessage("✅ Linked account created, activated, and driver marked as payout eligible!");
 //       } else {
 //         setSuccessMessage("✅ Linked account created successfully!");
 //       }
-      
+
 //       // Refresh driver details
 //       const updated = await getDriverDetails(selectedDriver.user_id);
 //       setDriverDetails(updated);
-      
+
 //       setTimeout(() => setSuccessMessage(null), 5000);
 //     } catch (error) {
 //       console.error("Error in linked account flow:", error);
@@ -802,7 +802,7 @@
 //       setErrorMessage("Please select a booking first to create an adjustment");
 //       return;
 //     }
-    
+
 //     if (!adjustmentForm.reason_text.trim()) {
 //       setErrorMessage("Reason text is required");
 //       return;
@@ -814,7 +814,7 @@
 
 //     setUpdating(true);
 //     setErrorMessage(null);
-    
+
 //     try {
 //       await createAdjustment(selectedBookingForAdjustment.booking_id, {
 //         adjustment_type: adjustmentForm.adjustment_type,
@@ -823,15 +823,15 @@
 //         reason_text: adjustmentForm.reason_text,
 //         admin_note: adjustmentForm.admin_note,
 //       });
-      
+
 //       if (selectedDriver) {
 //         const adjustments = await getOpenAdjustmentsForDriver(selectedDriver.user_id);
 //         setOpenAdjustments(adjustments.items || []);
-        
+
 //         const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
 //         setPayoutBookings(bookings.items || []);
 //       }
-      
+
 //       setShowAdjustmentModal(false);
 //       setSelectedBookingForAdjustment(null);
 //       setAdjustmentForm({
@@ -845,7 +845,7 @@
 //       setTimeout(() => setSuccessMessage(null), 3000);
 //     } catch (error) {
 //       console.error("Error creating adjustment:", error);
-      
+
 //       if (error.message === "BOOKING_NOT_IN_PAYOUT_SYSTEM") {
 //         setErrorMessage(
 //           "This booking is not registered in the payout system yet. " +
@@ -863,12 +863,12 @@
 //     setUpdating(true);
 //     try {
 //       await updateAdjustmentDecision(adjustmentId, decision_status, `Admin ${decision_status} this adjustment`);
-      
+
 //       if (selectedDriver) {
 //         const adjustments = await getOpenAdjustmentsForDriver(selectedDriver.user_id);
 //         setOpenAdjustments(adjustments.items || []);
 //       }
-      
+
 //       setSuccessMessage(`✅ Adjustment ${decision_status} successfully!`);
 //       setTimeout(() => setSuccessMessage(null), 3000);
 //     } catch (error) {
@@ -901,31 +901,31 @@
 //   const handleProcessPayout = async (bookingId) => {
 //     setProcessingBooking(bookingId);
 //     setErrorMessage(null);
-    
+
 //     const adjustments_to_apply = Object.values(selectedAdjustments);
-    
+
 //     // Find the booking to check its net amount
 //     const booking = payoutBookings.find(b => b.booking_id === bookingId);
 //     const netPayoutAmount = parseFloat(booking?.net_payout_amount || 0);
-    
+
 //     // Check if net payout amount is valid
 //     if (netPayoutAmount <= 0) {
 //       setErrorMessage(`Cannot process payout: Net amount (₹${netPayoutAmount.toFixed(2)}) is zero or negative after deductions.`);
 //       setProcessingBooking(null);
 //       return;
 //     }
-    
+
 //     // Optional: Add a warning if amount is very small
 //     if (netPayoutAmount < 1) {
 //       setErrorMessage(`Net payout amount (₹${netPayoutAmount.toFixed(2)}) is too small to transfer. Minimum transfer amount is ₹1.`);
 //       setProcessingBooking(null);
 //       return;
 //     }
-    
+
 //     try {
 //       const result = await triggerSinglePayout(bookingId, adjustments_to_apply);
 //       console.log("Payout result:", result);
-      
+
 //       if (result.booking_transfer_status === "withheld") {
 //         setSuccessMessage("⚠️ Payout fully absorbed by deductions. No transfer created.");
 //       } else if (result.transfer_row_status === "processed") {
@@ -935,17 +935,17 @@
 //       } else {
 //         setSuccessMessage("Payout processed successfully!");
 //       }
-      
+
 //       setSelectedAdjustments({});
-      
+
 //       const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
 //       setPayoutBookings(bookings.items || []);
-      
+
 //       setTimeout(() => setSuccessMessage(null), 3000);
 //     } catch (error) {
 //       console.error("Error processing payout:", error);
 //       const errorMsg = error.detail?.error || error.detail?.message || "Failed to process payout";
-      
+
 //       if (error.detail?.error === "booking_not_completed") {
 //         setErrorMessage("Booking is not completed yet. Cannot process payout.");
 //       } else if (error.detail?.error === "driver_not_payout_eligible") {
@@ -984,14 +984,14 @@
 //       setErrorMessage("No ready bookings to process");
 //       return;
 //     }
-    
+
 //     setUpdating(true);
 //     setErrorMessage(null);
-    
+
 //     let successCount = 0;
 //     let failureCount = 0;
 //     const results = [];
-    
+
 //     for (const booking of monthlySummary.bookings) {
 //       try {
 //         const result = await triggerSinglePayout(booking.booking_id, []);
@@ -1011,21 +1011,21 @@
 //         failureCount++;
 //       }
 //     }
-    
+
 //     setBatchResults({
 //       total_selected: monthlySummary.bookings.length,
 //       success_count: successCount,
 //       failure_count: failureCount,
 //       results: results
 //     });
-    
+
 //     setSuccessMessage(`Processed ${successCount} successful, ${failureCount} failed out of ${monthlySummary.bookings.length} bookings`);
-    
+
 //     // Refresh data
 //     const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
 //     setPayoutBookings(bookings.items || []);
 //     setShowMonthlySummary(false);
-    
+
 //     setTimeout(() => setSuccessMessage(null), 5000);
 //     setUpdating(false);
 //   };
@@ -1035,9 +1035,9 @@
 //     try {
 //       const result = await reconcileRefund(bookingId);
 //       setSuccessMessage(`Refund reconciled successfully! Outcome: ${result.outcome}`);
-      
+
 //       await fetchRefundQueue();
-      
+
 //       setTimeout(() => setSuccessMessage(null), 3000);
 //     } catch (error) {
 //       console.error("Error reconciling refund:", error);
@@ -1078,7 +1078,7 @@
 //             <BanknotesIcon className="w-12 h-12 text-green-500 opacity-50" />
 //           </div>
 //         </div>
-        
+
 //         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
 //           <div className="flex items-center justify-between">
 //             <div>
@@ -1089,7 +1089,7 @@
 //             <CheckCircleIcon className="w-12 h-12 text-blue-500 opacity-50" />
 //           </div>
 //         </div>
-        
+
 //         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
 //           <div className="flex items-center justify-between">
 //             <div>
@@ -1100,7 +1100,7 @@
 //             <ExclamationTriangleIcon className="w-12 h-12 text-red-500 opacity-50" />
 //           </div>
 //         </div>
-        
+
 //         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
 //           <div className="flex items-center justify-between">
 //             <div>
@@ -1112,7 +1112,7 @@
 //           </div>
 //         </div>
 //       </div>
-      
+
 //       <div className="bg-white rounded-xl shadow-md p-6">
 //         <h3 className="font-semibold text-gray-900 mb-4">Alerts</h3>
 //         <div className="space-y-2">
@@ -1166,14 +1166,14 @@
 //                   {driver.vehicle && (
 //                     <p className="text-xs text-gray-400">{driver.vehicle.registration_number || driver.vehicle.reg_no}</p>
 //                   )}
-                  
+
 //                   <div className="mt-2 flex flex-wrap gap-4 text-xs">
 //                     <span className="text-yellow-600">Ready: {driver.aggregates?.ready_booking_count || 0}</span>
 //                     <span className="text-green-600">Transferred: {driver.aggregates?.transferred_booking_count || 0}</span>
 //                     <span className="text-red-600">Withheld: {driver.aggregates?.withheld_booking_count || 0}</span>
 //                     <span className="text-purple-600">Refund Queue: {driver.aggregates?.refund_queue_count || 0}</span>
 //                   </div>
-                  
+
 //                   {driver.payout_details?.linked_account_status && (
 //                     <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${getLinkedAccountStatusColor(driver.payout_details.linked_account_status)}`}>
 //                       {driver.payout_details.linked_account_status}
@@ -1200,7 +1200,7 @@
 //   // Monthly Summary Modal
 //   const renderMonthlySummaryModal = () => {
 //     if (!showMonthlySummary) return null;
-    
+
 //     return (
 //       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 //         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -1227,7 +1227,7 @@
 //                 <p className="text-2xl font-bold text-purple-600">₹{monthlySummary.totalNetAmount.toFixed(2)}</p>
 //               </div>
 //             </div>
-            
+
 //             <h4 className="font-semibold text-gray-900 mb-3">Booking Details</h4>
 //             <div className="space-y-3 max-h-96 overflow-auto">
 //               {monthlySummary.bookings.map((booking) => (
@@ -1270,12 +1270,12 @@
 //   // Driver Detail Tab
 //   const renderDriverDetail = () => {
 //     if (!selectedDriver) return null;
-    
+
 //     const payoutDetails = driverDetails?.payout_details || {};
 //     const isFullySetup = payoutDetails.razorpay_linked_account_id && 
 //                          payoutDetails.linked_account_status === 'active' && 
 //                          payoutDetails.is_payout_eligible;
-    
+
 //     return (
 //       <div className="space-y-4">
 //         {/* Driver Header */}
@@ -1324,7 +1324,7 @@
 //             </div>
 //           </div>
 //         </div>
-        
+
 //         {/* Setup Status Card */}
 //         <div className={`rounded-xl shadow-md p-4 ${isFullySetup ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
 //           <div className="flex items-center gap-3">
@@ -1345,7 +1345,7 @@
 //             </div>
 //           </div>
 //         </div>
-        
+
 //         {/* Bank Details Section */}
 //         <div className="bg-white rounded-xl shadow-md overflow-hidden">
 //           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -1385,7 +1385,7 @@
 //             )}
 //           </div>
 //         </div>
-        
+
 //         {/* Razorpay Linked Account Section */}
 //         <div className="bg-white rounded-xl shadow-md overflow-hidden">
 //           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -1444,7 +1444,7 @@
 //             )}
 //           </div>
 //         </div>
-        
+
 //         {/* Payout Eligibility */}
 //         {payoutDetails.razorpay_linked_account_id && payoutDetails.linked_account_status === 'active' && !payoutDetails.is_payout_eligible && (
 //           <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -1462,7 +1462,7 @@
 //             </div>
 //           </div>
 //         )}
-        
+
 //         {/* Open Adjustments Section */}
 //         <div className="bg-white rounded-xl shadow-md overflow-hidden">
 //           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -1510,7 +1510,7 @@
 //             )}
 //           </div>
 //         </div>
-        
+
 //         {/* Payout Bookings Section */}
 //         <div className="bg-white rounded-xl shadow-md overflow-hidden">
 //           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -1535,7 +1535,7 @@
 //               </button>
 //             </div>
 //           </div>
-          
+
 //           {payoutBookings.length === 0 ? (
 //             <div className="p-8 text-center text-gray-500">
 //               No payout bookings found for this driver
@@ -1545,7 +1545,7 @@
 //               {payoutBookings.map((booking) => {
 //                 const displayStatus = getDisplayStatus(booking);
 //                 const netPayoutAmount = parseFloat(booking.net_payout_amount || 0);
-                
+
 //                 return (
 //                   <div key={booking.booking_id} className="p-4 hover:bg-gray-50">
 //                     <div className="flex justify-between items-start">
@@ -1591,11 +1591,11 @@
 //                             Sync Status
 //                           </button>
 //                         </div>
-                        
+
 //                         <p className="text-sm text-gray-600">
 //                           Passenger: {booking.passenger_name || "N/A"}
 //                         </p>
-                        
+
 //                         <div className="mt-2 grid grid-cols-4 gap-4 text-sm">
 //                           <div>
 //                             <p className="text-xs text-gray-400">Gross Payout</p>
@@ -1616,7 +1616,7 @@
 //                             <p className="text-gray-600">-₹{parseFloat(booking.commission_amount || 0).toFixed(2)}</p>
 //                           </div>
 //                         </div>
-                        
+
 //                         {/* Add warning if net amount is zero or negative */}
 //                         {netPayoutAmount <= 0 && (
 //                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
@@ -1624,7 +1624,7 @@
 //                           </div>
 //                         )}
 //                       </div>
-                      
+
 //                       {booking.transfer_status === 'ready' && isFullySetup && netPayoutAmount > 0 && (
 //                         <div className="ml-4">
 //                           {openAdjustments.length > 0 && (
@@ -1648,7 +1648,7 @@
 //                               </details>
 //                             </div>
 //                           )}
-                          
+
 //                           <button
 //                             onClick={() => handleProcessPayout(booking.booking_id)}
 //                             disabled={processingBooking === booking.booking_id}
@@ -1662,13 +1662,13 @@
 //                           </button>
 //                         </div>
 //                       )}
-                      
+
 //                       {booking.transfer_status === 'withheld' && (
 //                         <div className="ml-4 px-3 py-1 bg-red-100 text-red-700 text-sm rounded-full">
 //                           Fully Absorbed
 //                         </div>
 //                       )}
-                      
+
 //                       {booking.transfer_status === 'failed' && (
 //                         <div className="ml-4 px-3 py-1 bg-red-100 text-red-700 text-sm rounded-full">
 //                           Failed - Check Details
@@ -1699,7 +1699,7 @@
 //             <option key={d.user_id} value={d.user_id}>{d.profile?.full_name || d.name}</option>
 //           ))}
 //         </select>
-        
+
 //         <select
 //           value={transferStatusFilter}
 //           onChange={(e) => setTransferStatusFilter(e.target.value)}
@@ -1710,7 +1710,7 @@
 //           <option value="failed">Failed</option>
 //           <option value="reversed">Reversed</option>
 //         </select>
-        
+
 //         <button
 //           onClick={fetchTransfers}
 //           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -1718,7 +1718,7 @@
 //           Apply Filters
 //         </button>
 //       </div>
-      
+
 //       <div className="bg-white rounded-xl shadow-md overflow-hidden">
 //         <div className="p-4 bg-gray-50 border-b">
 //           <h3 className="font-semibold text-gray-900">Transfer History</h3>
@@ -1834,7 +1834,7 @@
 //   // Full Booking Details Modal
 //   const renderFullBookingModal = () => {
 //     if (!showFullBookingModal || !fullBookingDetails) return null;
-    
+
 //     return (
 //       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 //         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -1861,7 +1861,7 @@
 //                 </div>
 //               </div>
 //             </div>
-            
+
 //             <div className="border rounded-lg p-4">
 //               <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
 //                 <UserIcon className="w-5 h-5" />
@@ -1878,7 +1878,7 @@
 //                 </div>
 //               </div>
 //             </div>
-            
+
 //             <div className="border rounded-lg p-4">
 //               <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
 //                 <MapPinIcon className="w-5 h-5" />
@@ -1887,7 +1887,7 @@
 //               <p className="font-medium">{fullBookingDetails.route?.name}</p>
 //               <p className="text-sm text-gray-500">Code: {fullBookingDetails.route?.code}</p>
 //             </div>
-            
+
 //             <div className="grid grid-cols-2 gap-4">
 //               <div className="border rounded-lg p-4">
 //                 <h4 className="font-semibold text-gray-900 mb-3">Pickup Location</h4>
@@ -1915,7 +1915,7 @@
 //   // Trip Passengers Modal
 //   const renderTripPassengersModal = () => {
 //     if (!showTripPassengersModal || !tripPassengers) return null;
-    
+
 //     return (
 //       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 //         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -1929,7 +1929,7 @@
 //               <p className="font-mono text-sm">{tripPassengers.trip_id}</p>
 //               <p className="text-sm text-gray-600 mt-2">Total Bookings: {tripPassengers.total_bookings}</p>
 //             </div>
-            
+
 //             <div className="space-y-3">
 //               <h4 className="font-semibold text-gray-900">Passengers List</h4>
 //               {tripPassengers.passengers?.map((passenger, idx) => (
@@ -1963,7 +1963,7 @@
 //   // Batch Results Modal
 //   const renderBatchResultsModal = () => {
 //     if (!batchResults) return null;
-    
+
 //     return (
 //       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 //         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -1986,7 +1986,7 @@
 //                 <p className="text-2xl font-bold text-red-600">{batchResults.failure_count}</p>
 //               </div>
 //             </div>
-            
+
 //             <div className="space-y-2">
 //               <p className="font-medium">Details:</p>
 //               {batchResults.results?.map((result, idx) => (
@@ -2028,7 +2028,7 @@
 //               </div>
 //             </div>
 //           )}
-          
+
 //           {errorMessage && (
 //             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
 //               <div className="flex items-start gap-3">
@@ -2041,7 +2041,7 @@
 //               </div>
 //             </div>
 //           )}
-          
+
 //           {/* Header */}
 //           <div className="flex justify-between items-center mb-6">
 //             <div>
@@ -2059,7 +2059,7 @@
 //               Commission: {settings?.commission_percent || 0}%
 //             </button>
 //           </div>
-          
+
 //           {/* Tabs */}
 //           <div className="flex gap-2 mb-6 border-b">
 //             <button
@@ -2096,7 +2096,7 @@
 //               Refunds
 //             </button>
 //           </div>
-          
+
 //           {/* Tab Content */}
 //           {loading && activeTab !== "driverDetail" ? (
 //             <div className="flex justify-center items-center h-64">
@@ -2113,7 +2113,7 @@
 //           )}
 //         </div>
 //       </div>
-      
+
 //       {/* Modals */}
 //       {showBankModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2169,7 +2169,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Settings Modal */}
 //       {showSettingsModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2199,7 +2199,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Provider Account Modal */}
 //       {showProviderModal && providerAccount && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2216,7 +2216,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Adjustment Modal */}
 //       {showAdjustmentModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2301,7 +2301,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Monthly Payout Modal */}
 //       {showMonthlyPayoutModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2345,7 +2345,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Bulk Payout Modal - Simplified since bulk trigger is not reliable */}
 //       {showBulkPayoutModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2373,7 +2373,7 @@
 //                   setSuccessMessage(`Processed ${successCount} out of ${bulkPayoutBookings.length} bookings`);
 //                   setShowBulkPayoutModal(false);
 //                   setUpdating(false);
-                  
+
 //                   // Refresh data
 //                   const bookings = await getPayoutBookings({ driver_user_id: selectedDriver?.user_id });
 //                   setPayoutBookings(bookings.items || []);
@@ -2386,7 +2386,7 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Booking Detail Modal */}
 //       {showBookingDetailModal && bookingDetail && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2403,16 +2403,16 @@
 //           </div>
 //         </div>
 //       )}
-      
+
 //       {/* Full Booking Details Modal */}
 //       {renderFullBookingModal()}
-      
+
 //       {/* Trip Passengers Modal */}
 //       {renderTripPassengersModal()}
-      
+
 //       {/* Monthly Summary Modal */}
 //       {renderMonthlySummaryModal()}
-      
+
 //       {/* Batch Results Modal */}
 //       {batchResults && renderBatchResultsModal()}
 //     </div>
@@ -2556,8 +2556,8 @@ const getProviderLinkedAccount = async (driverUserId) => {
 
 // Get booking with full adjustments context
 const getBookingWithAdjustments = async (bookingId) => {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, { 
-    headers: getAuthHeaders() 
+  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+    headers: getAuthHeaders()
   });
   if (!response.ok) throw new Error("Failed to fetch booking with adjustments");
   return response.json();
@@ -2565,8 +2565,8 @@ const getBookingWithAdjustments = async (bookingId) => {
 
 // Get booking-origin adjustments
 const getBookingOriginAdjustments = async (bookingId) => {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/adjustments`, { 
-    headers: getAuthHeaders() 
+  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/adjustments`, {
+    headers: getAuthHeaders()
   });
   if (!response.ok) throw new Error("Failed to fetch booking adjustments");
   return response.json();
@@ -2610,9 +2610,9 @@ const manualUpdateLinkedAccount = async (driverUserId, linkedAccountId, status) 
   const response = await fetch(`${API_BASE_URL}/drivers/${driverUserId}/linked-account`, {
     method: "PATCH",
     headers: getAuthHeaders(),
-    body: JSON.stringify({ 
-      razorpay_linked_account_id: linkedAccountId, 
-      linked_account_status: status 
+    body: JSON.stringify({
+      razorpay_linked_account_id: linkedAccountId,
+      linked_account_status: status
     }),
   });
   if (!response.ok) throw new Error("Failed to update linked account");
@@ -2625,7 +2625,7 @@ const manualUpdateLinkedAccount = async (driverUserId, linkedAccountId, status) 
 const getPayoutBookings = async (filters = {}) => {
   const params = new URLSearchParams(filters).toString();
   const url = params ? `${API_BASE_URL}/bookings?${params}` : `${API_BASE_URL}/bookings`;
-  const response = await fetch(url, { 
+  const response = await fetch(url, {
     headers: getAuthHeaders(),
     cache: 'no-cache'
   });
@@ -2662,8 +2662,8 @@ const getTripPassengers = async (tripId) => {
 // Check if booking exists in payout system
 const checkBookingInPayoutSystem = async (bookingId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, { 
-      headers: getAuthHeaders() 
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+      headers: getAuthHeaders()
     });
     if (response.status === 404) {
       return { exists: false };
@@ -2683,16 +2683,16 @@ const createAdjustment = async (bookingId, adjustmentData) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(adjustmentData),
   });
-  
+
   if (response.status === 404) {
     throw new Error("BOOKING_NOT_IN_PAYOUT_SYSTEM");
   }
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.detail || "Failed to create adjustment");
   }
-  
+
   return response.json();
 };
 
@@ -2825,7 +2825,7 @@ const getBookingStatusColor = (status) => {
 const PayoutService = () => {
   // Navigation State
   const [activeTab, setActiveTab] = useState("dashboard");
-  
+
   // UI State
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -2833,7 +2833,7 @@ const PayoutService = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [showPayoutConfirmation, setShowPayoutConfirmation] = useState(false);
   const [pendingPayoutBooking, setPendingPayoutBooking] = useState(null);
-  
+
   // Data State
   const [dashboard, setDashboard] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -2847,7 +2847,7 @@ const PayoutService = () => {
   const [selectedAdjustments, setSelectedAdjustments] = useState({});
   const [transfers, setTransfers] = useState([]);
   const [refundQueue, setRefundQueue] = useState([]);
-  
+
   // Monthly Summary State
   const [showMonthlySummary, setShowMonthlySummary] = useState(false);
   const [monthlySummary, setMonthlySummary] = useState({
@@ -2857,13 +2857,13 @@ const PayoutService = () => {
     totalNetAmount: 0,
     bookings: []
   });
-  
+
   // Enhanced Booking Details State
   const [showFullBookingModal, setShowFullBookingModal] = useState(false);
   const [fullBookingDetails, setFullBookingDetails] = useState(null);
   const [tripPassengers, setTripPassengers] = useState(null);
   const [showTripPassengersModal, setShowTripPassengersModal] = useState(false);
-  
+
   // NEW: Additional State for missing APIs
   const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
   const [bookingAdjustments, setBookingAdjustments] = useState([]);
@@ -2872,7 +2872,7 @@ const PayoutService = () => {
   const [showMonthlyBatchModal, setShowMonthlyBatchModal] = useState(false);
   const [bulkBatchResults, setBulkBatchResults] = useState(null);
   const [showBulkBatchModal, setShowBulkBatchModal] = useState(false);
-  
+
   // Modal State
   const [showBankModal, setShowBankModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -2882,7 +2882,7 @@ const PayoutService = () => {
   const [showMonthlyPayoutModal, setShowMonthlyPayoutModal] = useState(false);
   const [showBulkPayoutModal, setShowBulkPayoutModal] = useState(false);
   const [providerAccount, setProviderAccount] = useState(null);
-  
+
   // Form State
   const [commissionPercent, setCommissionPercent] = useState("");
   const [bankDetails, setBankDetails] = useState({
@@ -2926,7 +2926,7 @@ const PayoutService = () => {
       setDashboard(dashboardData);
       setSettings(settingsData);
       setCommissionPercent(settingsData.commission_percent?.toString() || "0");
-      
+
       let driversList = [];
       if (driversData.items && Array.isArray(driversData.items)) {
         driversList = driversData.items;
@@ -2953,7 +2953,7 @@ const PayoutService = () => {
       const details = await getDriverDetails(driver.user_id);
       console.log("Driver details:", details);
       setDriverDetails(details);
-      
+
       const payoutDetails = details.payout_details || {};
       setBankDetails({
         account_holder_name: payoutDetails.account_holder_name || "",
@@ -2961,10 +2961,10 @@ const PayoutService = () => {
         ifsc_code: payoutDetails.ifsc_code || "",
         phone_number: payoutDetails.phone_number || "",
       });
-      
+
       const adjustments = await getOpenAdjustmentsForDriver(driver.user_id);
       setOpenAdjustments(adjustments.items || []);
-      
+
       const bookings = await getPayoutBookings({ driver_user_id: driver.user_id });
       console.log("Fetched payout bookings:", bookings);
       setPayoutBookings(bookings.items || []);
@@ -2983,15 +2983,15 @@ const PayoutService = () => {
     try {
       const bookingDetails = await getBookingDetailsByBookingId(bookingId);
       console.log("Latest booking status from main system:", bookingDetails);
-      
+
       if (tripId) {
         const passengers = await getTripPassengers(tripId);
         console.log("Trip passengers status:", passengers);
-        
+
         const bookingInTrip = passengers.passengers?.find(p => p.booking_id === bookingId);
         if (bookingInTrip && bookingInTrip.status === 'completed') {
           setSuccessMessage(`✅ Booking ${bookingId.substring(0, 8)}... is COMPLETED in the main system! The payout system will update shortly.`);
-          
+
           if (selectedDriver) {
             const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
             setPayoutBookings(refreshedBookings.items || []);
@@ -3001,7 +3001,7 @@ const PayoutService = () => {
           setErrorMessage(`Booking status in main system: ${bookingInTrip?.status || 'not found'}`);
         }
       }
-      
+
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error("Error syncing booking status:", error);
@@ -3014,7 +3014,7 @@ const PayoutService = () => {
   // Force refresh payout bookings
   const refreshPayoutBookings = async () => {
     if (!selectedDriver) return;
-    
+
     setLoading(true);
     try {
       const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
@@ -3032,20 +3032,20 @@ const PayoutService = () => {
   // Calculate monthly summary with proper amounts
   const calculateMonthlySummary = async () => {
     if (!selectedDriver) return;
-    
+
     setLoading(true);
     try {
-      const response = await getPayoutBookings({ 
+      const response = await getPayoutBookings({
         driver_user_id: selectedDriver.user_id,
         month: monthlyPayoutConfig.month,
         year: monthlyPayoutConfig.year
       });
-      
+
       const bookings = response.items || [];
       console.log("Monthly bookings:", bookings);
-      
+
       const eligibleBookings = bookings.filter(b => b.transfer_status === 'ready');
-      
+
       const summary = {
         totalBookings: eligibleBookings.length,
         totalGrossAmount: 0,
@@ -3053,7 +3053,7 @@ const PayoutService = () => {
         totalNetAmount: 0,
         bookings: eligibleBookings
       };
-      
+
       eligibleBookings.forEach(booking => {
         const gross = parseFloat(booking.driver_payout_amount) || 0;
         const deductions = parseFloat(booking.applied_adjustment_amount) || 0;
@@ -3061,7 +3061,7 @@ const PayoutService = () => {
         summary.totalDeductions += deductions;
         summary.totalNetAmount += (gross - deductions);
       });
-      
+
       console.log("Monthly summary:", summary);
       setMonthlySummary(summary);
       setShowMonthlySummary(true);
@@ -3097,7 +3097,7 @@ const PayoutService = () => {
       setErrorMessage("Please select a driver first");
       return;
     }
-    
+
     setLoading(true);
     try {
       const result = await triggerMonthlyPayout(
@@ -3106,11 +3106,11 @@ const PayoutService = () => {
         monthlyPayoutConfig.year,
         []
       );
-      
+
       setMonthlyBatchResults(result);
       setShowMonthlyBatchModal(true);
       setSuccessMessage(`Monthly payout completed: ${result.success_count} successful, ${result.failure_count} failed`);
-      
+
       await refreshPayoutBookings();
     } catch (error) {
       console.error("Error triggering monthly payout:", error);
@@ -3135,11 +3135,11 @@ const PayoutService = () => {
         limit: 100,
         booking_items: [],
       });
-      
+
       setBulkBatchResults(result);
       setShowBulkBatchModal(true);
       setSuccessMessage(`Bulk payout completed: ${result.success_count} successful, ${result.failure_count} failed`);
-      
+
       await refreshPayoutBookings();
     } catch (error) {
       console.error("Error triggering bulk payout:", error);
@@ -3181,7 +3181,7 @@ const PayoutService = () => {
       const enhancedData = await getBookingDetailsByBookingId(bookingId);
       setFullBookingDetails(enhancedData);
       setShowFullBookingModal(true);
-      
+
       if (enhancedData.trip_id) {
         const passengers = await getTripPassengers(enhancedData.trip_id);
         setTripPassengers(passengers);
@@ -3202,7 +3202,7 @@ const PayoutService = () => {
       const passengers = await getTripPassengers(tripId);
       setTripPassengers(passengers);
       setShowTripPassengersModal(true);
-      
+
       if (selectedDriver) {
         const refreshedBookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
         setPayoutBookings(refreshedBookings.items || []);
@@ -3287,21 +3287,21 @@ const PayoutService = () => {
     try {
       const createResult = await createLinkedAccount(selectedDriver.user_id);
       console.log("Linked account creation result:", createResult);
-      
+
       const linkedAccountId = createResult.driver?.payout_details?.razorpay_linked_account_id;
       const stakeholderId = createResult.driver?.payout_details?.razorpay_stakeholder_id;
       const routeStatus = createResult.driver?.payout_details?.route_product_status;
-      
+
       if (linkedAccountId) {
         await updateLinkedAccountStatus(selectedDriver.user_id, linkedAccountId, "active");
-        
+
         if (stakeholderId) {
           setSuccessMessage(`✅ Linked account created! Stakeholder ID: ${stakeholderId.substring(0, 8)}...`);
         } else {
           setSuccessMessage("⚠️ Linked account created but stakeholder missing. Running sync to fix...");
           await syncLinkedAccount(selectedDriver.user_id);
         }
-        
+
         if (routeStatus === 'activated') {
           await updateDriverEligibility(selectedDriver.user_id, true);
           setSuccessMessage(prev => prev + ` Route product activated! Driver is now payout eligible.`);
@@ -3313,10 +3313,10 @@ const PayoutService = () => {
       } else {
         setSuccessMessage("✅ Linked account created successfully!");
       }
-      
+
       const updated = await getDriverDetails(selectedDriver.user_id);
       setDriverDetails(updated);
-      
+
       setTimeout(() => setSuccessMessage(null), 8000);
     } catch (error) {
       console.error("Error in linked account flow:", error);
@@ -3341,29 +3341,29 @@ const PayoutService = () => {
     try {
       const syncResult = await syncLinkedAccount(selectedDriver.user_id);
       console.log("Sync result:", syncResult);
-      
+
       const updated = await getDriverDetails(selectedDriver.user_id);
       setDriverDetails(updated);
-      
+
       const payoutDetails = updated.payout_details || {};
       const stakeholderId = payoutDetails.razorpay_stakeholder_id;
       const routeStatus = payoutDetails.route_product_status;
       const linkedStatus = payoutDetails.linked_account_status;
-      
+
       let statusMessage = "";
-      
+
       if (linkedStatus === 'active') {
         statusMessage += "✅ Linked account: ACTIVE\n";
       } else {
         statusMessage += `⚠️ Linked account status: ${linkedStatus}\n`;
       }
-      
+
       if (stakeholderId) {
         statusMessage += `✅ Stakeholder: ${stakeholderId.substring(0, 8)}...\n`;
       } else {
         statusMessage += "❌ Stakeholder: MISSING - Please run sync again\n";
       }
-      
+
       if (routeStatus === 'activated') {
         statusMessage += "✅ Route Product: ACTIVATED\n";
         if (!payoutDetails.is_payout_eligible) {
@@ -3375,14 +3375,14 @@ const PayoutService = () => {
       } else {
         statusMessage += `⚠️ Route Product status: ${routeStatus || 'NOT STARTED'}\n`;
       }
-      
+
       setSuccessMessage(statusMessage);
-      
+
       setTimeout(async () => {
         const refreshed = await getDriverDetails(selectedDriver.user_id);
         setDriverDetails(refreshed);
       }, 5000);
-      
+
       setTimeout(() => setSuccessMessage(null), 10000);
     } catch (error) {
       console.error("Error syncing linked account:", error);
@@ -3432,7 +3432,7 @@ const PayoutService = () => {
       setErrorMessage("Please select a booking first to create an adjustment");
       return;
     }
-    
+
     if (!adjustmentForm.reason_text.trim()) {
       setErrorMessage("Reason text is required");
       return;
@@ -3444,7 +3444,7 @@ const PayoutService = () => {
 
     setUpdating(true);
     setErrorMessage(null);
-    
+
     try {
       await createAdjustment(selectedBookingForAdjustment.booking_id, {
         adjustment_type: adjustmentForm.adjustment_type,
@@ -3453,15 +3453,15 @@ const PayoutService = () => {
         reason_text: adjustmentForm.reason_text,
         admin_note: adjustmentForm.admin_note,
       });
-      
+
       if (selectedDriver) {
         const adjustments = await getOpenAdjustmentsForDriver(selectedDriver.user_id);
         setOpenAdjustments(adjustments.items || []);
-        
+
         const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
         setPayoutBookings(bookings.items || []);
       }
-      
+
       setShowAdjustmentModal(false);
       setSelectedBookingForAdjustment(null);
       setAdjustmentForm({
@@ -3475,7 +3475,7 @@ const PayoutService = () => {
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Error creating adjustment:", error);
-      
+
       if (error.message === "BOOKING_NOT_IN_PAYOUT_SYSTEM") {
         setErrorMessage(
           "This booking is not registered in the payout system yet. " +
@@ -3493,12 +3493,12 @@ const PayoutService = () => {
     setUpdating(true);
     try {
       await updateAdjustmentDecision(adjustmentId, decision_status, `Admin ${decision_status} this adjustment`);
-      
+
       if (selectedDriver) {
         const adjustments = await getOpenAdjustmentsForDriver(selectedDriver.user_id);
         setOpenAdjustments(adjustments.items || []);
       }
-      
+
       setSuccessMessage(`✅ Adjustment ${decision_status} successfully!`);
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
@@ -3531,28 +3531,28 @@ const PayoutService = () => {
   const handleProcessPayout = async (bookingId) => {
     setProcessingBooking(bookingId);
     setErrorMessage(null);
-    
+
     const adjustments_to_apply = Object.values(selectedAdjustments);
-    
+
     const booking = payoutBookings.find(b => b.booking_id === bookingId);
     const netPayoutAmount = parseFloat(booking?.net_payout_amount || 0);
-    
+
     if (netPayoutAmount <= 0) {
       setErrorMessage(`Cannot process payout: Net amount (₹${netPayoutAmount.toFixed(2)}) is zero or negative after deductions.`);
       setProcessingBooking(null);
       return;
     }
-    
+
     if (netPayoutAmount < 1) {
       setErrorMessage(`Net payout amount (₹${netPayoutAmount.toFixed(2)}) is too small to transfer. Minimum transfer amount is ₹1.`);
       setProcessingBooking(null);
       return;
     }
-    
+
     try {
       const result = await triggerSinglePayout(bookingId, adjustments_to_apply);
       console.log("Payout result:", result);
-      
+
       if (result.booking_transfer_status === "withheld") {
         setSuccessMessage("⚠️ Payout fully absorbed by deductions. No transfer created.");
       } else if (result.transfer_row_status === "processed") {
@@ -3562,17 +3562,17 @@ const PayoutService = () => {
       } else {
         setSuccessMessage("Payout processed successfully!");
       }
-      
+
       setSelectedAdjustments({});
-      
+
       const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
       setPayoutBookings(bookings.items || []);
-      
+
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Error processing payout:", error);
       const errorMsg = error.detail?.error || error.detail?.message || "Failed to process payout";
-      
+
       if (error.detail?.error === "booking_not_completed") {
         setErrorMessage("Booking is not completed yet. Cannot process payout.");
       } else if (error.detail?.error === "driver_not_payout_eligible") {
@@ -3610,14 +3610,14 @@ const PayoutService = () => {
       setErrorMessage("No ready bookings to process");
       return;
     }
-    
+
     setUpdating(true);
     setErrorMessage(null);
-    
+
     let successCount = 0;
     let failureCount = 0;
     const results = [];
-    
+
     for (const booking of monthlySummary.bookings) {
       try {
         const result = await triggerSinglePayout(booking.booking_id, []);
@@ -3637,20 +3637,20 @@ const PayoutService = () => {
         failureCount++;
       }
     }
-    
+
     setBatchResults({
       total_selected: monthlySummary.bookings.length,
       success_count: successCount,
       failure_count: failureCount,
       results: results
     });
-    
+
     setSuccessMessage(`Processed ${successCount} successful, ${failureCount} failed out of ${monthlySummary.bookings.length} bookings`);
-    
+
     const bookings = await getPayoutBookings({ driver_user_id: selectedDriver.user_id });
     setPayoutBookings(bookings.items || []);
     setShowMonthlySummary(false);
-    
+
     setTimeout(() => setSuccessMessage(null), 5000);
     setUpdating(false);
   };
@@ -3660,9 +3660,9 @@ const PayoutService = () => {
     try {
       const result = await reconcileRefund(bookingId);
       setSuccessMessage(`Refund reconciled successfully! Outcome: ${result.outcome}`);
-      
+
       await fetchRefundQueue();
-      
+
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Error reconciling refund:", error);
@@ -3703,7 +3703,7 @@ const PayoutService = () => {
             <BanknotesIcon className="w-12 h-12 text-green-500 opacity-50" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
@@ -3714,7 +3714,7 @@ const PayoutService = () => {
             <CheckCircleIcon className="w-12 h-12 text-blue-500 opacity-50" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
           <div className="flex items-center justify-between">
             <div>
@@ -3725,7 +3725,7 @@ const PayoutService = () => {
             <ExclamationTriangleIcon className="w-12 h-12 text-red-500 opacity-50" />
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
           <div className="flex items-center justify-between">
             <div>
@@ -3737,7 +3737,7 @@ const PayoutService = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Alerts</h3>
         <div className="space-y-2">
@@ -3791,14 +3791,14 @@ const PayoutService = () => {
                   {driver.vehicle && (
                     <p className="text-xs text-gray-400">{driver.vehicle.registration_number || driver.vehicle.reg_no}</p>
                   )}
-                  
+
                   <div className="mt-2 flex flex-wrap gap-4 text-xs">
                     <span className="text-yellow-600">Ready: {driver.aggregates?.ready_booking_count || 0}</span>
                     <span className="text-green-600">Transferred: {driver.aggregates?.transferred_booking_count || 0}</span>
                     <span className="text-red-600">Withheld: {driver.aggregates?.withheld_booking_count || 0}</span>
                     <span className="text-purple-600">Refund Queue: {driver.aggregates?.refund_queue_count || 0}</span>
                   </div>
-                  
+
                   {driver.payout_details?.linked_account_status && (
                     <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${getLinkedAccountStatusColor(driver.payout_details.linked_account_status)}`}>
                       {driver.payout_details.linked_account_status}
@@ -3825,7 +3825,7 @@ const PayoutService = () => {
   // Monthly Summary Modal
   const renderMonthlySummaryModal = () => {
     if (!showMonthlySummary) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -3852,7 +3852,7 @@ const PayoutService = () => {
                 <p className="text-2xl font-bold text-purple-600">₹{monthlySummary.totalNetAmount.toFixed(2)}</p>
               </div>
             </div>
-            
+
             <h4 className="font-semibold text-gray-900 mb-3">Booking Details</h4>
             <div className="space-y-3 max-h-96 overflow-auto">
               {monthlySummary.bookings.map((booking) => (
@@ -3895,7 +3895,7 @@ const PayoutService = () => {
   // Monthly Batch Results Modal (NEW)
   const renderMonthlyBatchModal = () => {
     if (!showMonthlyBatchModal || !monthlyBatchResults) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -3918,7 +3918,7 @@ const PayoutService = () => {
                 <p className="text-2xl font-bold text-red-600">{monthlyBatchResults.failure_count}</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <p className="font-medium">Results:</p>
               {monthlyBatchResults.results?.map((result, idx) => (
@@ -3947,7 +3947,7 @@ const PayoutService = () => {
   // Bulk Batch Results Modal (NEW)
   const renderBulkBatchModal = () => {
     if (!showBulkBatchModal || !bulkBatchResults) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -3970,7 +3970,7 @@ const PayoutService = () => {
                 <p className="text-2xl font-bold text-red-600">{bulkBatchResults.failure_count}</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <p className="font-medium">Results:</p>
               {bulkBatchResults.results?.map((result, idx) => (
@@ -3996,7 +3996,7 @@ const PayoutService = () => {
   // Booking Adjustments Modal (NEW)
   const renderBookingAdjustmentsModal = () => {
     if (!showBookingAdjustmentsModal || !selectedBookingDetail) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -4032,7 +4032,7 @@ const PayoutService = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Originated Adjustments */}
             <div className="mb-6">
               <h4 className="font-semibold text-gray-900 mb-3">Originated Adjustments</h4>
@@ -4048,10 +4048,9 @@ const PayoutService = () => {
                             <span className={`px-2 py-0.5 text-xs rounded-full ${adj.adjustment_type === 'fine' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
                               {adj.adjustment_type}
                             </span>
-                            <span className={`px-2 py-0.5 text-xs rounded-full ${
-                              adj.decision_status === 'included' ? 'bg-green-100 text-green-700' :
+                            <span className={`px-2 py-0.5 text-xs rounded-full ${adj.decision_status === 'included' ? 'bg-green-100 text-green-700' :
                               adj.decision_status === 'excluded' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>
+                              }`}>
                               {adj.decision_status}
                             </span>
                           </div>
@@ -4066,7 +4065,7 @@ const PayoutService = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Applied Adjustments */}
             <div className="mb-6">
               <h4 className="font-semibold text-gray-900 mb-3">Applied Adjustments</h4>
@@ -4087,7 +4086,7 @@ const PayoutService = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Open Driver Adjustments */}
             {selectedBookingDetail.open_driver_adjustments?.items?.length > 0 && (
               <div>
@@ -4124,13 +4123,13 @@ const PayoutService = () => {
   // Driver Detail Tab
   const renderDriverDetail = () => {
     if (!selectedDriver) return null;
-    
+
     const payoutDetails = driverDetails?.payout_details || {};
-    const isFullySetup = payoutDetails.razorpay_linked_account_id && 
-                         payoutDetails.linked_account_status === 'active' && 
-                         payoutDetails.route_product_status === 'activated' &&
-                         payoutDetails.is_payout_eligible;
-    
+    const isFullySetup = payoutDetails.razorpay_linked_account_id &&
+      payoutDetails.linked_account_status === 'active' &&
+      payoutDetails.route_product_status === 'activated' &&
+      payoutDetails.is_payout_eligible;
+
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-xl shadow-md p-6">
@@ -4150,11 +4149,10 @@ const PayoutService = () => {
                   </span>
                 )}
                 {payoutDetails.route_product_status && (
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    payoutDetails.route_product_status === 'activated' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs rounded-full ${payoutDetails.route_product_status === 'activated'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                    }`}>
                     Route: {payoutDetails.route_product_status}
                   </span>
                 )}
@@ -4187,7 +4185,7 @@ const PayoutService = () => {
             </div>
           </div>
         </div>
-        
+
         <div className={`rounded-xl shadow-md p-4 ${isFullySetup ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
           <div className="flex items-center gap-3">
             {isFullySetup ? (
@@ -4200,14 +4198,14 @@ const PayoutService = () => {
                 {isFullySetup ? "Driver Fully Setup for Payouts" : "Driver Setup Incomplete"}
               </p>
               <p className="text-sm">
-                {isFullySetup 
+                {isFullySetup
                   ? "This driver can receive payouts. All requirements are met."
                   : "Complete the steps below to enable payouts for this driver."}
               </p>
             </div>
           </div>
         </div>
-        
+
         {/* Bank Account Details Section */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -4311,7 +4309,7 @@ const PayoutService = () => {
             )}
           </div>
         </div>
-        
+
         {/* NEW: Onboarding Status Section */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mt-4">
           <div className="p-4 border-b bg-gray-50">
@@ -4330,7 +4328,7 @@ const PayoutService = () => {
                   {payoutDetails.bank_account_number ? '✓ Completed' : '✗ Required'}
                 </span>
               </div>
-              
+
               {/* Linked Account Status */}
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -4352,7 +4350,7 @@ const PayoutService = () => {
                   )}
                 </div>
               </div>
-              
+
               {/* Stakeholder Status */}
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -4363,7 +4361,7 @@ const PayoutService = () => {
                   {payoutDetails.razorpay_stakeholder_id ? '✓ Created' : 'Pending - Run Sync'}
                 </span>
               </div>
-              
+
               {/* Route Product Status */}
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -4371,11 +4369,10 @@ const PayoutService = () => {
                   <span className="text-sm text-gray-700">4. Route Product</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs ${
-                    payoutDetails.route_product_status === 'activated' ? 'text-green-600' :
+                  <span className={`text-xs ${payoutDetails.route_product_status === 'activated' ? 'text-green-600' :
                     payoutDetails.route_product_status === 'requested' ? 'text-blue-600' :
-                    'text-yellow-600'
-                  }`}>
+                      'text-yellow-600'
+                    }`}>
                     {payoutDetails.route_product_status || 'Not Created'}
                   </span>
                   {payoutDetails.razorpay_linked_account_id && payoutDetails.route_product_status !== 'activated' && (
@@ -4389,7 +4386,7 @@ const PayoutService = () => {
                   )}
                 </div>
               </div>
-              
+
               {/* Payout Eligibility */}
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
@@ -4412,7 +4409,7 @@ const PayoutService = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="mt-4 pt-3 border-t border-gray-100 flex gap-2">
               <button
@@ -4433,7 +4430,7 @@ const PayoutService = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Open Adjustments Section */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -4481,7 +4478,7 @@ const PayoutService = () => {
             )}
           </div>
         </div>
-        
+
         {/* Driver's Payout Bookings Section */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
@@ -4506,7 +4503,7 @@ const PayoutService = () => {
               </button>
             </div>
           </div>
-          
+
           {payoutBookings.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               No payout bookings found for this driver
@@ -4516,7 +4513,7 @@ const PayoutService = () => {
               {payoutBookings.map((booking) => {
                 const displayStatus = getDisplayStatus(booking);
                 const netPayoutAmount = parseFloat(booking.net_payout_amount || 0);
-                
+
                 return (
                   <div key={booking.booking_id} className="p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
@@ -4569,11 +4566,11 @@ const PayoutService = () => {
                             Sync Status
                           </button>
                         </div>
-                        
+
                         <p className="text-sm text-gray-600">
                           Passenger: {booking.passenger_name || "N/A"}
                         </p>
-                        
+
                         <div className="mt-2 grid grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-xs text-gray-400">Gross Payout</p>
@@ -4594,14 +4591,14 @@ const PayoutService = () => {
                             <p className="text-gray-600">-₹{parseFloat(booking.commission_amount || 0).toFixed(2)}</p>
                           </div>
                         </div>
-                        
+
                         {netPayoutAmount <= 0 && (
                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
                             ⚠️ Net payout is zero or negative. Cannot process payout.
                           </div>
                         )}
                       </div>
-                      
+
                       {booking.transfer_status === 'ready' && isFullySetup && netPayoutAmount > 0 && (
                         <div className="ml-4">
                           {openAdjustments.length > 0 && (
@@ -4625,7 +4622,7 @@ const PayoutService = () => {
                               </details>
                             </div>
                           )}
-                          
+
                           <button
                             onClick={() => handleProcessPayout(booking.booking_id)}
                             disabled={processingBooking === booking.booking_id}
@@ -4639,13 +4636,13 @@ const PayoutService = () => {
                           </button>
                         </div>
                       )}
-                      
+
                       {booking.transfer_status === 'withheld' && (
                         <div className="ml-4 px-3 py-1 bg-red-100 text-red-700 text-sm rounded-full">
                           Fully Absorbed
                         </div>
                       )}
-                      
+
                       {booking.transfer_status === 'failed' && (
                         <div className="ml-4 px-3 py-1 bg-red-100 text-red-700 text-sm rounded-full">
                           Failed - Check Details
@@ -4676,7 +4673,7 @@ const PayoutService = () => {
             <option key={d.user_id} value={d.user_id}>{d.profile?.full_name || d.name}</option>
           ))}
         </select>
-        
+
         <select
           value={transferStatusFilter}
           onChange={(e) => setTransferStatusFilter(e.target.value)}
@@ -4687,7 +4684,7 @@ const PayoutService = () => {
           <option value="failed">Failed</option>
           <option value="reversed">Reversed</option>
         </select>
-        
+
         <button
           onClick={fetchTransfers}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -4695,7 +4692,7 @@ const PayoutService = () => {
           Apply Filters
         </button>
       </div>
-      
+
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-4 bg-gray-50 border-b">
           <h3 className="font-semibold text-gray-900">Transfer History</h3>
@@ -4811,7 +4808,7 @@ const PayoutService = () => {
   // Full Booking Details Modal
   const renderFullBookingModal = () => {
     if (!showFullBookingModal || !fullBookingDetails) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -4838,7 +4835,7 @@ const PayoutService = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="border rounded-lg p-4">
               <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <UserIcon className="w-5 h-5" />
@@ -4855,7 +4852,7 @@ const PayoutService = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="border rounded-lg p-4">
               <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <MapPinIcon className="w-5 h-5" />
@@ -4864,7 +4861,7 @@ const PayoutService = () => {
               <p className="font-medium">{fullBookingDetails.route?.name}</p>
               <p className="text-sm text-gray-500">Code: {fullBookingDetails.route?.code}</p>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="border rounded-lg p-4">
                 <h4 className="font-semibold text-gray-900 mb-3">Pickup Location</h4>
@@ -4892,7 +4889,7 @@ const PayoutService = () => {
   // Trip Passengers Modal
   const renderTripPassengersModal = () => {
     if (!showTripPassengersModal || !tripPassengers) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -4906,7 +4903,7 @@ const PayoutService = () => {
               <p className="font-mono text-sm">{tripPassengers.trip_id}</p>
               <p className="text-sm text-gray-600 mt-2">Total Bookings: {tripPassengers.total_bookings}</p>
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="font-semibold text-gray-900">Passengers List</h4>
               {tripPassengers.passengers?.map((passenger, idx) => (
@@ -4940,7 +4937,7 @@ const PayoutService = () => {
   // Batch Results Modal
   const renderBatchResultsModal = () => {
     if (!batchResults) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -4963,7 +4960,7 @@ const PayoutService = () => {
                 <p className="text-2xl font-bold text-red-600">{batchResults.failure_count}</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <p className="font-medium">Details:</p>
               {batchResults.results?.map((result, idx) => (
@@ -5004,7 +5001,7 @@ const PayoutService = () => {
               </div>
             </div>
           )}
-          
+
           {errorMessage && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-start gap-3">
@@ -5017,7 +5014,7 @@ const PayoutService = () => {
               </div>
             </div>
           )}
-          
+
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -5034,7 +5031,7 @@ const PayoutService = () => {
               Commission: {settings?.commission_percent || 0}%
             </button>
           </div>
-          
+
           <div className="flex gap-2 mb-6 border-b">
             <button
               onClick={() => setActiveTab("dashboard")}
@@ -5070,7 +5067,7 @@ const PayoutService = () => {
               Refunds
             </button>
           </div>
-          
+
           {loading && activeTab !== "driverDetail" ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -5086,7 +5083,7 @@ const PayoutService = () => {
           )}
         </div>
       </div>
-      
+
       {showBankModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -5141,7 +5138,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -5170,7 +5167,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {showProviderModal && providerAccount && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -5186,7 +5183,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {showAdjustmentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -5270,7 +5267,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {/* Updated Monthly Payout Modal with Trigger Button */}
       {showMonthlyPayoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -5314,7 +5311,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {showBulkPayoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -5335,7 +5332,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {showBookingDetailModal && bookingDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -5351,7 +5348,7 @@ const PayoutService = () => {
           </div>
         </div>
       )}
-      
+
       {renderFullBookingModal()}
       {renderTripPassengersModal()}
       {renderMonthlySummaryModal()}

@@ -1687,6 +1687,8 @@ const DriverPayments = () => {
                             <div className="space-y-0.5">
                               <div className="text-xs text-gray-500">Gross: {formatCurrency(booking.fare_amount)}</div>
                               <div className="text-xs text-orange-500">Commission: {formatCurrency(booking.commission_amount)}</div>
+
+                              
                               <div className="text-xs text-red-500">Deductions: {formatCurrency(booking.applied_adjustment_amount)}</div>
                               <div className="text-sm font-bold text-green-600 mt-1">Net: {formatCurrency(booking.net_payout_amount)}</div>
                             </div>
