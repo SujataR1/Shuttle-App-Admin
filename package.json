@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "vite",
+    "start:prod": "vite preview --host 127.0.0.1 --port 18082 --strictPort",
     "build": "vite build",
     "preview": "vite preview"
   },
