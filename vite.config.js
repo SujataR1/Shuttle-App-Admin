@@ -23,7 +23,7 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     server: {
-      port: parseInt(env.PORT) || 5173, // Default to 5173 if PORT is not set
+      port: parseInt(env.PORT) || 18082, // Default to 18082 if PORT is not set
       host: true, // Allows external access
       allowedHosts: [
         'admin.shuttleapp.transev.site',
@@ -33,7 +33,7 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     preview: {
-      port: parseInt(env.PORT) || 5173,
+      port: parseInt(env.PORT) || 18082,
       host: true,
       allowedHosts: [
         'admin.shuttleapp.transev.site',
@@ -49,3 +49,4 @@ export default defineConfig(({ command, mode }) => {
     },
   };
 });
+
