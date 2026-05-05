@@ -36,3 +36,6 @@ coverage
 
 # Misc
 *.local
+
+# Hosting cleanup
+package-lock.json
