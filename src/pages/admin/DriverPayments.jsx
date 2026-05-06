@@ -963,7 +963,6 @@
 
 // export default DriverPayments;
 
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../assets/components/sidebar/Sidebar";
 import TopNavbar from "../../assets/components/navbar/TopNavbar";
@@ -1124,6 +1123,8 @@ const DriverPayments = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Data State
   const [drivers, setDrivers] = useState([]);
@@ -1153,6 +1154,17 @@ const DriverPayments = () => {
   
   // Search State
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Check if mobile/tablet view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch all data
   useEffect(() => {
@@ -1432,13 +1444,13 @@ const DriverPayments = () => {
     
     if (filteredDrivers.length === 0 && !loading) {
       return (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <UserIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <div className="text-center py-8 sm:py-12 bg-white rounded-xl border border-gray-200">
+          <UserIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
           <p className="text-gray-500">No drivers found</p>
-          <p className="text-sm text-gray-400 mt-2">Try refreshing or check your connection</p>
+          <p className="text-xs sm:text-sm text-gray-400 mt-2">Try refreshing or check your connection</p>
           <button
             onClick={handleRefresh}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
           >
             Refresh Data
           </button>
@@ -1447,60 +1459,60 @@ const DriverPayments = () => {
     }
     
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredDrivers.map((driver, index) => (
           <div
             key={driver.driver_id || index}
             onClick={() => handleDriverClick(driver)}
             className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group"
           >
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg">
                     {driver.driver_name?.charAt(0)?.toUpperCase() || 'D'}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm sm:text-base">
                       {driver.driver_name}
                     </h3>
-                    <p className="text-xs text-gray-500">{driver.driver_email}</p>
+                    <p className="text-xs text-gray-500 break-all">{driver.driver_email}</p>
                   </div>
                 </div>
-                <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </div>
               
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <TruckIcon className="w-4 h-4" />
-                  <span>{driver.vehicle_number}</span>
+              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <TruckIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="break-all">{driver.vehicle_number}</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="text-center p-2 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Total Trips</p>
-                  <p className="text-xl font-bold text-blue-600">{driver.total_bookings}</p>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="text-center p-1.5 sm:p-2 bg-blue-50 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Total Trips</p>
+                  <p className="text-lg sm:text-xl font-bold text-blue-600">{driver.total_bookings}</p>
                 </div>
-                <div className="text-center p-2 bg-green-50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Total Earned</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(driver.total_net_payout)}</p>
+                <div className="text-center p-1.5 sm:p-2 bg-green-50 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Total Earned</p>
+                  <p className="text-lg sm:text-xl font-bold text-green-600">{formatCurrency(driver.total_net_payout)}</p>
                 </div>
               </div>
               
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {driver.completed_count > 0 && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                  <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full bg-green-100 text-green-700">
                     {driver.completed_count} Paid
                   </span>
                 )}
                 {driver.pending_count > 0 && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                  <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
                     {driver.pending_count} Pending
                   </span>
                 )}
                 {driver.failed_count > 0 && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                  <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full bg-red-100 text-red-700">
                     {driver.failed_count} Failed
                   </span>
                 )}
@@ -1524,18 +1536,18 @@ const DriverPayments = () => {
     };
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-gray-50 to-white sticky top-0 bg-white z-10 flex-shrink-0">
+          <div className="flex justify-between items-center p-4 sm:p-6 border-b bg-gradient-to-r from-gray-50 to-white sticky top-0 bg-white z-10 flex-shrink-0">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg">
                   {selectedDriver.driver_name?.charAt(0)?.toUpperCase() || 'D'}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">{selectedDriver.driver_name}</h3>
-                  <p className="text-sm text-gray-500">{selectedDriver.driver_email}</p>
-                  <p className="text-xs text-gray-400 mt-1">Vehicle: {selectedDriver.vehicle_number}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">{selectedDriver.driver_name}</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 break-all">{selectedDriver.driver_email}</p>
+                  <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">Vehicle: {selectedDriver.vehicle_number}</p>
                 </div>
               </div>
             </div>
@@ -1554,19 +1566,19 @@ const DriverPayments = () => {
               }}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
           
-          <div className="flex-1 overflow-auto p-6">
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[150px]">
+          <div className="flex-1 overflow-auto p-4 sm:p-6">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="flex flex-wrap gap-3 sm:gap-4 items-end">
+                <div className="flex-1 min-w-[120px] sm:min-w-[150px]">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Date Range</label>
                   <select
                     value={detailFilters.dateRange}
                     onChange={(e) => setDetailFilters({ ...detailFilters, dateRange: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-xs sm:text-sm"
                   >
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
@@ -1579,26 +1591,26 @@ const DriverPayments = () => {
                 
                 {detailFilters.dateRange === 'custom' && (
                   <>
-                    <div className="w-32">
+                    <div className="w-28 sm:w-32">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Month</label>
                       <select
                         value={detailFilters.customMonth}
                         onChange={(e) => setDetailFilters({ ...detailFilters, customMonth: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-xs sm:text-sm"
                       >
                         {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                           <option key={m} value={m}>
-                            {new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })}
+                            {new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' })}
                           </option>
                         ))}
                       </select>
                     </div>
-                    <div className="w-24">
+                    <div className="w-20 sm:w-24">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Year</label>
                       <select
                         value={detailFilters.customYear}
                         onChange={(e) => setDetailFilters({ ...detailFilters, customYear: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-xs sm:text-sm"
                       >
                         {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
                           <option key={y} value={y}>{y}</option>
@@ -1617,7 +1629,7 @@ const DriverPayments = () => {
                       startDate: '',
                       endDate: ''
                     })}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -1625,89 +1637,82 @@ const DriverPayments = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Total Trips</p>
-                <p className="text-2xl font-bold text-blue-600">{filteredBookings.length}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-blue-50 rounded-lg p-2 sm:p-4 text-center">
+                <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Total Trips</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-600">{filteredBookings.length}</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Gross Amount</p>
-                <p className="text-lg font-bold text-green-600">{formatCurrency(driverStats.totalGross)}</p>
+              <div className="bg-green-50 rounded-lg p-2 sm:p-4 text-center">
+                <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Gross Amount</p>
+                <p className="text-sm sm:text-lg font-bold text-green-600">{formatCurrency(driverStats.totalGross)}</p>
               </div>
-              <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Commission</p>
-                <p className="text-lg font-bold text-orange-600">{formatCurrency(driverStats.totalCommission)}</p>
+              <div className="bg-orange-50 rounded-lg p-2 sm:p-4 text-center">
+                <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Commission</p>
+                <p className="text-sm sm:text-lg font-bold text-orange-600">{formatCurrency(driverStats.totalCommission)}</p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Net Payout</p>
-                <p className="text-2xl font-bold text-purple-600">{formatCurrency(driverStats.totalNet)}</p>
+              <div className="bg-purple-50 rounded-lg p-2 sm:p-4 text-center">
+                <p className="text-xs text-gray-500 mb-0.5 sm:mb-1">Net Payout</p>
+                <p className="text-lg sm:text-2xl font-bold text-purple-600">{formatCurrency(driverStats.totalNet)}</p>
               </div>
             </div>
             
-            {/* TABLE WITHOUT Route & Stops and Status columns */}
+            {/* Table */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-[800px] lg:min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Trip Details</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Amounts</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">Actions</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[160px]">Trip Details</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Amounts</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">Date</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredBookings.length === 0 ? (
                       <tr>
-                        <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan="4" className="px-4 sm:px-6 py-8 sm:py-12 text-center text-gray-500 text-sm">
                           No bookings found for this period
                         </td>
                       </tr>
                     ) : (
                       filteredBookings.map((booking) => (
                         <tr key={booking.booking_id} className="hover:bg-gray-50 transition-colors">
-                          {/* Trip Details */}
-                          <td className="px-4 py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4">
                             <div className="text-sm font-medium text-gray-900">
                               {booking.passenger_name || 'N/A'}
                             </div>
                             <div className="text-xs text-gray-500 font-mono mt-1">
                               ID: {booking.booking_id?.substring(0, 8)}...
                             </div>
-                            {/* Status badge shown inline */}
                             <div className="mt-2">
-                              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getTransferStatusColor(booking.transfer_status)}`}>
+                              <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full ${getTransferStatusColor(booking.transfer_status)}`}>
                                 {getTransferStatusText(booking.transfer_status)}
                               </span>
                             </div>
                           </td>
                           
-                          {/* Amounts */}
-                          <td className="px-4 py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4">
                             <div className="space-y-0.5">
                               <div className="text-xs text-gray-500">Gross: {formatCurrency(booking.fare_amount)}</div>
                               <div className="text-xs text-orange-500">Commission: {formatCurrency(booking.commission_amount)}</div>
-
-                              
                               <div className="text-xs text-red-500">Deductions: {formatCurrency(booking.applied_adjustment_amount)}</div>
                               <div className="text-sm font-bold text-green-600 mt-1">Net: {formatCurrency(booking.net_payout_amount)}</div>
                             </div>
                           </td>
                           
-                          {/* Date */}
-                          <td className="px-4 py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4">
                             <div className="text-xs text-gray-500">
                               {formatDate(booking.completed_at || booking.created_at)}
                             </div>
                           </td>
                           
-                          {/* Actions */}
-                          <td className="px-4 py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4">
                             <button
                               onClick={() => handleViewBookingDetails(booking)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                              className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-white border border-gray-300 text-gray-700 text-xs sm:text-sm rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors"
                             >
-                              <EyeIcon className="w-4 h-4" />
+                              <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                               View
                             </button>
                           </td>
@@ -1720,14 +1725,14 @@ const DriverPayments = () => {
             </div>
           </div>
           
-          <div className="p-4 border-t bg-gray-50 flex justify-end flex-shrink-0">
+          <div className="p-3 sm:p-4 border-t bg-gray-50 flex justify-end flex-shrink-0">
             <button
               onClick={() => {
                 setShowDetailsModal(false);
                 setSelectedDriver(null);
                 setDriverBookings([]);
               }}
-              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               Close
             </button>
@@ -1747,12 +1752,12 @@ const DriverPayments = () => {
     );
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-3 sm:p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+          <div className="flex justify-between items-center p-4 sm:p-6 border-b bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Booking Payment Details</h3>
-              <p className="text-sm text-gray-500 mt-1 font-mono">Booking ID: {selectedBooking.booking_id}</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Booking Payment Details</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 font-mono">Booking ID: {selectedBooking.booking_id}</p>
             </div>
             <button
               onClick={() => {
@@ -1764,26 +1769,26 @@ const DriverPayments = () => {
               }}
               className="text-gray-400 hover:text-gray-600"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
           
-          <div className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-4 sm:p-6">
             {/* Passenger Information */}
             {passengerBookingHistory && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-6 border border-purple-100">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <UserIcon className="w-5 h-5 text-purple-600" />
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-purple-100">
+                <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                  <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   Passenger Information
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <p className="text-xs text-gray-500">Name</p>
-                    <p className="text-sm font-medium text-gray-900">{passengerBookingHistory.profile?.full_name || 'N/A'}</p>
+                    <p className="text-sm font-medium text-gray-900 break-all">{passengerBookingHistory.profile?.full_name || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Email</p>
-                    <p className="text-sm text-gray-700">{passengerBookingHistory.email || 'N/A'}</p>
+                    <p className="text-sm text-gray-700 break-all">{passengerBookingHistory.email || 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -1791,40 +1796,40 @@ const DriverPayments = () => {
             
             {/* Route & Stops Information */}
             {matchingBooking && (
-              <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-100">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <MapPinIcon className="w-5 h-5 text-blue-600" />
+              <div className="bg-blue-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-100">
+                <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                  <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   Route & Stops Information
                 </h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-green-600 text-sm">🚏</span>
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-xs sm:text-sm">🚏</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-gray-500">Pickup Stop</p>
-                      <p className="text-sm font-medium text-gray-900">{matchingBooking.pickup_stop?.name || 'N/A'}</p>
+                      <p className="text-sm font-medium text-gray-900 break-all">{matchingBooking.pickup_stop?.name || 'N/A'}</p>
                       <p className="text-xs text-gray-400">Stop #{matchingBooking.pickup_stop?.sequence || 'N/A'}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-red-600 text-sm">📍</span>
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-red-600 text-xs sm:text-sm">📍</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-gray-500">Dropoff Stop</p>
-                      <p className="text-sm font-medium text-gray-900">{matchingBooking.dropoff_stop?.name || 'N/A'}</p>
+                      <p className="text-sm font-medium text-gray-900 break-all">{matchingBooking.dropoff_stop?.name || 'N/A'}</p>
                       <p className="text-xs text-gray-400">Stop #{matchingBooking.dropoff_stop?.sequence || 'N/A'}</p>
                     </div>
                   </div>
                   {matchingBooking.actual_drop_stop_name && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 text-sm">🔽</span>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-600 text-xs sm:text-sm">🔽</span>
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-500">Actual Dropoff Stop</p>
-                        <p className="text-sm font-medium text-blue-600">{matchingBooking.actual_drop_stop_name}</p>
+                        <p className="text-sm font-medium text-blue-600 break-all">{matchingBooking.actual_drop_stop_name}</p>
                         {matchingBooking.actual_dropped_at && (
                           <p className="text-xs text-gray-400">at {formatDate(matchingBooking.actual_dropped_at)}</p>
                         )}
@@ -1837,22 +1842,22 @@ const DriverPayments = () => {
             
             {/* Route Information */}
             {routeDetails && (
-              <div className="bg-purple-50 rounded-lg p-4 mb-6 border border-purple-100">
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <InformationCircleIcon className="w-5 h-5 text-purple-600" />
+              <div className="bg-purple-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-purple-100">
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                  <InformationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   Route Information
                 </h4>
-                <p className="text-sm text-gray-700"><span className="font-medium">Route:</span> {routeDetails.name}</p>
+                <p className="text-sm text-gray-700 break-all"><span className="font-medium">Route:</span> {routeDetails.name}</p>
                 <p className="text-sm text-gray-700"><span className="font-medium">Code:</span> {routeDetails.code}</p>
               </div>
             )}
             
             {/* Booking Status */}
             {matchingBooking && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Booking Status</span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${getBookingStatusColor(matchingBooking.status)}`}>
+              <div className="mb-4 sm:mb-6">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-600">Booking Status</span>
+                  <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full ${getBookingStatusColor(matchingBooking.status)}`}>
                     {matchingBooking.status?.toUpperCase() || 'N/A'}
                   </span>
                 </div>
@@ -1860,29 +1865,29 @@ const DriverPayments = () => {
             )}
             
             {/* Financial Breakdown */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Financial Breakdown</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Gross Fare Amount</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedBooking.fare_amount)}</span>
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Financial Breakdown</h4>
+              <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex flex-col sm:flex-row justify-between gap-1">
+                  <span className="text-xs sm:text-sm text-gray-600">Gross Fare Amount</span>
+                  <span className="text-xs sm:text-sm font-medium">{formatCurrency(selectedBooking.fare_amount)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Commission ({selectedBooking.commission_percent_snapshot || 0}%)</span>
-                  <span className="text-sm text-orange-600">-{formatCurrency(selectedBooking.commission_amount)}</span>
+                <div className="flex flex-col sm:flex-row justify-between gap-1">
+                  <span className="text-xs sm:text-sm text-gray-600">Commission ({selectedBooking.commission_percent_snapshot || 0}%)</span>
+                  <span className="text-xs sm:text-sm text-orange-600">-{formatCurrency(selectedBooking.commission_amount)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Driver Gross Payout</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedBooking.driver_payout_amount)}</span>
+                <div className="flex flex-col sm:flex-row justify-between gap-1">
+                  <span className="text-xs sm:text-sm text-gray-600">Driver Gross Payout</span>
+                  <span className="text-xs sm:text-sm font-medium">{formatCurrency(selectedBooking.driver_payout_amount)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Deductions Applied</span>
-                  <span className="text-sm text-red-600">-{formatCurrency(selectedBooking.applied_adjustment_amount)}</span>
+                <div className="flex flex-col sm:flex-row justify-between gap-1">
+                  <span className="text-xs sm:text-sm text-gray-600">Deductions Applied</span>
+                  <span className="text-xs sm:text-sm text-red-600">-{formatCurrency(selectedBooking.applied_adjustment_amount)}</span>
                 </div>
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between">
-                    <span className="text-base font-semibold">Net Payout to Driver</span>
-                    <span className="text-lg font-bold text-green-600">{formatCurrency(selectedBooking.net_payout_amount)}</span>
+                <div className="border-t pt-1.5 sm:pt-2 mt-1.5 sm:mt-2">
+                  <div className="flex flex-col sm:flex-row justify-between gap-1">
+                    <span className="text-sm sm:text-base font-semibold">Net Payout to Driver</span>
+                    <span className="text-base sm:text-lg font-bold text-green-600">{formatCurrency(selectedBooking.net_payout_amount)}</span>
                   </div>
                 </div>
               </div>
@@ -1890,20 +1895,20 @@ const DriverPayments = () => {
             
             {/* Adjustments / Fines */}
             {adjustments.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Adjustments / Fines</h4>
+              <div className="mb-4 sm:mb-6">
+                <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Adjustments / Fines</h4>
                 <div className="space-y-2">
                   {adjustments.map((adj, idx) => (
-                    <div key={idx} className="bg-red-50 rounded-lg p-3">
-                      <div className="flex justify-between flex-wrap gap-2">
+                    <div key={idx} className="bg-red-50 rounded-lg p-2 sm:p-3">
+                      <div className="flex flex-col sm:flex-row justify-between gap-2">
                         <div>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${adj.adjustment_type === 'fine' ? 'bg-red-200 text-red-800' : 'bg-orange-200 text-orange-800'}`}>
+                          <span className={`px-1.5 sm:px-2 py-0.5 text-xs rounded-full ${adj.adjustment_type === 'fine' ? 'bg-red-200 text-red-800' : 'bg-orange-200 text-orange-800'}`}>
                             {adj.adjustment_type}
                           </span>
-                          <p className="text-sm mt-1">{adj.reason_text}</p>
+                          <p className="text-xs sm:text-sm mt-1 break-all">{adj.reason_text}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-red-600">{formatCurrency(adj.amount)}</p>
+                        <div className="text-left sm:text-right">
+                          <p className="font-semibold text-red-600 text-sm">{formatCurrency(adj.amount)}</p>
                           <p className="text-xs text-gray-500">Status: {adj.decision_status}</p>
                         </div>
                       </div>
@@ -1915,25 +1920,25 @@ const DriverPayments = () => {
             
             {/* Trip Passengers */}
             {tripPassengers && tripPassengers.passengers && tripPassengers.passengers.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Trip Passengers</h4>
+              <div className="mb-4 sm:mb-6">
+                <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Trip Passengers</h4>
                 <div className="bg-gray-50 rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-[500px] w-full divide-y divide-gray-200">
                       <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Passenger</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Booking ID</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                          <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-xs font-medium text-gray-500">Passenger</th>
+                          <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-xs font-medium text-gray-500">Booking ID</th>
+                          <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-xs font-medium text-gray-500">Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {tripPassengers.passengers.map((passenger, idx) => (
                           <tr key={idx} className="hover:bg-gray-100">
-                            <td className="px-4 py-2 text-sm">{passenger.passenger_name}</td>
-                            <td className="px-4 py-2 text-xs font-mono">{passenger.booking_id?.substring(0, 13)}...</td>
-                            <td className="px-4 py-2">
-                              <span className={`px-2 py-0.5 text-xs rounded-full ${passenger.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            <td className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm break-all">{passenger.passenger_name}</td>
+                            <td className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs font-mono">{passenger.booking_id?.substring(0, 13)}...</td>
+                            <td className="px-2 sm:px-4 py-1.5 sm:py-2">
+                              <span className={`px-1.5 sm:px-2 py-0.5 text-xs rounded-full ${passenger.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                 {passenger.status}
                               </span>
                             </td>
@@ -1947,7 +1952,7 @@ const DriverPayments = () => {
             )}
           </div>
           
-          <div className="p-4 border-t bg-gray-50 flex justify-end flex-shrink-0">
+          <div className="p-3 sm:p-4 border-t bg-gray-50 flex justify-end flex-shrink-0">
             <button
               onClick={() => {
                 setSelectedBooking(null);
@@ -1956,7 +1961,7 @@ const DriverPayments = () => {
                 setRouteDetails(null);
                 setPassengerBookingHistory(null);
               }}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
             >
               Close
             </button>
@@ -1968,13 +1973,13 @@ const DriverPayments = () => {
 
   if (loading && driverSummaries.length === 0) {
     return (
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TopNavbar />
+      <div className="flex h-screen bg-gray-100 overflow-hidden">
+        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+          <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} title="Driver Payments" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading driver data...</p>
             </div>
           </div>
@@ -1984,58 +1989,60 @@ const DriverPayments = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNavbar />
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <Sidebar onClose={() => setSidebarOpen(false)} />
+      
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+        <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} title="Driver Payments" />
+        
         <div className="flex-1 overflow-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                  <BanknotesIcon className="w-8 h-8 text-green-600" />
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                  <BanknotesIcon className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
                   Driver Payments
                 </h1>
-                <p className="text-gray-500 mt-1">View and manage driver earnings</p>
+                <p className="text-sm text-gray-500 mt-1">View and manage driver earnings</p>
               </div>
               <button
                 onClick={handleRefresh}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
               >
-                <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <ArrowPathIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
             </div>
             
             {successMessage && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mb-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                  <p className="text-green-700">{successMessage}</p>
+                  <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                  <p className="text-sm text-green-700">{successMessage}</p>
                 </div>
               </div>
             )}
             
             {errorMessage && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-                  <p className="text-red-700">{errorMessage}</p>
+                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                  <p className="text-sm text-red-700">{errorMessage}</p>
                 </div>
               </div>
             )}
             
             {/* Search Bar */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <div className="relative max-w-md">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search by driver name, email, or vehicle number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                 />
               </div>
             </div>

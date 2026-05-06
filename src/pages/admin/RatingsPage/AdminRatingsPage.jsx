@@ -462,6 +462,8 @@
 // };
 
 // export default AdminSupportPage;
+
+
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -484,6 +486,8 @@ const AdminSupportPage = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [newTicketAlert, setNewTicketAlert] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [actionModal, setActionModal] = useState({
         open: false,
@@ -497,6 +501,17 @@ const AdminSupportPage = () => {
         id: null,
         action: null,
     });
+
+    // Check if mobile/tablet view
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 1024);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Fetch tickets function
     const fetchTickets = async () => {
@@ -718,11 +733,15 @@ const AdminSupportPage = () => {
 
     if (initialLoad || (loading && tickets.length === 0)) {
         return (
-            <div className="flex h-screen bg-gray-50">
-                <Sidebar />
-                <div className="flex-1 flex flex-col">
-                    <TopNavbarUltra />
-                    <div className="flex-1 flex items-center justify-center p-6">
+            <div className="flex h-screen bg-gray-50 overflow-hidden">
+                <Sidebar onClose={() => setSidebarOpen(false)} />
+                <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+                    <TopNavbarUltra 
+                        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
+                        isMobile={isMobile}
+                        title="Support Tickets"
+                    />
+                    <div className="flex-1 flex items-center justify-center p-4">
                         <div className="text-center">
                             <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800 mb-3"></div>
                             <p className="text-gray-600">Loading support tickets...</p>
@@ -739,32 +758,36 @@ const AdminSupportPage = () => {
     const rejectedTickets = tickets.filter(t => t.status === "rejected").length;
 
     return (
-        <div className="flex h-screen bg-gray-50">
-            <Sidebar />
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <TopNavbarUltra />
+            <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+                <TopNavbarUltra 
+                    onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
+                    isMobile={isMobile}
+                    title="Support Tickets"
+                />
 
                 <div className="flex-1 overflow-y-auto">
-                    <div className="p-8 space-y-6 animate-fadeIn">
+                    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
                         {/* New Ticket Alert Banner */}
                         {newTicketAlert && (
-                            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 animate-slideDown">
-                                <div className="flex items-center justify-between">
+                            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3 sm:p-4 animate-slideDown">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-blue-800">{newTicketAlert.title}</p>
-                                            <p className="text-sm text-blue-600">{newTicketAlert.message}</p>
+                                            <p className="font-semibold text-blue-800 text-sm sm:text-base">{newTicketAlert.title}</p>
+                                            <p className="text-xs sm:text-sm text-blue-600">{newTicketAlert.message}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setNewTicketAlert(null)}
-                                        className="text-blue-400 hover:text-blue-600"
+                                        className="text-blue-400 hover:text-blue-600 self-end sm:self-auto"
                                     >
                                         ✕
                                     </button>
@@ -773,10 +796,10 @@ const AdminSupportPage = () => {
                         )}
 
                         {/* HEADER */}
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-800">Support Tickets</h1>
-                                <p className="text-gray-500 text-sm mt-1">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Support Tickets</h1>
+                                <p className="text-sm text-gray-500 mt-1">
                                     Monitor, manage, and resolve user support requests
                                     {wsConnected && (
                                         <span className="ml-2 inline-flex items-center gap-1 text-green-600 text-xs">
@@ -792,7 +815,7 @@ const AdminSupportPage = () => {
                                     fetchTickets();
                                     fetchUnreadCount();
                                 }}
-                                className="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center gap-2 shadow-sm"
+                                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center gap-2 shadow-sm w-full sm:w-auto justify-center"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -802,22 +825,22 @@ const AdminSupportPage = () => {
                         </div>
 
                         {/* STATS CARDS */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                <p className="text-gray-500 text-sm font-medium">Total Tickets</p>
-                                <p className="text-2xl font-bold text-gray-800 mt-2">{totalTickets}</p>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                <p className="text-gray-500 text-xs sm:text-sm font-medium">Total Tickets</p>
+                                <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1 sm:mt-2">{totalTickets}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                <p className="text-gray-500 text-sm font-medium">Pending</p>
-                                <p className="text-2xl font-bold text-gray-800 mt-2">{pendingTickets}</p>
+                            <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                <p className="text-gray-500 text-xs sm:text-sm font-medium">Pending</p>
+                                <p className="text-xl sm:text-2xl font-bold text-yellow-600 mt-1 sm:mt-2">{pendingTickets}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                <p className="text-gray-500 text-sm font-medium">Resolved</p>
-                                <p className="text-2xl font-bold text-gray-800 mt-2">{resolvedTickets}</p>
+                            <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                <p className="text-gray-500 text-xs sm:text-sm font-medium">Resolved</p>
+                                <p className="text-xl sm:text-2xl font-bold text-green-600 mt-1 sm:mt-2">{resolvedTickets}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                <p className="text-gray-500 text-sm font-medium">Rejected</p>
-                                <p className="text-2xl font-bold text-gray-800 mt-2">{rejectedTickets}</p>
+                            <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                <p className="text-gray-500 text-xs sm:text-sm font-medium">Rejected</p>
+                                <p className="text-xl sm:text-2xl font-bold text-red-600 mt-1 sm:mt-2">{rejectedTickets}</p>
                             </div>
                         </div>
 
@@ -828,13 +851,13 @@ const AdminSupportPage = () => {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search by user email or subject..."
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all text-gray-700 placeholder-gray-400"
+                                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all text-gray-700 placeholder-gray-400 text-sm sm:text-base"
                                 />
                             </div>
                             <select
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
-                                className="px-4 py-2.5 rounded-lg border border-gray-300 bg-white cursor-pointer hover:border-gray-400 transition-all text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-gray-300 bg-white cursor-pointer hover:border-gray-400 transition-all text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm sm:text-base"
                             >
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
@@ -843,72 +866,82 @@ const AdminSupportPage = () => {
                             </select>
                         </div>
 
-                        {/* TABLE - Same as before, keeping your existing table code */}
+                        {/* TABLE */}
                         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
+                                <table className="min-w-[900px] lg:min-w-full w-full text-sm">
                                     <thead className="bg-gray-50 border-b border-gray-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Issue</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Attachment</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Resolved</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Remarks</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Issue</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Attachment</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Resolved</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Remarks</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {/* Your existing table rows */}
                                         {filteredTickets.map((ticket) => (
                                             <tr key={ticket.id} className="hover:bg-gray-50 transition-all duration-200">
-                                                {/* Your existing table cells */}
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                                                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 flex items-center justify-center">
                                                             <span className="text-xs font-semibold text-gray-600">
                                                                 {ticket.user?.charAt(0).toUpperCase() || "U"}
                                                             </span>
                                                         </div>
-                                                        <span className="font-medium text-gray-800">{ticket.user || "N/A"}</span>
+                                                        <span className="font-medium text-gray-800 text-xs sm:text-sm break-all">{ticket.user || "N/A"}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="font-semibold text-gray-800">{ticket.subject || "No Subject"}</div>
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                                    <div className="font-semibold text-gray-800 text-sm">{ticket.subject || "No Subject"}</div>
                                                     <div className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-[200px]">{ticket.description}</div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                     {ticket.path ? (
-                                                        <img src={`https://be.shuttleapp.transev.site/${ticket.path.replace(/\\/g, "/")}`}
-                                                            className="w-12 h-12 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform duration-200 shadow-sm"
+                                                        <img 
+                                                            src={`https://be.shuttleapp.transev.site/${ticket.path.replace(/\\/g, "/")}`}
+                                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform duration-200 shadow-sm"
                                                             onClick={() => setSelectedImage(`https://be.shuttleapp.transev.site/${ticket.path.replace(/\\/g, "/")}`)}
-                                                            alt="Ticket attachment" />
+                                                            alt="Ticket attachment" 
+                                                        />
                                                     ) : <span className="text-gray-400 text-xs">No image</span>}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                                                         ticket.status === "resolved" ? "bg-green-100 text-green-800" :
                                                         ticket.status === "rejected" ? "bg-red-100 text-red-800" :
                                                         "bg-yellow-100 text-yellow-800"
                                                     }`}>{ticket.status}</span>
                                                 </td>
-                                                <td className="px-6 py-4 text-gray-500 text-xs">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-500 text-xs">
                                                     {ticket.created_at ? new Date(ticket.created_at).toLocaleString("en-IN") : "-"}
                                                 </td>
-                                                <td className="px-6 py-4 text-gray-500 text-xs">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-500 text-xs">
                                                     {ticket.resolved_at_by_admin ? new Date(ticket.resolved_at_by_admin).toLocaleString("en-IN") : "-"}
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                     {ticket.status === "rejected" && ticket.rejection_reason_by_admin ? (
-                                                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{ticket.rejection_reason_by_admin}</span>
+                                                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded break-words max-w-[150px] inline-block">{ticket.rejection_reason_by_admin}</span>
                                                     ) : ticket.status === "resolved" ? <span className="text-xs text-gray-500">Resolved</span> : <span className="text-gray-400 text-xs">-</span>}
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                     {ticket.status === "pending" ? (
-                                                        <div className="flex gap-2">
-                                                            <button onClick={(e) => openResolveModal(ticket.id, e)} className="px-3 py-1.5 text-xs font-medium rounded bg-gray-800 text-white hover:bg-gray-900">Resolve</button>
-                                                            <button onClick={(e) => openRejectModal(ticket.id, e)} className="px-3 py-1.5 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Reject</button>
+                                                        <div className="flex flex-col sm:flex-row gap-2">
+                                                            <button 
+                                                                onClick={(e) => openResolveModal(ticket.id, e)} 
+                                                                className="px-2 sm:px-3 py-1 text-xs font-medium rounded bg-gray-800 text-white hover:bg-gray-900 transition whitespace-nowrap"
+                                                            >
+                                                                Resolve
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => openRejectModal(ticket.id, e)} 
+                                                                className="px-2 sm:px-3 py-1 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition whitespace-nowrap"
+                                                            >
+                                                                Reject
+                                                            </button>
                                                         </div>
                                                     ) : <span className="text-gray-400 text-xs">Completed</span>}
                                                 </td>
@@ -917,6 +950,15 @@ const AdminSupportPage = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            {filteredTickets.length === 0 && !loading && (
+                                <div className="text-center py-8 sm:py-12">
+                                    <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400 mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                    <p className="text-gray-500">No tickets found</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -924,29 +966,43 @@ const AdminSupportPage = () => {
 
             {/* IMAGE MODAL */}
             {selectedImage && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setSelectedImage(null)}>
-                    <div className="relative max-w-[90%] max-h-[90%]">
-                        <img src={selectedImage} className="max-w-full max-h-full rounded-lg shadow-2xl" alt="Full size" />
-                        <button onClick={() => setSelectedImage(null)} className="absolute top-2 right-2 bg-white rounded-full p-1.5 hover:bg-gray-100">✕</button>
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSelectedImage(null)}>
+                    <div className="relative max-w-[90%] max-h-[90%]" onClick={(e) => e.stopPropagation()}>
+                        <img src={selectedImage} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" alt="Full size" />
+                        <button 
+                            onClick={() => setSelectedImage(null)} 
+                            className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 hover:bg-gray-100 shadow-lg w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center"
+                        >
+                            ✕
+                        </button>
                     </div>
                 </div>
             )}
 
             {/* RESOLVE CONFIRM MODAL */}
             {confirmModal.open && confirmModal.action === "resolve" && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeResolveModal}>
-                    <div className="bg-white rounded-lg p-6 w-[400px] max-w-[90%] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeResolveModal}>
+                    <div className="bg-white rounded-lg p-6 w-[400px] max-w-[90%] shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center">
-                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirm Resolution</h3>
                             <p className="text-sm text-gray-500 mb-6">Are you sure you want to mark this ticket as resolved?</p>
                             <div className="flex justify-center gap-3">
-                                <button onClick={closeResolveModal} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
-                                <button onClick={handleResolve} disabled={actionLoading} className="px-4 py-2 rounded-lg bg-gray-800 text-white font-medium hover:bg-gray-900 disabled:opacity-50">
+                                <button 
+                                    onClick={closeResolveModal} 
+                                    className="px-3 sm:px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 text-sm sm:text-base"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleResolve} 
+                                    disabled={actionLoading} 
+                                    className="px-3 sm:px-4 py-2 rounded-lg bg-gray-800 text-white font-medium hover:bg-gray-900 disabled:opacity-50 text-sm sm:text-base"
+                                >
                                     {actionLoading ? "Processing..." : "Yes, Resolve"}
                                 </button>
                             </div>
@@ -957,21 +1013,36 @@ const AdminSupportPage = () => {
 
             {/* REJECT MODAL */}
             {actionModal.open && actionModal.action === "reject" && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeRejectModal}>
-                    <div className="bg-white rounded-lg p-6 w-[450px] max-w-[90%] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeRejectModal}>
+                    <div className="bg-white rounded-lg p-4 sm:p-6 w-[450px] max-w-[90%] shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-900">Reject Ticket</h3>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Reject Ticket</h3>
                             <button onClick={closeRejectModal} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-semibold text-gray-800 mb-2">Rejection Reason <span className="text-red-600">*</span></label>
-                            <textarea value={actionModal.note} onChange={(e) => setActionModal({ ...actionModal, note: e.target.value })}
-                                placeholder="Enter rejection reason here..." className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none bg-white resize-none" rows="4" autoFocus />
+                            <textarea 
+                                value={actionModal.note} 
+                                onChange={(e) => setActionModal({ ...actionModal, note: e.target.value })}
+                                placeholder="Enter rejection reason here..." 
+                                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none bg-white resize-none text-sm sm:text-base" 
+                                rows="4" 
+                                autoFocus 
+                            />
                             <p className="text-xs text-gray-600 mt-2">⚠️ This reason will be shared with the user.</p>
                         </div>
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button onClick={closeRejectModal} className="px-5 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100">Cancel</button>
-                            <button onClick={handleReject} disabled={actionLoading} className="px-5 py-2 rounded-lg bg-gray-900 text-white font-semibold hover:bg-gray-800 shadow-md disabled:opacity-50">
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button 
+                                onClick={closeRejectModal} 
+                                className="px-4 sm:px-5 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 text-sm sm:text-base"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleReject} 
+                                disabled={actionLoading} 
+                                className="px-4 sm:px-5 py-2 rounded-lg bg-gray-900 text-white font-semibold hover:bg-gray-800 shadow-md disabled:opacity-50 text-sm sm:text-base"
+                            >
                                 {actionLoading ? "Processing..." : "Submit Rejection"}
                             </button>
                         </div>

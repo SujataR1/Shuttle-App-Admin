@@ -21,6 +21,7 @@ import DriverInspectionPage from "./pages/admin/DriverInspectionPage/DriverInspe
 import DriverRatingsReviewPage from "./pages/admin/DriverRatingsReviewPage";
 import CancellationFine from "./pages/admin/CancellationFine";
 import DriverPayments from "./pages/admin/DriverPayments";
+import PassengerAllTrips from "./pages/admin/PassengerAllTrips";
 function App() {
   return (
     <Routes>
@@ -48,6 +49,7 @@ function App() {
       <Route path="/admin/driver-review" element={<DriverRatingsReviewPage />} />
       <Route path="/admin/cancellation-fine" element={<CancellationFine />} />
       <Route path="/admin/payments" element={<DriverPayments />} />
+      <Route path="/admin/Passenger-all-trips" element={<PassengerAllTrips />} />
     </Routes>
   );
 }

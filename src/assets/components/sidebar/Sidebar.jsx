@@ -226,19 +226,21 @@ const menuSections = [
       },
       { name: "Verify KYC Details", path: "/admin/providers", icon: UsersIcon },
       { name: "Verify Bus Details", path: "/admin/verify-drivers", icon: UsersIcon },
-      // { name: "Account Manager", path: "/admin/accountManager", icon: UsersIcon },
     ],
   },
   {
     title: "ACCOUNTS",
-    items: [{ name: "Transaction & Statements", path: "/admin/transactions", icon: DocumentTextIcon }],
+    items: [
+      { name: "Transaction & Statements", path: "/admin/transactions", icon: DocumentTextIcon },
+      { name: "Passenger All Trips", path: "/admin/Passenger-all-trips", icon: DocumentTextIcon }
+    ],
   },
   {
     title: "DETAILS",
     items: [
       { name: "Route Settings", path: "/admin/route-settings", icon: MapIcon },
       { name: "Ticket Details", path: "/admin/ratings", icon: StarIcon },
-      { name: "Trip Details", path: "/admin/trip-details", icon: StarIcon },
+      { name: "Trip Details", path: "/admin/trip-details", icon: StarIcon }
     ],
   },
   {
@@ -258,16 +260,45 @@ const menuSections = [
   },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const [open, setOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const API_BASE = "https://be.shuttleapp.transev.site";
+
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      // Auto close sidebar on mobile
+      if (mobile && open) {
+        setOpen(false);
+      }
+      // Auto open sidebar on desktop
+      if (!mobile && !open) {
+        setOpen(true);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (isMobile && open) {
+      setOpen(false);
+      if (onClose) onClose();
+    }
+  }, [location.pathname, isMobile]);
 
   // Auto-expand submenu if a sub-item is active
   useEffect(() => {
@@ -315,6 +346,11 @@ const Sidebar = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setOpen(!open);
+    if (!open && onClose) onClose();
+  };
+
   return (
     <>
       <style>{`
@@ -332,21 +368,34 @@ const Sidebar = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.3);
         }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-in-out;
+        }
       `}</style>
 
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-gradient-to-r from-gray-900 to-gray-800 text-white p-2 rounded-xl shadow-lg backdrop-blur-lg"
-      >
-        {open ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
-      </button>
+      {/* Mobile Menu Button - Only show when sidebar is closed on mobile */}
+      {isMobile && !open && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-4 left-4 z-50 lg:hidden bg-gradient-to-r from-gray-900 to-gray-800 text-white p-2.5 rounded-xl shadow-lg backdrop-blur-lg hover:scale-105 transition-transform"
+        >
+          <Bars3Icon className="w-5 h-5" />
+        </button>
+      )}
 
       {/* Overlay for mobile */}
-      {open && (
+      {isMobile && open && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-fadeIn"
+          onClick={toggleSidebar}
         />
       )}
 
@@ -356,11 +405,11 @@ const Sidebar = () => {
         bg-gradient-to-b from-gray-900 via-gray-900 to-black
         backdrop-blur-xl
         shadow-2xl
-        transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+        transition-all duration-300 ease-in-out
         z-50
         flex flex-col
-        ${open ? 'w-72' : 'w-20'}
-        lg:relative
+        ${isMobile ? (open ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
+        ${open ? 'w-72' : 'lg:w-20'}
         border-r border-white/10
       `}>
         
@@ -368,24 +417,38 @@ const Sidebar = () => {
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
           <div className="flex items-center justify-between p-5 border-b border-white/10 backdrop-blur-sm">
-            <div className={`flex items-center gap-3 ${!open && 'justify-center w-full'}`}>
+            <div className={`flex items-center gap-3 ${!open && 'lg:justify-center lg:w-full'}`}>
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-xl">T</span>
               </div>
-              <span className={`text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-300 ${!open && 'hidden'}`}>
+              <span className={`text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-300 ${!open && 'lg:hidden'}`}>
                 TransEV
               </span>
             </div>
-            <button
-              className="hidden lg:flex text-gray-400 hover:text-white transition-all duration-300 hover:rotate-180"
-              onClick={() => setOpen(!open)}
-            >
-              {open ? (
-                <ChevronDownIcon className="w-5 h-5 rotate-90" />
-              ) : (
-                <ChevronUpIcon className="w-5 h-5 -rotate-90" />
-              )}
-            </button>
+            
+            {/* Close button for mobile when sidebar is open */}
+            {isMobile && open && (
+              <button
+                onClick={toggleSidebar}
+                className="lg:hidden text-gray-400 hover:text-white transition-all duration-300"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
+            
+            {/* Desktop toggle button */}
+            {!isMobile && (
+              <button
+                className="hidden lg:flex text-gray-400 hover:text-white transition-all duration-300 hover:rotate-180"
+                onClick={toggleSidebar}
+              >
+                {open ? (
+                  <ChevronDownIcon className="w-5 h-5 rotate-90" />
+                ) : (
+                  <ChevronUpIcon className="w-5 h-5 -rotate-90" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -425,9 +488,9 @@ const Sidebar = () => {
                             <div className="flex items-center justify-between px-4 py-3">
                               <div className="flex items-center gap-3">
                                 {Icon && (
-                                  <Icon className={`w-5 h-5 transition-all duration-300 ${isActive || isHovered ? 'text-purple-400' : 'text-gray-400'}`} />
+                                  <Icon className={`w-5 h-5 transition-all duration-300 flex-shrink-0 ${isActive || isHovered ? 'text-purple-400' : 'text-gray-400'}`} />
                                 )}
-                                <span className={`font-medium transition-all duration-300 ${!open && 'hidden'} ${isActive ? 'text-white' : 'text-gray-300'}`}>
+                                <span className={`font-medium transition-all duration-300 ${!open && 'lg:hidden'} ${isActive ? 'text-white' : 'text-gray-300'}`}>
                                   {item.name}
                                 </span>
                               </div>
@@ -447,7 +510,7 @@ const Sidebar = () => {
 
                           {/* Smooth submenu animation */}
                           <div className={`
-                            overflow-hidden transition-all duration-400 ease-in-out
+                            overflow-hidden transition-all duration-300 ease-in-out
                             ${activeMenu === `${section.title}-${iIdx}` || isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
                           `}>
                             <ul className="ml-8 mt-1 space-y-1">
@@ -485,9 +548,9 @@ const Sidebar = () => {
                           onMouseLeave={() => setHoveredItem(null)}
                         >
                           {Icon && (
-                            <Icon className={`w-5 h-5 transition-all duration-300 ${location.pathname === item.path || isHovered ? 'text-purple-400' : 'text-gray-400'}`} />
+                            <Icon className={`w-5 h-5 transition-all duration-300 flex-shrink-0 ${location.pathname === item.path || isHovered ? 'text-purple-400' : 'text-gray-400'}`} />
                           )}
-                          <span className={`font-medium transition-all duration-300 ${!open && 'hidden'}`}>
+                          <span className={`font-medium transition-all duration-300 ${!open && 'lg:hidden'}`}>
                             {item.name}
                           </span>
                           {location.pathname === item.path && (
@@ -513,20 +576,20 @@ const Sidebar = () => {
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className={`relative group w-full rounded-xl transition-all duration-300 overflow-hidden
-                ${open ? 'px-4 py-3' : 'p-3'}
+                ${open ? 'px-4 py-3' : 'lg:p-3'}
                 hover:bg-red-500/10
               `}
               disabled={loading}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors" />
-                  <span className={`text-red-400 group-hover:text-red-300 transition-all duration-300 font-medium ${!open && 'hidden'}`}>
+                  <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors flex-shrink-0" />
+                  <span className={`text-red-400 group-hover:text-red-300 transition-all duration-300 font-medium ${!open && 'lg:hidden'}`}>
                     {loading ? "Logging out..." : "Logout"}
                   </span>
                 </div>
                 {open && !loading && (
-                  <span className="text-xs text-gray-500 group-hover:text-red-300 transition-colors">
+                  <span className="text-xs text-gray-500 group-hover:text-red-300 transition-colors lg:block hidden">
                     Click to sign out
                   </span>
                 )}
@@ -546,7 +609,7 @@ const Sidebar = () => {
 
       {/* Modern Logout Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowLogoutConfirm(false)} />
           <div className="relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
