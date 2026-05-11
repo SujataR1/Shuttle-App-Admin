@@ -99,18 +99,19 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
   const userName = user?.full_name || user?.name || "Admin";
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  // Check tablet view
+  // Track window width for responsive behavior
   useEffect(() => {
-    const checkTablet = () => {
-      setIsTablet(window.innerWidth < 1024 && window.innerWidth >= 768);
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
     };
-    
-    checkTablet();
-    window.addEventListener('resize', checkTablet);
-    return () => window.removeEventListener('resize', checkTablet);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const isTablet = windowWidth < 1024 && windowWidth >= 768;
+  const showMenuButton = windowWidth < 1024; // Show on mobile and tablet
 
   const handleLogout = async () => {
     const token = localStorage.getItem("access_token");
@@ -147,13 +148,13 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
       <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Left section with menu button and title */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            {/* Hamburger Menu Button - Only show on mobile/tablet */}
-            {(isMobile || isTablet) && (
+            {/* Hamburger Menu Button - Show on mobile and tablet */}
+            {showMenuButton && (
               <button
                 onClick={onMenuClick}
                 className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
@@ -168,9 +169,8 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
             {/* Title */}
             <div>
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-[250px] md:max-w-none">
-                {title}
+                {title || "Dashboard"}
               </h1>
-              {/* Optional subtitle for mobile */}
               <p className="text-xs text-gray-500 sm:hidden mt-0.5">
                 Admin Panel
               </p>
@@ -196,7 +196,7 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
                 </div>
                 
                 {/* Avatar */}
-                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm sm:text-base font-medium shadow-md group-hover:shadow-lg transition-all duration-200">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm sm:text-base font-medium shadow-md group-hover:shadow-lg transition-all duration-200">
                   {userName.charAt(0).toUpperCase()}
                 </div>
                 
@@ -220,7 +220,7 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
                     onClick={() => setShowUserMenu(false)}
                   />
                   
-                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50 animate-slideDown">
+                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50">
                     {/* User info for mobile */}
                     <div className="sm:hidden px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <p className="text-sm font-medium text-gray-900">{userName}</p>
@@ -306,23 +306,6 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
           </div>
         </div>
       </div>
-
-      {/* Add animation styles */}
-      <style jsx>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slideDown {
-          animation: slideDown 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect } from "react";
 // import Sidebar from "../../assets/components/sidebar/Sidebar";
 // import TopNavbar from "../../assets/components/navbar/TopNavbar";
@@ -664,7 +665,7 @@
 //   // Render Commercial Rules Tab
 //   const renderRulesTab = () => (
 //     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
+//       <div className="flex justify-between items-center flex-wrap gap-4">
 //         <div>
 //           <h2 className="text-2xl font-semibold text-gray-800">Commercial Rules</h2>
 //           <p className="text-gray-400 text-sm mt-1">Define fine policies and cancellation rules</p>
@@ -792,7 +793,7 @@
 //   // Render Drivers Tab
 //   const renderDriversTab = () => (
 //     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
+//       <div className="flex justify-between items-center flex-wrap gap-4">
 //         <div>
 //           <h2 className="text-2xl font-semibold text-gray-800">Drivers</h2>
 //           <p className="text-gray-400 text-sm mt-1">Review cancelled bookings and apply fines</p>
@@ -901,7 +902,7 @@
 //     </div>
 //   );
 
-//   // Fine Modal - Create adjustment (PENDING)
+//   // Fine Modal - Create adjustment (PENDING) - FIXED FOR SCROLLING
 //   const renderFineModal = () => {
 //     if (!showFineModal || !selectedDriver) return null;
     
@@ -911,8 +912,9 @@
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in duration-300">
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//           {/* Header - Fixed */}
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
 //             <div className="flex justify-between items-center">
 //               <div>
 //                 <h3 className="text-xl font-semibold text-gray-800">Create Cancellation Fine</h3>
@@ -929,7 +931,8 @@
 //             </div>
 //           </div>
           
-//           <div className="p-6 overflow-auto flex-1">
+//           {/* Scrollable Content */}
+//           <div className="flex-1 overflow-y-auto p-6">
 //             {cancelledBookings.length === 0 ? (
 //               <div className="text-center py-12">
 //                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -944,7 +947,7 @@
 //                   Found <span className="font-semibold text-gray-700">{cancelledBookings.length}</span> cancelled booking(s). Select one to create a fine:
 //                 </p>
                 
-//                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+//                 <div className="space-y-3">
 //                   {cancelledBookings.map((booking) => (
 //                     <div
 //                       key={booking.booking_id}
@@ -967,8 +970,8 @@
 //                             : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50/50 cursor-pointer'
 //                       }`}
 //                     >
-//                       <div className="flex justify-between items-start">
-//                         <div className="flex-1">
+//                       <div className="flex justify-between items-start flex-wrap gap-3">
+//                         <div className="flex-1 min-w-[200px]">
 //                           <div className="flex items-center gap-2 mb-2 flex-wrap">
 //                             <code className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
 //                               {booking.booking_id?.slice(0, 13)}...
@@ -1080,7 +1083,8 @@
 //             )}
 //           </div>
           
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+//           {/* Footer - Fixed */}
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
 //             <button
 //               onClick={handleCreateAdjustment}
 //               disabled={updating || !selectedBooking || selectedBooking.hasAdjustments}
@@ -1113,7 +1117,7 @@
 //     );
 //   };
 
-//   // Review Adjustments Modal - Review, Include/Exclude, Trigger Payout
+//   // Review Adjustments Modal - FIXED FOR SCROLLING
 //   const renderReviewModal = () => {
 //     if (!showReviewModal || !selectedBookingForReview) return null;
     
@@ -1123,8 +1127,9 @@
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in duration-300">
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//           {/* Header - Fixed */}
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
 //             <div className="flex justify-between items-center">
 //               <div>
 //                 <h3 className="text-xl font-semibold text-gray-800">Review Adjustments</h3>
@@ -1141,10 +1146,11 @@
 //             </div>
 //           </div>
           
-//           <div className="p-6 overflow-auto flex-1">
+//           {/* Scrollable Content */}
+//           <div className="flex-1 overflow-y-auto p-6">
 //             {/* Booking Info */}
 //             <div className="bg-gray-50 rounded-xl p-4 mb-6">
-//               <div className="grid grid-cols-2 gap-4 text-sm">
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 //                 <div>
 //                   <p className="text-gray-500">Passenger</p>
 //                   <p className="font-medium text-gray-800">{selectedBookingForReview.passenger_name || 'N/A'}</p>
@@ -1171,7 +1177,7 @@
 //                 <div className="space-y-3">
 //                   {allAdjustments.map((adj) => (
 //                     <div key={adj.id} className="border rounded-xl p-4 bg-white">
-//                       <div className="flex justify-between items-start">
+//                       <div className="flex justify-between items-start flex-wrap gap-4">
 //                         <div className="flex-1">
 //                           <div className="flex items-center gap-2 mb-2 flex-wrap">
 //                             <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -1193,7 +1199,7 @@
 //                           )}
 //                         </div>
 //                         {adj.decision_status === 'pending' && (
-//                           <div className="flex gap-2 ml-4">
+//                           <div className="flex gap-2">
 //                             <button
 //                               onClick={() => handleUpdateDecision(adj.id, 'included', 'Approved by admin')}
 //                               className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -1242,7 +1248,8 @@
 //             )}
 //           </div>
           
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+//           {/* Footer - Fixed */}
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0">
 //             <button
 //               onClick={() => {
 //                 setShowReviewModal(false);
@@ -1258,14 +1265,15 @@
 //     );
 //   };
 
-//   // Rule Modal
+//   // Rule Modal - FIXED FOR SCROLLING
 //   const renderRuleModal = () => {
 //     if (!showRuleModal) return null;
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in duration-300">
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//           {/* Header - Fixed */}
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
 //             <div className="flex justify-between items-center">
 //               <h3 className="text-xl font-semibold text-gray-800">
 //                 {selectedRule ? "Edit Rule" : "Create Rule"}
@@ -1278,8 +1286,10 @@
 //               </button>
 //             </div>
 //           </div>
-//           <div className="p-6 overflow-auto flex-1 space-y-4">
-//             <div className="grid grid-cols-2 gap-4">
+          
+//           {/* Scrollable Content */}
+//           <div className="flex-1 overflow-y-auto p-6 space-y-4">
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-2">Rule Type</label>
 //                 <select
@@ -1323,7 +1333,7 @@
 //               />
 //             </div>
 
-//             <div className="grid grid-cols-2 gap-4">
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
 //                 <input
@@ -1349,7 +1359,7 @@
 //               </div>
 //             </div>
 
-//             <div className="grid grid-cols-2 gap-4">
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-2">
 //                   Min Minutes Before
@@ -1408,7 +1418,9 @@
 //               </label>
 //             </div>
 //           </div>
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+          
+//           {/* Footer - Fixed */}
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
 //             <button
 //               onClick={handleCreateRule}
 //               disabled={updating}
@@ -1475,7 +1487,7 @@
 //       <Sidebar />
 //       <div className="flex-1 flex flex-col overflow-hidden">
 //         <TopNavbar />
-//         <div className="p-8 overflow-auto">
+//         <div className="flex-1 overflow-y-auto p-8">
 //           {successMessage && (
 //             <div className="mb-5 p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 rounded-xl animate-in slide-in-from-top-2">
 //               <div className="flex items-center gap-2">
@@ -1496,7 +1508,7 @@
 //             <p className="text-gray-400 text-sm mt-1">Manage commercial rules and apply cancellation fines to drivers</p>
 //           </div>
           
-//           <div className="flex gap-6 mb-6 border-b border-gray-100">
+//           <div className="flex gap-6 mb-6 border-b border-gray-100 flex-wrap">
 //             <button
 //               onClick={() => setActiveTab("rules")}
 //               className={`pb-3 px-1 text-sm font-medium transition-all duration-200 ${
@@ -1724,6 +1736,8 @@ const triggerPayout = async (bookingId, adjustmentsToApply) => {
 // ============= MAIN COMPONENT =============
 
 const CancellationFine = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [activeTab, setActiveTab] = useState("rules");
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -1780,6 +1794,20 @@ const CancellationFine = () => {
       fine_value: "60.00"
     }
   });
+
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   // Function to get active fine percentage from commercial rules
   const getActiveFinePercentage = () => {
@@ -2439,7 +2467,7 @@ const CancellationFine = () => {
     </div>
   );
 
-  // Fine Modal - Create adjustment (PENDING) - FIXED FOR SCROLLING
+  // Fine Modal - Create adjustment (PENDING)
   const renderFineModal = () => {
     if (!showFineModal || !selectedDriver) return null;
     
@@ -2449,9 +2477,9 @@ const CancellationFine = () => {
     
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
           {/* Header - Fixed */}
-          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800">Create Cancellation Fine</h3>
@@ -2621,7 +2649,7 @@ const CancellationFine = () => {
           </div>
           
           {/* Footer - Fixed */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
             <button
               onClick={handleCreateAdjustment}
               disabled={updating || !selectedBooking || selectedBooking.hasAdjustments}
@@ -2654,7 +2682,7 @@ const CancellationFine = () => {
     );
   };
 
-  // Review Adjustments Modal - FIXED FOR SCROLLING
+  // Review Adjustments Modal
   const renderReviewModal = () => {
     if (!showReviewModal || !selectedBookingForReview) return null;
     
@@ -2664,9 +2692,9 @@ const CancellationFine = () => {
     
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
           {/* Header - Fixed */}
-          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800">Review Adjustments</h3>
@@ -2786,7 +2814,7 @@ const CancellationFine = () => {
           </div>
           
           {/* Footer - Fixed */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0">
+          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0 rounded-b-2xl">
             <button
               onClick={() => {
                 setShowReviewModal(false);
@@ -2802,15 +2830,15 @@ const CancellationFine = () => {
     );
   };
 
-  // Rule Modal - FIXED FOR SCROLLING
+  // Rule Modal
   const renderRuleModal = () => {
     if (!showRuleModal) return null;
     
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
           {/* Header - Fixed */}
-          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold text-gray-800">
                 {selectedRule ? "Edit Rule" : "Create Rule"}
@@ -2957,7 +2985,7 @@ const CancellationFine = () => {
           </div>
           
           {/* Footer - Fixed */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
             <button
               onClick={handleCreateRule}
               disabled={updating}
@@ -3020,10 +3048,16 @@ const CancellationFine = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNavbar />
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white overflow-hidden">
+      <Sidebar onClose={() => setSidebarOpen(false)} />
+      
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+        <TopNavbar 
+          title="Cancellation Fine Management" 
+          onMenuClick={toggleSidebar} 
+          isMobile={isMobile} 
+        />
+        
         <div className="flex-1 overflow-y-auto p-8">
           {successMessage && (
             <div className="mb-5 p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 rounded-xl animate-in slide-in-from-top-2">

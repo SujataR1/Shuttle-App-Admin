@@ -194,6 +194,7 @@
 // export default Sidebar;
 
 // src/components/sidebar/Sidebar.jsximport { useState, useEffect } from "react";
+
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -277,11 +278,9 @@ const Sidebar = ({ onClose }) => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      // Auto close sidebar on mobile
       if (mobile && open) {
         setOpen(false);
       }
-      // Auto open sidebar on desktop
       if (!mobile && !open) {
         setOpen(true);
       }
@@ -315,23 +314,33 @@ const Sidebar = ({ onClose }) => {
   }, [location.pathname]);
 
   const handleLogout = async () => {
+    if (loading) return;
+    
+    setLoading(true);
     try {
-      setLoading(true);
       const token = localStorage.getItem("access_token");
       
-      await axios.post(
-        `${API_BASE}/auth/logout`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+      if (token) {
+        await axios.post(
+          `${API_BASE}/auth/logout`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        }
-      );
+        );
+      }
       
+      // Clear storage
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
       delete axios.defaults.headers.common['Authorization'];
+      
+      // Close modal
+      setShowLogoutConfirm(false);
+      
+      // Navigate to login
       navigate("/admin/login", { replace: true });
       
     } catch (err) {
@@ -339,16 +348,27 @@ const Sidebar = ({ onClose }) => {
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
       delete axios.defaults.headers.common['Authorization'];
+      setShowLogoutConfirm(false);
       navigate("/admin/login", { replace: true });
     } finally {
       setLoading(false);
-      setShowLogoutConfirm(false);
     }
   };
 
   const toggleSidebar = () => {
     setOpen(!open);
     if (!open && onClose) onClose();
+  };
+
+  // SIMPLE FIX: Just set the state directly without any event handling complexity
+  const openLogoutModal = () => {
+    console.log("Opening logout modal");
+    setShowLogoutConfirm(true);
+  };
+
+  const closeLogoutModal = () => {
+    console.log("Closing logout modal");
+    setShowLogoutConfirm(false);
   };
 
   return (
@@ -381,7 +401,7 @@ const Sidebar = ({ onClose }) => {
         }
       `}</style>
 
-      {/* Mobile Menu Button - Only show when sidebar is closed on mobile */}
+      {/* Mobile Menu Button */}
       {isMobile && !open && (
         <button
           onClick={toggleSidebar}
@@ -413,7 +433,7 @@ const Sidebar = ({ onClose }) => {
         border-r border-white/10
       `}>
         
-        {/* Modern Glass Header */}
+        {/* Header */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
           <div className="flex items-center justify-between p-5 border-b border-white/10 backdrop-blur-sm">
@@ -426,7 +446,6 @@ const Sidebar = ({ onClose }) => {
               </span>
             </div>
             
-            {/* Close button for mobile when sidebar is open */}
             {isMobile && open && (
               <button
                 onClick={toggleSidebar}
@@ -436,7 +455,6 @@ const Sidebar = ({ onClose }) => {
               </button>
             )}
             
-            {/* Desktop toggle button */}
             {!isMobile && (
               <button
                 className="hidden lg:flex text-gray-400 hover:text-white transition-all duration-300 hover:rotate-180"
@@ -452,7 +470,7 @@ const Sidebar = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Menu with modern scrollbar */}
+        {/* Menu */}
         <div className="flex-1 overflow-y-auto mt-4 px-3 custom-scrollbar">
           {menuSections.map((section, sIdx) => (
             <div key={sIdx} className="mb-6">
@@ -504,11 +522,9 @@ const Sidebar = ({ onClose }) => {
                                 </div>
                               )}
                             </div>
-                            {/* Animated underline */}
                             <div className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                           </button>
 
-                          {/* Smooth submenu animation */}
                           <div className={`
                             overflow-hidden transition-all duration-300 ease-in-out
                             ${activeMenu === `${section.title}-${iIdx}` || isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
@@ -567,19 +583,19 @@ const Sidebar = ({ onClose }) => {
           ))}
         </div>
 
-        {/* Footer Section with Glass Effect */}
+        {/* Footer with Logout Button */}
         <div className="relative mt-auto">
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           
-          {/* Logout Button */}
           <div className="relative p-4 border-t border-white/10">
             <button
-              onClick={() => setShowLogoutConfirm(true)}
+              onClick={openLogoutModal}
               className={`relative group w-full rounded-xl transition-all duration-300 overflow-hidden
                 ${open ? 'px-4 py-3' : 'lg:p-3'}
                 hover:bg-red-500/10
               `}
               disabled={loading}
+              type="button"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -598,7 +614,6 @@ const Sidebar = ({ onClose }) => {
             </button>
           </div>
 
-          {/* Copyright */}
           {open && (
             <div className="relative px-4 pb-4 text-xs text-center text-gray-500">
               © 2026 TransEV. All rights reserved.
@@ -607,39 +622,130 @@ const Sidebar = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Modern Logout Modal */}
+      {/* Logout Confirmation Modal - SIMPLIFIED */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowLogoutConfirm(false)} />
-          <div className="relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
-            <div className="relative p-6">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-2xl shadow-lg">
-                  <ArrowRightOnRectangleIcon className="w-8 h-8 text-white" />
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={closeLogoutModal}
+        >
+          {/* Modal Container - Stop propagation on the modal itself */}
+          <div 
+            style={{
+              maxWidth: '28rem',
+              width: '100%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              background: 'linear-gradient(to bottom, #111827, #111827)',
+              borderRadius: '1rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              {/* Gradient overlay */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(to right, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1))',
+                borderRadius: '1rem',
+              }} />
+              
+              {/* Content */}
+              <div style={{ position: 'relative', padding: '1.5rem' }}>
+                {/* Icon */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                  <div style={{
+                    background: 'linear-gradient(to bottom right, #ef4444, #dc2626)',
+                    padding: '1rem',
+                    borderRadius: '1rem',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <ArrowRightOnRectangleIcon style={{ width: '2rem', height: '2rem', color: 'white' }} />
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-2xl font-bold text-white text-center mb-2">
-                Confirm Logout
-              </h3>
-              <p className="text-gray-400 text-center mb-6">
-                Are you sure you want to logout from your admin account?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2.5 bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-all duration-300 font-medium"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg"
-                  disabled={loading}
-                >
-                  {loading ? "Logging out..." : "Yes, Logout"}
-                </button>
+                
+                {/* Text */}
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  textAlign: 'center',
+                  marginBottom: '0.5rem',
+                }}>
+                  Confirm Logout
+                </h3>
+                <p style={{
+                  color: '#9ca3af',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem',
+                }}>
+                  Are you sure you want to logout from your admin account?
+                </p>
+                
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    onClick={closeLogoutModal}
+                    style={{
+                      flex: 1,
+                      padding: '0.625rem 1rem',
+                      backgroundColor: '#1f2937',
+                      color: 'white',
+                      borderRadius: '0.75rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1f2937'}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      flex: 1,
+                      padding: '0.625rem 1rem',
+                      background: 'linear-gradient(to right, #ef4444, #dc2626)',
+                      color: 'white',
+                      borderRadius: '0.75rem',
+                      border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s',
+                      opacity: loading ? 0.5 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.background = 'linear-gradient(to right, #dc2626, #b91c1c)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    {loading ? "Logging out..." : "Yes, Logout"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
