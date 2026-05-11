@@ -836,7 +836,6 @@
 
 // export default DriverInspectionPage;
 
-
 import React, { useState, useEffect } from 'react';
 import {
   TruckIcon,
@@ -877,6 +876,7 @@ const DriverInspectionPage = () => {
   const [filter, setFilter] = useState('all');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingDriverDetails, setLoadingDriverDetails] = useState({});
@@ -890,6 +890,20 @@ const DriverInspectionPage = () => {
     total: 0,
     totalPages: 0
   });
+
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   // Get auth token
   const getAuthToken = () => {
@@ -1310,10 +1324,6 @@ const DriverInspectionPage = () => {
     setRejectionReason('');
   };
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -1380,10 +1390,14 @@ const DriverInspectionPage = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
         <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TopNavbar onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+          <TopNavbar 
+            title="Vehicle Inspection" 
+            onMenuClick={toggleSidebar} 
+            isMobile={isMobile} 
+          />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -1397,10 +1411,14 @@ const DriverInspectionPage = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
         <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TopNavbar onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+          <TopNavbar 
+            title="Vehicle Inspection" 
+            onMenuClick={toggleSidebar} 
+            isMobile={isMobile} 
+          />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md">
               <div className="bg-red-100 rounded-full p-4 mx-auto mb-4">
@@ -1421,14 +1439,18 @@ const DriverInspectionPage = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNavbar onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+        <TopNavbar 
+          title="Inspection Dashboard" 
+          onMenuClick={toggleSidebar} 
+          isMobile={isMobile} 
+        />
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-7xl mx-auto">
+          <div className="p-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
