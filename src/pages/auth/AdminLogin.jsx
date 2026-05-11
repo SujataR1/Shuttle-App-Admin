@@ -214,25 +214,52 @@ const AdminLogin = () => {
       return;
     }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showErrorAlert("Please enter a valid email address");
+      return;
+    }
+
     try {
       setLoading(true);
       setErrorMessage("");
-      await axios.post(`${API_BASE}/auth/login/send-otp`, { email });
+      
+      // ✅ FIX: Send role field as required by backend
+      await axios.post(`${API_BASE}/auth/login/send-otp`, { 
+        email: email,
+        role: "admin"  // Required field!
+      });
+      
       setStep(2);
     } catch (err) {
       console.error("Error sending OTP:", err);
       
-      // Extract error message from response
       let errorMsg = "Failed to send OTP";
       
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;
         
-        // Handle different error formats
-        if (typeof detail === 'string') {
+        // Handle Pydantic validation errors (array of errors)
+        if (Array.isArray(detail)) {
+          const missingField = detail.find(d => d.type === "missing");
+          if (missingField) {
+            errorMsg = `Missing required field: ${missingField.loc?.join('.')}`;
+          } else {
+            errorMsg = detail[0]?.msg || "Validation error";
+          }
+        } 
+        // Handle string error
+        else if (typeof detail === 'string') {
           errorMsg = detail;
-        } else if (detail.message) {
+        } 
+        // Handle object error
+        else if (detail.message) {
           errorMsg = detail.message;
+        } else if (detail.error === "user_not_found") {
+          errorMsg = "Access Denied: This email is not registered as an admin. Please use an authorized admin email.";
+        } else if (detail.error === "user_inactive") {
+          errorMsg = "Your admin account is inactive. Please contact system administrator.";
         } else if (detail.error === "invalid_email") {
           errorMsg = "Invalid email address. Please check and try again.";
         } else {
@@ -285,9 +312,11 @@ const AdminLogin = () => {
       setLoading(true);
       setErrorMessage("");
 
+      // ✅ FIX: Send role field as required by backend
       const res = await axios.post(`${API_BASE}/auth/login`, {
-        email,
+        email: email,
         otp: finalOtp,
+        role: "admin"  // Required field!
       });
 
       const token = res.data.access_token;
@@ -309,14 +338,30 @@ const AdminLogin = () => {
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;
         
-        if (typeof detail === 'string') {
+        // Handle Pydantic validation errors (array of errors)
+        if (Array.isArray(detail)) {
+          const missingField = detail.find(d => d.type === "missing");
+          if (missingField) {
+            errorMsg = `Missing required field: ${missingField.loc?.join('.')}`;
+          } else {
+            errorMsg = detail[0]?.msg || "Validation error";
+          }
+        }
+        // Handle string error
+        else if (typeof detail === 'string') {
           errorMsg = detail;
-        } else if (detail.message) {
+        }
+        // Handle object error
+        else if (detail.message) {
           errorMsg = detail.message;
         } else if (detail.error === "invalid_otp") {
           errorMsg = "Invalid OTP. Please try again.";
         } else if (detail.error === "expired_otp") {
           errorMsg = "OTP has expired. Please request a new one.";
+        } else if (detail.error === "user_not_found") {
+          errorMsg = "Access Denied: This email is not registered as an admin.";
+        } else if (detail.error === "user_inactive") {
+          errorMsg = "Your admin account is inactive. Please contact system administrator.";
         } else {
           errorMsg = detail.message || "Login failed. Please try again.";
         }
@@ -384,7 +429,7 @@ const AdminLogin = () => {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-800">Error</p>
+                  <p className="text-sm font-semibold text-red-800">Access Denied</p>
                   <p className="text-sm text-red-600 mt-0.5">{errorMessage}</p>
                 </div>
                 <button
@@ -455,13 +500,23 @@ const AdminLogin = () => {
             <img src={logo} alt="logo" className="h-8 w-auto" />
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-1">
-              Welcome back
+              Admin Access Only
             </h2>
             <p className="text-sm text-gray-500">
-              {step === 1 ? "Enter your email to continue" : "Enter the 6-digit code sent to your email"}
+              {step === 1 
+                ? "Enter your authorized admin email to continue" 
+                : "Enter the 6-digit code sent to your email"}
             </p>
+          </div>
+
+          {/* Security Badge */}
+          <div className="mb-6 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full w-fit">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6-6h2m8 0h2m-6-4v2" />
+            </svg>
+            <span>Restricted to authorized admins only</span>
           </div>
 
           <AnimatePresence mode="wait">
@@ -476,11 +531,11 @@ const AdminLogin = () => {
               >
                 <div className="mb-6">
                   <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    Email Address
+                    Authorized Email Address
                   </label>
                   <input
                     type="email"
-                    placeholder="admin@example.com"
+                    placeholder="admin@yourcompany.com"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
                     value={email}
                     onChange={(e) => {
@@ -489,6 +544,9 @@ const AdminLogin = () => {
                     }}
                     onKeyPress={(e) => e.key === 'Enter' && handleVerify()}
                   />
+                  <p className="text-xs text-gray-400 mt-2">
+                    Only authorized admin emails can access this portal
+                  </p>
                 </div>
 
                 <motion.button
@@ -507,7 +565,7 @@ const AdminLogin = () => {
                         animate="animate"
                         className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                       />
-                      Sending...
+                      Verifying Access...
                     </span>
                   ) : (
                     "Continue"
@@ -587,12 +645,15 @@ const AdminLogin = () => {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-100">
             <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
-              <span>Secure login</span>
+              <span>🔒 Secure admin access</span>
               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-              <span>OTP verification</span>
+              <span>✓ OTP verification</span>
               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
               <span>256-bit encrypted</span>
             </div>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Unauthorized access attempts are logged and monitored
+            </p>
           </div>
         </div>
       </motion.div>
