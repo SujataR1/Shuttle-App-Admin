@@ -1,4 +1,4 @@
-// import { useState, useEffect } from "react";
+// import { useState, useEffect, useRef } from "react";
 // import { Link, useLocation, useNavigate } from "react-router-dom";
 // import axios from "axios";
 // import {
@@ -71,20 +71,42 @@
 //   const [loading, setLoading] = useState(false);
 //   const [hoveredItem, setHoveredItem] = useState(null);
 //   const [isMobile, setIsMobile] = useState(false);
+//   const [savedScrollPosition, setSavedScrollPosition] = useState(0);
+//   const menuContainerRef = useRef(null);
 //   const location = useLocation();
 //   const navigate = useNavigate();
 
 //   const API_BASE = "https://be.shuttleapp.transev.site";
 
-//   // Check if mobile view
+//   // Save scroll position before navigation
+//   const saveScrollPosition = () => {
+//     if (menuContainerRef.current) {
+//       setSavedScrollPosition(menuContainerRef.current.scrollTop);
+//     }
+//   };
+
+//   // Restore scroll position after navigation
+//   const restoreScrollPosition = () => {
+//     setTimeout(() => {
+//       if (menuContainerRef.current && savedScrollPosition > 0) {
+//         menuContainerRef.current.scrollTop = savedScrollPosition;
+//       }
+//     }, 50);
+//   };
+
+//   // Check if mobile view and load saved sidebar state from localStorage
 //   useEffect(() => {
 //     const checkMobile = () => {
 //       const mobile = window.innerWidth < 1024;
 //       setIsMobile(mobile);
-//       if (mobile && open) {
+      
+//       // Load saved sidebar state from localStorage (only for desktop)
+//       const savedSidebarState = localStorage.getItem("sidebarOpen");
+//       if (!mobile && savedSidebarState !== null) {
+//         setOpen(savedSidebarState === "true");
+//       } else if (mobile) {
 //         setOpen(false);
-//       }
-//       if (!mobile && !open) {
+//       } else if (!mobile && savedSidebarState === null) {
 //         setOpen(true);
 //       }
 //     };
@@ -94,12 +116,21 @@
 //     return () => window.removeEventListener('resize', checkMobile);
 //   }, []);
 
+//   // Save sidebar state to localStorage when it changes (desktop only)
+//   useEffect(() => {
+//     if (!isMobile) {
+//       localStorage.setItem("sidebarOpen", open);
+//     }
+//   }, [open, isMobile]);
+
 //   // Close sidebar on mobile when route changes
 //   useEffect(() => {
 //     if (isMobile && open) {
 //       setOpen(false);
 //       if (onClose) onClose();
 //     }
+//     // Restore scroll position after route change
+//     restoreScrollPosition();
 //   }, [location.pathname, isMobile]);
 
 //   // Auto-expand submenu if a sub-item is active
@@ -108,8 +139,9 @@
 //       section.items.forEach((item, iIdx) => {
 //         if (item.subItems) {
 //           const isSubItemActive = item.subItems.some((sub) => sub.path === location.pathname);
-//           if (isSubItemActive && activeMenu !== `${section.title}-${iIdx}`) {
-//             setActiveMenu(`${section.title}-${iIdx}`);
+//           const menuKey = `${section.title}-${iIdx}`;
+//           if (isSubItemActive && activeMenu !== menuKey) {
+//             setActiveMenu(menuKey);
 //           }
 //         }
 //       });
@@ -138,12 +170,10 @@
 //       // Clear storage
 //       localStorage.removeItem("access_token");
 //       localStorage.removeItem("user");
+//       localStorage.removeItem("sidebarOpen");
 //       delete axios.defaults.headers.common['Authorization'];
       
-//       // Close modal
 //       setShowLogoutConfirm(false);
-      
-//       // Navigate to login
 //       navigate("/admin/login", { replace: true });
       
 //     } catch (err) {
@@ -163,15 +193,17 @@
 //     if (!open && onClose) onClose();
 //   };
 
-//   // SIMPLE FIX: Just set the state directly without any event handling complexity
 //   const openLogoutModal = () => {
-//     console.log("Opening logout modal");
 //     setShowLogoutConfirm(true);
 //   };
 
 //   const closeLogoutModal = () => {
-//     console.log("Closing logout modal");
 //     setShowLogoutConfirm(false);
+//   };
+
+//   // Handle link click - save scroll position before navigation
+//   const handleLinkClick = () => {
+//     saveScrollPosition();
 //   };
 
 //   return (
@@ -192,15 +224,18 @@
 //           background: rgba(255, 255, 255, 0.3);
 //         }
 //         @keyframes fadeIn {
-//           from {
-//             opacity: 0;
-//           }
-//           to {
-//             opacity: 1;
-//           }
+//           from { opacity: 0; }
+//           to { opacity: 1; }
 //         }
 //         .animate-fadeIn {
 //           animation: fadeIn 0.2s ease-in-out;
+//         }
+//         @keyframes slideIn {
+//           from { transform: translateX(-100%); }
+//           to { transform: translateX(0); }
+//         }
+//         .animate-slideIn {
+//           animation: slideIn 0.3s ease-out;
 //         }
 //       `}</style>
 
@@ -231,13 +266,13 @@
 //         transition-all duration-300 ease-in-out
 //         z-50
 //         flex flex-col
-//         ${isMobile ? (open ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
+//         ${isMobile ? (open ? 'translate-x-0 animate-slideIn' : '-translate-x-full') : 'translate-x-0'}
 //         ${open ? 'w-72' : 'lg:w-20'}
 //         border-r border-white/10
 //       `}>
         
 //         {/* Header */}
-//         <div className="relative overflow-hidden">
+//         <div className="relative overflow-hidden flex-shrink-0">
 //           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
 //           <div className="flex items-center justify-between p-5 border-b border-white/10 backdrop-blur-sm">
 //             <div className={`flex items-center gap-3 ${!open && 'lg:justify-center lg:w-full'}`}>
@@ -273,8 +308,11 @@
 //           </div>
 //         </div>
 
-//         {/* Menu */}
-//         <div className="flex-1 overflow-y-auto mt-4 px-3 custom-scrollbar">
+//         {/* Menu - Scrollable area with ref for scroll position */}
+//         <div 
+//           ref={menuContainerRef}
+//           className="flex-1 overflow-y-auto mt-4 px-3 custom-scrollbar"
+//         >
 //           {menuSections.map((section, sIdx) => (
 //             <div key={sIdx} className="mb-6">
 //               {open && (
@@ -288,6 +326,8 @@
 //                   const isActive = item.path === location.pathname ||
 //                     (item.subItems && item.subItems.some((sub) => sub.path === location.pathname));
 //                   const isHovered = hoveredItem === `${section.title}-${iIdx}`;
+//                   const menuKey = `${section.title}-${iIdx}`;
+//                   const isMenuOpen = activeMenu === menuKey;
 
 //                   return (
 //                     <li key={iIdx}>
@@ -295,15 +335,16 @@
 //                         <div>
 //                           <button
 //                             className={`relative group w-full rounded-xl transition-all duration-300 overflow-hidden
-//                               ${activeMenu === `${section.title}-${iIdx}` || isActive
+//                               ${isMenuOpen || isActive
 //                                 ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 shadow-lg'
 //                                 : 'hover:bg-white/5'
 //                               }
 //                             `}
-//                             onClick={() => setActiveMenu(
-//                               activeMenu === `${section.title}-${iIdx}` ? null : `${section.title}-${iIdx}`
-//                             )}
-//                             onMouseEnter={() => setHoveredItem(`${section.title}-${iIdx}`)}
+//                             onClick={() => {
+//                               // Toggle submenu - stays open when clicked
+//                               setActiveMenu(isMenuOpen ? null : menuKey);
+//                             }}
+//                             onMouseEnter={() => setHoveredItem(menuKey)}
 //                             onMouseLeave={() => setHoveredItem(null)}
 //                           >
 //                             <div className="flex items-center justify-between px-4 py-3">
@@ -317,7 +358,7 @@
 //                               </div>
 //                               {open && (
 //                                 <div className="transition-transform duration-300">
-//                                   {activeMenu === `${section.title}-${iIdx}` ? (
+//                                   {isMenuOpen ? (
 //                                     <ChevronUpIcon className="w-4 h-4 text-gray-400" />
 //                                   ) : (
 //                                     <ChevronDownIcon className="w-4 h-4 text-gray-400" />
@@ -328,15 +369,17 @@
 //                             <div className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
 //                           </button>
 
+//                           {/* Submenu - stays open when active or toggled */}
 //                           <div className={`
 //                             overflow-hidden transition-all duration-300 ease-in-out
-//                             ${activeMenu === `${section.title}-${iIdx}` || isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+//                             ${isMenuOpen || isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
 //                           `}>
 //                             <ul className="ml-8 mt-1 space-y-1">
 //                               {item.subItems.map((sub, subIdx) => (
 //                                 <li key={subIdx}>
 //                                   <Link
 //                                     to={sub.path}
+//                                     onClick={handleLinkClick}
 //                                     className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 group relative overflow-hidden
 //                                       ${location.pathname === sub.path
 //                                         ? 'text-purple-400 bg-purple-500/10'
@@ -357,6 +400,7 @@
 //                       ) : (
 //                         <Link
 //                           to={item.path}
+//                           onClick={handleLinkClick}
 //                           className={`relative group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 overflow-hidden
 //                             ${location.pathname === item.path
 //                               ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 shadow-lg text-white'
@@ -386,8 +430,8 @@
 //           ))}
 //         </div>
 
-//         {/* Footer with Logout Button */}
-//         <div className="relative mt-auto">
+//         {/* Footer with Logout Button - Fixed at bottom */}
+//         <div className="relative flex-shrink-0 mt-auto">
 //           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           
 //           <div className="relative p-4 border-t border-white/10">
@@ -408,7 +452,7 @@
 //                   </span>
 //                 </div>
 //                 {open && !loading && (
-//                   <span className="text-xs text-gray-500 group-hover:text-red-300 transition-colors lg:block hidden">
+//                   <span className="text-xs text-gray-500 group-hover:text-red-300 transition-colors hidden lg:block">
 //                     Click to sign out
 //                   </span>
 //                 )}
@@ -425,7 +469,7 @@
 //         </div>
 //       </div>
 
-//       {/* Logout Confirmation Modal - SIMPLIFIED */}
+//       {/* Logout Confirmation Modal */}
 //       {showLogoutConfirm && (
 //         <div 
 //           style={{
@@ -444,7 +488,6 @@
 //           }}
 //           onClick={closeLogoutModal}
 //         >
-//           {/* Modal Container - Stop propagation on the modal itself */}
 //           <div 
 //             style={{
 //               maxWidth: '28rem',
@@ -459,7 +502,6 @@
 //               position: 'relative',
 //               overflow: 'hidden',
 //             }}>
-//               {/* Gradient overlay */}
 //               <div style={{
 //                 position: 'absolute',
 //                 inset: 0,
@@ -467,9 +509,7 @@
 //                 borderRadius: '1rem',
 //               }} />
               
-//               {/* Content */}
 //               <div style={{ position: 'relative', padding: '1.5rem' }}>
-//                 {/* Icon */}
 //                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
 //                   <div style={{
 //                     background: 'linear-gradient(to bottom right, #ef4444, #dc2626)',
@@ -481,7 +521,6 @@
 //                   </div>
 //                 </div>
                 
-//                 {/* Text */}
 //                 <h3 style={{
 //                   fontSize: '1.5rem',
 //                   fontWeight: 'bold',
@@ -499,7 +538,6 @@
 //                   Are you sure you want to logout from your admin account?
 //                 </p>
                 
-//                 {/* Buttons */}
 //                 <div style={{ display: 'flex', gap: '0.75rem' }}>
 //                   <button
 //                     onClick={closeLogoutModal}
@@ -559,13 +597,15 @@
 // };
 
 // export default Sidebar;
+
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   ChevronDownIcon, ChevronUpIcon, HomeIcon, UsersIcon, TruckIcon,
   DocumentTextIcon, MapIcon, StarIcon, ClipboardDocumentListIcon, Cog6ToothIcon,
-  ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon
+  ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, CreditCardIcon, DevicePhoneMobileIcon,
+  ChartBarIcon
 } from "@heroicons/react/24/solid";
 
 const menuSections = [
@@ -576,6 +616,37 @@ const menuSections = [
       { name: "Driver Inspection", path: "/admin/inspection", icon: TruckIcon },
       { name: "Heat Map", path: "/admin/heatmap", icon: MapIcon },
       { name: "Driver Payments", path: "/admin/payments", icon: DocumentTextIcon },
+    ],
+  },
+  {
+    title: "RFID MANAGEMENT",
+    items: [
+      {
+        name: "RFID Devices",
+        icon: DevicePhoneMobileIcon,
+        subItems: [
+          { name: "All Devices", path: "/admin/rfid/devices" },
+          { name: "Register Device", path: "/admin/rfid/devices/register" },
+        ],
+      },
+      {
+        name: "Cards Inventory",
+        icon: CreditCardIcon,
+        subItems: [
+          { name: "All Cards", path: "/admin/rfid/cards" },
+          { name: "Register Card", path: "/admin/rfid/cards/register" },
+          { name: "Bulk Register", path: "/admin/rfid/cards/bulk-register" },
+        ],
+      },
+      {
+        name: "Reports & History",
+        icon: ChartBarIcon,
+        subItems: [
+          { name: "Transaction Ledger", path: "/admin/rfid/transaction-ledger" },
+          { name: "Recharge History", path: "/admin/rfid/recharge-history" },
+          { name: "Card Activity Log", path: "/admin/rfid/card-activity-log" },
+        ],
+      },
     ],
   },
   {

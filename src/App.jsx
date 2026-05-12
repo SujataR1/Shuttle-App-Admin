@@ -22,6 +22,16 @@ import DriverRatingsReviewPage from "./pages/admin/DriverRatingsReviewPage";
 import CancellationFine from "./pages/admin/CancellationFine";
 import DriverPayments from "./pages/admin/DriverPayments";
 import PassengerAllTrips from "./pages/admin/PassengerAllTrips";
+import DevicesList from "./pages/admin/devices/DevicesList";
+import RegisterDevice from "./pages/admin/devices/RegisterDevice";
+import CardsList from "./pages/admin/cards/CardsList";
+import RegisterCard from "./pages/admin/cards/RegisterCard";
+import BulkRegisterCard from "./pages/admin/cards/BulkRegisterCard";
+import CardDetails from "./pages/admin/cards/CardDetails";
+import TransactionLedger from "./pages/admin/reports/TransactionLedger";
+import RechargeHistory from "./pages/admin/reports/RechargeHistory";
+import CardActivityLog from "./pages/admin/reports/CardActivityLog";
+
 function App() {
   return (
     <Routes>
@@ -50,8 +60,17 @@ function App() {
       <Route path="/admin/cancellation-fine" element={<CancellationFine />} />
       <Route path="/admin/payments" element={<DriverPayments />} />
       <Route path="/admin/Passenger-all-trips" element={<PassengerAllTrips />} />
+      <Route path="/admin/rfid/devices" element={<DevicesList />} />
+      <Route path="/admin/rfid/devices/register" element={<RegisterDevice />} />
+      <Route path="/admin/rfid/cards" element={<CardsList />} />
+      <Route path="/admin/rfid/cards/register" element={<RegisterCard />} />
+      <Route path="/admin/rfid/cards/bulk-register" element={<BulkRegisterCard />} />
+      <Route path="/admin/rfid/cards/:cardId" element={<CardDetails />} />
+      <Route path="/admin/rfid/transaction-ledger" element={<TransactionLedger />} />
+      <Route path="/admin/rfid/recharge-history" element={<RechargeHistory />} />
+      <Route path="/admin/rfid/card-activity-log" element={<CardActivityLog />} />
     </Routes>
   );
 }
 
-export default App; // ✅ must be default export
+export default App; 
