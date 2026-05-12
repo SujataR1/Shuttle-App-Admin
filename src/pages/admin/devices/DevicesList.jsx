@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { DevicePhoneMobileIcon, PlusIcon, FunnelIcon, XMarkIcon, PowerIcon, TrashIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { DevicePhoneMobileIcon, PlusIcon, FunnelIcon, XMarkIcon, PowerIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const DevicesList = () => {
   const [devices, setDevices] = useState([]);
@@ -59,7 +59,6 @@ const DevicesList = () => {
     } catch (error) {
       const message = error.response?.data?.detail?.message || `Failed to ${actionText} device`;
       toast.error(message);
-      console.error(error);
     } finally {
       setActionLoading(null);
     }
@@ -89,7 +88,7 @@ const DevicesList = () => {
   const getStatusBadge = (isActive, decommissionedAt) => {
     if (decommissionedAt) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-medium border border-red-100">
+        <span className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
           <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
           Decommissioned
         </span>
@@ -97,15 +96,15 @@ const DevicesList = () => {
     }
     if (isActive) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-medium border border-green-100">
-          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+        <span className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
+          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
           Active
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-xs font-medium border border-gray-100">
-        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+      <span className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
+        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
         Inactive
       </span>
     );
@@ -115,184 +114,179 @@ const DevicesList = () => {
     setFilters({ vehicle_id: "", is_active: "" });
     setShowFilters(false);
     toast.info("Filters cleared");
+    fetchDevices();
+  };
+
+  const applyFilters = () => {
+    setPage(1);
+    fetchDevices();
+    toast.success("Filters applied");
   };
 
   const hasActiveFilters = filters.vehicle_id || filters.is_active;
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-slate-50">
       <Sidebar onClose={() => setSidebarOpen(false)} />
       
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
         <TopNavbar />
         
-        {/* Page Content - Centered */}
         <main className="flex-1 overflow-y-auto">
-          <div className="min-h-full p-8">
+          <div className="p-8">
             <div className="max-w-7xl mx-auto">
-              {/* Header Section */}
+              {/* Header */}
               <div className="mb-8">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-black rounded-2xl blur-xl opacity-10"></div>
-                      <div className="relative w-14 h-14 bg-black rounded-2xl flex items-center justify-center shadow-lg">
-                        <DevicePhoneMobileIcon className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-                    <div>
-                      <h1 className="text-3xl font-light text-black tracking-tight">
-                        RFID <span className="font-semibold">Devices</span>
-                      </h1>
-                      <p className="text-gray-500 text-sm mt-1 font-light">Manage and monitor all RFID scanner devices</p>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-semibold text-slate-900">RFID Devices</h1>
+                    <p className="text-slate-500 text-sm mt-1">Manage and monitor all RFID scanner devices</p>
                   </div>
                   <Link
                     to="/admin/rfid/devices/register"
-                    className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm"
                   >
-                    <PlusIcon className="w-5 h-5" />
+                    <PlusIcon className="w-4 h-4" />
                     Register Device
                   </Link>
                 </div>
               </div>
 
-              {/* Filters Toggle */}
-              <div className="mb-4 flex justify-between items-center">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="inline-flex items-center gap-2 text-gray-500 hover:text-black transition-all duration-300 px-3 py-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FunnelIcon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{showFilters ? "Hide Filters" : "Show Filters"}</span>
-                  {hasActiveFilters && (
-                    <span className="px-2 py-0.5 bg-black/5 text-black rounded-full text-xs font-medium">
-                      Active
-                    </span>
-                  )}
-                </button>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="inline-flex items-center gap-1 text-red-500 hover:text-red-600 text-sm transition-all duration-300 px-3 py-1.5 rounded-lg hover:bg-red-50"
-                  >
-                    <XMarkIcon className="w-4 h-4" />
-                    Clear all
-                  </button>
+              {/* Filters Bar */}
+              <div className="bg-white rounded-lg border border-slate-200 p-4 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition text-sm"
+                    >
+                      <FunnelIcon className="w-4 h-4" />
+                      <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
+                      {hasActiveFilters && (
+                        <span className="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">Active</span>
+                      )}
+                    </button>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="inline-flex items-center gap-1 text-red-500 hover:text-red-600 text-sm"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Total: <span className="font-semibold text-slate-900">{totalCount}</span> devices
+                  </div>
+                </div>
+
+                {/* Filters Panel */}
+                {showFilters && (
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Vehicle ID</label>
+                        <input
+                          type="text"
+                          placeholder="Search by vehicle ID"
+                          value={filters.vehicle_id}
+                          onChange={(e) => setFilters({ ...filters, vehicle_id: e.target.value })}
+                          className="w-full bg-slate-50 text-slate-900 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Device Status</label>
+                        <select
+                          value={filters.is_active}
+                          onChange={(e) => setFilters({ ...filters, is_active: e.target.value })}
+                          className="w-full bg-slate-50 text-slate-900 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 text-sm"
+                        >
+                          <option value="">All Status</option>
+                          <option value="true">Active</option>
+                          <option value="false">Inactive</option>
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          onClick={applyFilters}
+                          className="w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition"
+                        >
+                          Apply Filters
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Filters Panel */}
-              {showFilters && (
-                <div className="bg-white rounded-2xl p-6 mb-6 border border-gray-100 shadow-lg animate-fadeIn">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-black text-xs font-semibold uppercase tracking-wider mb-2">
-                        Vehicle ID
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter vehicle ID"
-                        value={filters.vehicle_id}
-                        onChange={(e) => setFilters({ ...filters, vehicle_id: e.target.value })}
-                        className="w-full bg-gray-50 text-black px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/20 border border-gray-200 transition-all duration-300 placeholder:text-gray-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-black text-xs font-semibold uppercase tracking-wider mb-2">
-                        Device Status
-                      </label>
-                      <select
-                        value={filters.is_active}
-                        onChange={(e) => setFilters({ ...filters, is_active: e.target.value })}
-                        className="w-full bg-gray-50 text-black px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/20 border border-gray-200 transition-all duration-300"
-                      >
-                        <option value="">All Status</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Stats Summary */}
+              {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Total Devices</p>
-                  <p className="text-3xl font-bold text-black">{totalCount}</p>
+                <div className="bg-white rounded-lg border border-slate-200 p-4">
+                  <p className="text-slate-500 text-xs uppercase tracking-wide">Total Devices</p>
+                  <p className="text-2xl font-semibold text-slate-900 mt-1">{totalCount}</p>
                 </div>
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Active Devices</p>
-                  <p className="text-3xl font-bold text-green-600">{devices.filter(d => d.is_active && !d.decommissioned_at).length}</p>
+                <div className="bg-white rounded-lg border border-slate-200 p-4">
+                  <p className="text-slate-500 text-xs uppercase tracking-wide">Active</p>
+                  <p className="text-2xl font-semibold text-emerald-600 mt-1">{devices.filter(d => d.is_active && !d.decommissioned_at).length}</p>
                 </div>
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Inactive Devices</p>
-                  <p className="text-3xl font-bold text-yellow-600">{devices.filter(d => !d.is_active && !d.decommissioned_at).length}</p>
+                <div className="bg-white rounded-lg border border-slate-200 p-4">
+                  <p className="text-slate-500 text-xs uppercase tracking-wide">Inactive</p>
+                  <p className="text-2xl font-semibold text-amber-600 mt-1">{devices.filter(d => !d.is_active && !d.decommissioned_at).length}</p>
                 </div>
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Decommissioned</p>
-                  <p className="text-3xl font-bold text-red-600">{devices.filter(d => d.decommissioned_at).length}</p>
+                <div className="bg-white rounded-lg border border-slate-200 p-4">
+                  <p className="text-slate-500 text-xs uppercase tracking-wide">Decommissioned</p>
+                  <p className="text-2xl font-semibold text-red-600 mt-1">{devices.filter(d => d.decommissioned_at).length}</p>
                 </div>
               </div>
 
               {/* Devices Table */}
-              <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-xl">
+              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">Serial Number</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">Vehicle ID</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">Created At</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">Actions</th>
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Serial Number</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Vehicle ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-100">
                       {loading ? (
-                        [...Array(5)].map((_, index) => (
-                          <tr key={index} className="animate-pulse">
-                            <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
-                            <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-40"></div></td>
-                            <td className="px-6 py-4"><div className="h-6 bg-gray-100 rounded w-24"></div></td>
-                            <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
-                            <td className="px-6 py-4"><div className="h-8 bg-gray-100 rounded w-32"></div></td>
+                        [...Array(5)].map((_, i) => (
+                          <tr key={i} className="animate-pulse">
+                            <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32"></div></td>
+                            <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-40"></div></td>
+                            <td className="px-6 py-4"><div className="h-6 bg-slate-100 rounded w-24"></div></td>
+                            <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+                            <td className="px-6 py-4"><div className="h-8 bg-slate-100 rounded w-32"></div></td>
                           </tr>
                         ))
                       ) : devices.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="px-6 py-16 text-center">
-                            <div className="flex flex-col items-center gap-3">
-                              <DevicePhoneMobileIcon className="w-12 h-12 text-gray-300" />
-                              <p className="text-gray-500 font-light">No devices found</p>
-                              <p className="text-gray-400 text-sm font-light">Try adjusting your filters or register a new device</p>
-                              <Link
-                                to="/admin/rfid/devices/register"
-                                className="mt-2 text-black hover:text-gray-700 text-sm font-medium underline-offset-4 hover:underline"
-                              >
-                                + Register a device
-                              </Link>
-                            </div>
+                          <td colSpan="5" className="px-6 py-12 text-center">
+                            <DevicePhoneMobileIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                            <p className="text-slate-500">No devices found</p>
+                            <Link to="/admin/rfid/devices/register" className="text-slate-600 text-sm hover:underline mt-2 inline-block">
+                              + Register a device
+                            </Link>
                           </td>
                         </tr>
                       ) : (
                         devices.map((device) => (
-                          <tr key={device.id} className="hover:bg-gray-50 transition-colors duration-200 group">
+                          <tr key={device.id} className="hover:bg-slate-50 transition">
                             <td className="px-6 py-4">
-                              <div className="text-black font-medium">{device.serial_number}</div>
-                              <div className="text-gray-400 text-xs font-mono mt-0.5">{device.id.substring(0, 8)}...</div>
+                              <div className="font-medium text-slate-900">{device.serial_number}</div>
+                              <div className="text-slate-400 text-xs font-mono mt-0.5">{device.id.slice(0, 8)}...</div>
                             </td>
                             <td className="px-6 py-4">
-                              <code className="text-black text-sm bg-gray-100 px-2 py-1 rounded font-mono">{device.vehicle_id}</code>
+                              <code className="text-sm bg-slate-100 px-2 py-1 rounded text-slate-700">{device.vehicle_id}</code>
                             </td>
                             <td className="px-6 py-4">{getStatusBadge(device.is_active, device.decommissioned_at)}</td>
                             <td className="px-6 py-4">
-                              <div className="text-gray-700 text-sm">{new Date(device.created_at).toLocaleDateString()}</div>
-                              <div className="text-gray-400 text-xs mt-0.5">{new Date(device.created_at).toLocaleTimeString()}</div>
+                              <div className="text-slate-700 text-sm">{new Date(device.created_at).toLocaleDateString()}</div>
                             </td>
                             <td className="px-6 py-4">
                               {!device.decommissioned_at && (
@@ -301,33 +295,30 @@ const DevicesList = () => {
                                     <button
                                       onClick={() => handleAction(device.id, "deactivate", "deactivate")}
                                       disabled={actionLoading === device.id}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-all duration-300 text-sm font-medium disabled:opacity-50 border border-yellow-100"
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 text-sm font-medium"
                                     >
                                       <PowerIcon className="w-3.5 h-3.5" />
-                                      {actionLoading === device.id ? "..." : "Deactivate"}
+                                      Deactivate
                                     </button>
                                   ) : (
                                     <button
                                       onClick={() => handleAction(device.id, "activate", "activate")}
                                       disabled={actionLoading === device.id}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-all duration-300 text-sm font-medium disabled:opacity-50 border border-green-100"
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 text-sm font-medium"
                                     >
                                       <PowerIcon className="w-3.5 h-3.5" />
-                                      {actionLoading === device.id ? "..." : "Activate"}
+                                      Activate
                                     </button>
                                   )}
                                   <button
                                     onClick={() => handleDecommission(device.id)}
                                     disabled={actionLoading === device.id}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all duration-300 text-sm font-medium disabled:opacity-50 border border-red-100"
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium"
                                   >
                                     <TrashIcon className="w-3.5 h-3.5" />
-                                    {actionLoading === device.id ? "..." : "Decommission"}
+                                    Decommission
                                   </button>
                                 </div>
-                              )}
-                              {device.decommissioned_at && (
-                                <span className="text-gray-400 text-sm font-light">Device retired</span>
                               )}
                             </td>
                           </tr>
@@ -339,37 +330,28 @@ const DevicesList = () => {
 
                 {/* Pagination */}
                 {totalCount > 25 && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <button
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="px-4 py-2 bg-white text-black rounded-xl disabled:opacity-50 hover:bg-gray-100 transition-all duration-300 text-sm font-medium border border-gray-200"
-                      >
-                        ← Previous
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-sm">Page</span>
-                        <span className="text-black font-semibold">{page}</span>
-                        <span className="text-gray-400 text-sm">of {Math.ceil(totalCount / 25)}</span>
-                      </div>
-                      <button
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={page * 25 >= totalCount}
-                        className="px-4 py-2 bg-white text-black rounded-xl disabled:opacity-50 hover:bg-gray-100 transition-all duration-300 text-sm font-medium border border-gray-200"
-                      >
-                        Next →
-                      </button>
+                  <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="inline-flex items-center gap-1 text-sm text-slate-600 disabled:opacity-40 hover:text-slate-900"
+                    >
+                      <ChevronLeftIcon className="w-4 h-4" />
+                      Previous
+                    </button>
+                    <div className="text-sm text-slate-500">
+                      Page <span className="font-medium text-slate-900">{page}</span> of {Math.ceil(totalCount / 25)}
                     </div>
+                    <button
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={page * 25 >= totalCount}
+                      className="inline-flex items-center gap-1 text-sm text-slate-600 disabled:opacity-40 hover:text-slate-900"
+                    >
+                      Next
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
-              </div>
-
-              {/* Decorative Footer */}
-              <div className="mt-6 text-center">
-                <p className="text-gray-400 text-xs tracking-wider font-light">
-                  MANAGING {totalCount} RFID DEVICES
-                </p>
               </div>
             </div>
           </div>
