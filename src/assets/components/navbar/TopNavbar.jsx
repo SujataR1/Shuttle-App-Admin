@@ -79,7 +79,6 @@ const TopNavbar = ({ title, onMenuClick, isMobile }) => {
               </p>
             </div>
           </div>
-
           {/* Right section with user controls - Simplified */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {/* Notification Bell */}
