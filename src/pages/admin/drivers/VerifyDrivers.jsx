@@ -2,7 +2,7 @@
 // import { useNavigate, useLocation, useParams } from "react-router-dom";
 // import axios from "axios";
 // import Sidebar from "../../../assets/components/sidebar/Sidebar";
-// import TopNavbarUltra from "../../../assets/components/navbar/TopNavbar";
+// import TopNavbar from "../../../assets/components/navbar/TopNavbar";
 // import { 
 //   ArrowLeftIcon, 
 //   CheckCircleIcon, 
@@ -29,6 +29,8 @@
 //   const { state } = useLocation();
 //   const params = useParams();
 //   const navigate = useNavigate();
+//   const [sidebarOpen, setSidebarOpen] = useState(false);
+//   const [isMobile, setIsMobile] = useState(false);
 
 //   const userId = state?.userId || params.userId;
 
@@ -51,6 +53,20 @@
 //   const reconnectTimeoutRef = useRef(null);
 
 //   const token = localStorage.getItem("access_token");
+
+//   // Check if mobile view
+//   useEffect(() => {
+//     const checkMobile = () => {
+//       setIsMobile(window.innerWidth < 1024);
+//     };
+//     checkMobile();
+//     window.addEventListener("resize", checkMobile);
+//     return () => window.removeEventListener("resize", checkMobile);
+//   }, []);
+
+//   const toggleSidebar = () => {
+//     setSidebarOpen(!sidebarOpen);
+//   };
 
 //   const handleImageLoad = (photoKey) => {
 //     setImageLoading(prev => ({ ...prev, [photoKey]: false }));
@@ -235,12 +251,16 @@
 //   if (initialLoad || loading) {
 //     return (
 //       <div className="flex h-screen bg-gray-50">
-//         <Sidebar />
-//         <div className="flex-1 flex flex-col overflow-hidden">
-//           <TopNavbarUltra />
+//         <Sidebar onClose={() => setSidebarOpen(false)} />
+//         <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+//           <TopNavbar 
+//             title="Verify Drivers" 
+//             onMenuClick={toggleSidebar} 
+//             isMobile={isMobile} 
+//           />
 //           <div className="flex-1 flex items-center justify-center">
 //             <div className="text-center">
-//               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black mb-2"></div>
+//               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
 //               <p className="text-gray-500">Loading...</p>
 //             </div>
 //           </div>
@@ -901,7 +921,7 @@
 //                   <td className="px-6 py-4">
 //                     <div className="font-medium text-gray-900">{d.profile?.name || d.profile?.full_name || "N/A"}</div>
 //                     <div className="text-sm text-gray-500">{d.email || "N/A"}</div>
-//                   </td>
+//                    </td>
 //                   <td className="px-6 py-4 text-gray-600">{d.profile?.phone || "N/A"}</td>
 //                   <td className="px-6 py-4">
 //                     {isVerified ? (
@@ -954,10 +974,16 @@
 //   );
 
 //   return (
-//     <div className="flex h-screen bg-gray-50">
-//       <Sidebar />
-//       <div className="flex-1 flex flex-col overflow-hidden">
-//         <TopNavbarUltra />
+//     <div className="flex h-screen bg-gray-50 overflow-hidden">
+//       <Sidebar onClose={() => setSidebarOpen(false)} />
+      
+//       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+//         <TopNavbar 
+//           title="Verify Drivers" 
+//           onMenuClick={toggleSidebar} 
+//           isMobile={isMobile} 
+//         />
+        
 //         <div className="flex-1 overflow-auto">
 //           <div className="p-8">
 //             <h1 className="text-2xl font-bold text-gray-900 mb-6">
@@ -1011,7 +1037,9 @@ import {
   IdentificationIcon,
   CalendarIcon,
   MapPinIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  DevicePhoneMobileIcon,
+  ShieldCheckIcon
 } from "@heroicons/react/24/outline";
 
 const VerifyDriver = () => {
@@ -1095,7 +1123,8 @@ const VerifyDriver = () => {
               vehicle: detailRes.data.vehicle,
               profile: detailRes.data.profile,
               account_info: detailRes.data.account_info,
-              vehical_physical_inspection: detailRes.data.vehical_physical_inspection
+              vehical_physical_inspection: detailRes.data.vehical_physical_inspection,
+              rfid: detailRes.data.rfid
             };
           } catch (err) {
             return { ...driver, vehicle_verification: "N/A" };
@@ -1199,7 +1228,8 @@ const VerifyDriver = () => {
               vehicle: detailRes.data.vehicle,
               profile: detailRes.data.profile,
               account_info: detailRes.data.account_info,
-              vehical_physical_inspection: detailRes.data.vehical_physical_inspection
+              vehical_physical_inspection: detailRes.data.vehical_physical_inspection,
+              rfid: detailRes.data.rfid
             };
           } catch (err) {
             return { ...driver, vehicle_verification: "N/A" };
@@ -1727,6 +1757,60 @@ const VerifyDriver = () => {
               </div>
             </div>
           </div>
+
+          {/* RFID Section - NEW */}
+          {d.rfid && (
+            <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <DevicePhoneMobileIcon className="w-4 h-4 text-gray-400" />
+                  <h2 className="font-semibold text-gray-900">RFID Configuration</h2>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Vehicle ID</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-gray-900 font-mono text-sm">{d.rfid.vehicle_id || "N/A"}</p>
+                      {d.rfid.vehicle_id && (
+                        <button onClick={() => copyToClipboard(d.rfid.vehicle_id, "Vehicle ID")} className="text-gray-400 hover:text-gray-600">
+                          <ClipboardIcon className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Default Reserved Seat Count</label>
+                    <p className="text-gray-900 text-sm mt-1">{d.rfid.default_reserved_seat_count || 0}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Total Devices</label>
+                    <p className="text-gray-900 text-sm mt-1">{d.rfid.device_count || 0}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Active Devices</label>
+                    <p className="text-gray-900 text-sm mt-1">{d.rfid.active_device_count || 0}</p>
+                  </div>
+                </div>
+                
+                {/* Devices List if any */}
+                {d.rfid.devices && d.rfid.devices.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Assigned Devices</label>
+                    <div className="flex flex-wrap gap-2">
+                      {d.rfid.devices.map((device, index) => (
+                        <span key={index} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700">
+                          <DevicePhoneMobileIcon className="w-3 h-3" />
+                          {device.serial_number || device.device_id || `Device ${index + 1}`}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Physical Inspection Section */}
           {d.vehical_physical_inspection && (
