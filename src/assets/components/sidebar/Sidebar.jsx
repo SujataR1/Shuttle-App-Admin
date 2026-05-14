@@ -18,7 +18,8 @@ import {
   CreditCardIcon, 
   DevicePhoneMobileIcon,
   ChartBarIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  ShieldCheckIcon
 } from "@heroicons/react/24/outline";
 
 const menuSections = [
@@ -31,37 +32,43 @@ const menuSections = [
       { name: "Driver Payments", path: "/admin/payments", icon: DocumentTextIcon },
     ],
   },
-  {
-    title: "RFID MANAGEMENT",
-    items: [
-      {
-        name: "RFID Devices",
-        icon: DevicePhoneMobileIcon,
-        subItems: [
-          { name: "All Devices", path: "/admin/rfid/devices" },
-          { name: "Register Device", path: "/admin/rfid/devices/register" },
-        ],
-      },
-      {
-        name: "Cards Inventory",
-        icon: CreditCardIcon,
-        subItems: [
-          { name: "All Cards", path: "/admin/rfid/cards" },
-          { name: "Register Card", path: "/admin/rfid/cards/register" },
-          { name: "Bulk Register", path: "/admin/rfid/cards/bulk-register" },
-        ],
-      },
-      {
-        name: "Reports & History",
-        icon: ChartBarIcon,
-        subItems: [
-          { name: "Transaction Ledger", path: "/admin/rfid/transaction-ledger" },
-          { name: "Recharge History", path: "/admin/rfid/recharge-history" },
-          { name: "Card Activity Log", path: "/admin/rfid/card-activity-log" },
-        ],
-      },
-    ],
-  },
+ {
+  title: "RFID MANAGEMENT",
+  items: [
+    {
+      name: "RFID Devices",
+      icon: DevicePhoneMobileIcon,
+      subItems: [
+        { name: "All Devices", path: "/admin/rfid/devices" },
+        { name: "Register Device", path: "/admin/rfid/devices/register" },
+      ],
+    },
+    {
+      name: "Cards Inventory",
+      icon: CreditCardIcon,
+      subItems: [
+        { name: "All Cards", path: "/admin/rfid/cards" },
+        { name: "Register Card", path: "/admin/rfid/cards/register" },
+        { name: "Bulk Register", path: "/admin/rfid/cards/bulk-register" },
+      ],
+    },
+    {
+      name: "Reports & History",
+      icon: ChartBarIcon,
+      subItems: [
+        { name: "Transaction Ledger", path: "/admin/rfid/transaction-ledger" },
+        { name: "Recharge History", path: "/admin/rfid/recharge-history" },
+        { name: "Card Activity Log", path: "/admin/rfid/card-activity-log" },
+      ],
+    },
+    // ✅ ADD THIS NEW MENU ITEM
+    {
+      name: "Seat Policy",
+      icon: ShieldCheckIcon,  // Make sure to import ShieldCheckIcon
+      path: "/admin/rfid/seat-policy",
+    },
+  ],
+},
   {
     title: "MEMBERS",
     items: [

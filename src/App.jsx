@@ -31,6 +31,7 @@ import CardDetails from "./pages/admin/cards/CardDetails";
 import TransactionLedger from "./pages/admin/reports/TransactionLedger";
 import RechargeHistory from "./pages/admin/reports/RechargeHistory";
 import CardActivityLog from "./pages/admin/reports/CardActivityLog";
+import SeatPolicy from "./pages/admin/devices/SeatPolicy";
 
 function App() {
   return (
@@ -69,6 +70,7 @@ function App() {
       <Route path="/admin/rfid/transaction-ledger" element={<TransactionLedger />} />
       <Route path="/admin/rfid/recharge-history" element={<RechargeHistory />} />
       <Route path="/admin/rfid/card-activity-log" element={<CardActivityLog />} />
+      <Route path="/admin/rfid/seat-policy" element={<SeatPolicy />} />
     </Routes>
   );
 }

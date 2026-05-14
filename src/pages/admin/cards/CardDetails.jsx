@@ -37,8 +37,30 @@ const CardDetails = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingPassengers, setLoadingPassengers] = useState(false);
   const [selectedPassenger, setSelectedPassenger] = useState(null);
+  
+  // Store passenger names for display
+  const [passengerNames, setPassengerNames] = useState({});
 
   const API_BASE = "https://be.shuttleapp.transev.site";
+
+  // Fetch all passengers to get names
+  const fetchAllPassengersForNames = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${API_BASE}/admin/view/all-passengers`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const passengersData = Array.isArray(response.data) ? response.data : [];
+      const nameMap = {};
+      passengersData.forEach(p => {
+        nameMap[p.user_id] = p.profile?.name || p.email;
+      });
+      setPassengerNames(nameMap);
+    } catch (error) {
+      console.error("Failed to fetch passenger names:", error);
+    }
+  };
 
   const fetchCardDetails = async () => {
     setLoading(true);
@@ -94,6 +116,13 @@ const CardDetails = () => {
       const passengersData = Array.isArray(response.data) ? response.data : [];
       setPassengers(passengersData);
       setFilteredPassengers(passengersData);
+      
+      // Also update the name map
+      const nameMap = { ...passengerNames };
+      passengersData.forEach(p => {
+        nameMap[p.user_id] = p.profile?.name || p.email;
+      });
+      setPassengerNames(nameMap);
     } catch (error) {
       toast.error("Failed to fetch passengers");
       console.error(error);
@@ -128,7 +157,9 @@ const CardDetails = () => {
       );
       toast.success(`Card assigned to ${selectedPassenger.profile?.name || selectedPassenger.email}`);
       setShowPassengerModal(false);
-      fetchCardDetails();
+      await fetchCardDetails();
+      // Refresh passenger names after assignment
+      await fetchAllPassengersForNames();
     } catch (error) {
       const message = error.response?.data?.detail?.message || "Failed to assign card";
       toast.error(message);
@@ -137,8 +168,15 @@ const CardDetails = () => {
     }
   };
 
+  // Get passenger display name
+  const getPassengerDisplayName = (userId) => {
+    if (!userId) return "Not assigned";
+    return passengerNames[userId] || userId;
+  };
+
   useEffect(() => {
     fetchCardDetails();
+    fetchAllPassengersForNames();
   }, [cardId]);
 
   useEffect(() => {
@@ -171,7 +209,7 @@ const CardDetails = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Card ${action} successfully`);
-      fetchCardDetails();
+      await fetchCardDetails();
       if (activeTab === "ledger") fetchLedger();
       if (activeTab === "recharges") fetchRecharges();
     } catch (error) {
@@ -324,9 +362,14 @@ const CardDetails = () => {
                 </div>
                 {current_assignment ? (
                   <>
-                    <p className="text-gray-900 text-sm font-medium">{current_assignment.passenger_user_id}</p>
+                    <p className="text-gray-900 text-sm font-medium">
+                      {getPassengerDisplayName(current_assignment.passenger_user_id)}
+                    </p>
                     <p className="text-gray-400 text-xs mt-1">
                       Assigned: {new Date(current_assignment.assigned_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      ID: {current_assignment.passenger_user_id}
                     </p>
                   </>
                 ) : (
@@ -405,38 +448,23 @@ const CardDetails = () => {
               </div>
             )}
 
-            {/* Tabs */}
+            {/* Tabs - Same as before */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="border-b border-gray-100">
                 <div className="flex space-x-6 px-6">
                   <button 
                     onClick={() => setActiveTab("details")} 
-                    className={`py-3 text-sm font-medium transition ${
-                      activeTab === "details" 
-                        ? "border-b-2 border-gray-800 text-gray-900" 
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
+                    className={`py-3 text-sm font-medium transition ${activeTab === "details" ? "border-b-2 border-gray-800 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
                     Details
                   </button>
                   <button 
                     onClick={() => setActiveTab("ledger")} 
-                    className={`py-3 text-sm font-medium transition ${
-                      activeTab === "ledger" 
-                        ? "border-b-2 border-gray-800 text-gray-900" 
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
+                    className={`py-3 text-sm font-medium transition ${activeTab === "ledger" ? "border-b-2 border-gray-800 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
                     Ledger
                   </button>
                   <button 
                     onClick={() => setActiveTab("recharges")} 
-                    className={`py-3 text-sm font-medium transition ${
-                      activeTab === "recharges" 
-                        ? "border-b-2 border-gray-800 text-gray-900" 
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
+                    className={`py-3 text-sm font-medium transition ${activeTab === "recharges" ? "border-b-2 border-gray-800 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
                     Recharges
                   </button>
                 </div>
@@ -477,27 +505,25 @@ const CardDetails = () => {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-100">
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Balance</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Note</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Type</th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">Amount</th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">Balance</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Note</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody>
                           {ledger.map(entry => (
-                            <tr key={entry.id} className="hover:bg-gray-50 transition">
+                            <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50">
                               <td className="px-4 py-3 text-gray-600 text-sm">{new Date(entry.created_at).toLocaleString()}</td>
                               <td className="px-4 py-3">
-                                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                                  {entry.entry_type}
-                                </span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">{entry.entry_type}</span>
                               </td>
                               <td className={`px-4 py-3 text-right font-semibold ${parseFloat(entry.amount_delta) > 0 ? "text-emerald-600" : "text-rose-600"}`}>
                                 {parseFloat(entry.amount_delta) > 0 ? "+" : ""}{entry.amount_delta}
                               </td>
-                              <td className="px-4 py-3 text-right text-gray-700 font-mono">₹{entry.balance_after}</td>
-                              <td className="px-4 py-3 text-gray-500 text-sm">{entry.note || "—"}</td>
+                              <td className="px-4 py-3 text-right text-gray-700">₹{entry.balance_after}</td>
+                              <td className="px-4 py-3 text-gray-500">{entry.note || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -517,33 +543,27 @@ const CardDetails = () => {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-100">
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Note</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Source</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Note</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody>
                           {recharges.map(recharge => (
-                            <tr key={recharge.id} className="hover:bg-gray-50 transition">
+                            <tr key={recharge.id} className="border-b border-gray-50 hover:bg-gray-50">
                               <td className="px-4 py-3 text-gray-600 text-sm">{new Date(recharge.created_at).toLocaleString()}</td>
                               <td className="px-4 py-3 text-right text-emerald-600 font-semibold">+₹{parseFloat(recharge.amount).toFixed(2)}</td>
                               <td className="px-4 py-3">
-                                <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                  {recharge.source_type}
-                                </span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">{recharge.source_type}</span>
                               </td>
                               <td className="px-4 py-3">
-                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  recharge.status === "credited" 
-                                    ? "bg-emerald-100 text-emerald-700" 
-                                    : "bg-amber-100 text-amber-700"
-                                }`}>
+                                <span className={`text-xs px-2 py-1 rounded-full ${recharge.status === "credited" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                                   {recharge.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-gray-500 text-sm">{recharge.note || "—"}</td>
+                              <td className="px-4 py-3 text-gray-500">{recharge.note || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -557,7 +577,7 @@ const CardDetails = () => {
         </main>
       </div>
 
-      {/* Passenger Selection Modal */}
+      {/* Passenger Selection Modal - Same as before */}
       {showPassengerModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
@@ -571,10 +591,7 @@ const CardDetails = () => {
                   <p className="text-sm text-gray-500 mt-0.5">Select a passenger to assign this card</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowPassengerModal(false)} 
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
+              <button onClick={() => setShowPassengerModal(false)} className="text-gray-400 hover:text-gray-600">
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
@@ -587,21 +604,20 @@ const CardDetails = () => {
                   placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
               {loadingPassengers ? (
-                <div className="flex items-center justify-center py-12">
+                <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
                 </div>
               ) : filteredPassengers.length === 0 ? (
                 <div className="text-center py-12">
                   <UserIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">No passengers found</p>
-                  <p className="text-sm text-gray-400 mt-1">Try a different search term</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -609,11 +625,7 @@ const CardDetails = () => {
                     <button
                       key={passenger.user_id}
                       onClick={() => setSelectedPassenger(passenger)}
-                      className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
-                        selectedPassenger?.user_id === passenger.user_id
-                          ? "bg-emerald-50 border-2 border-emerald-500"
-                          : "bg-gray-50 border border-gray-100 hover:bg-gray-100"
-                      }`}
+                      className={`w-full text-left p-4 rounded-xl transition ${selectedPassenger?.user_id === passenger.user_id ? "bg-emerald-50 border-2 border-emerald-500" : "bg-gray-50 border border-gray-100 hover:bg-gray-100"}`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-medium">
@@ -622,9 +634,6 @@ const CardDetails = () => {
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{passenger.profile?.name || "N/A"}</p>
                           <p className="text-sm text-gray-500">{passenger.email}</p>
-                          {passenger.total_trips_booked > 0 && (
-                            <p className="text-xs text-gray-400 mt-0.5">{passenger.total_trips_booked} trips booked</p>
-                          )}
                         </div>
                         {selectedPassenger?.user_id === passenger.user_id && (
                           <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -641,17 +650,10 @@ const CardDetails = () => {
             </div>
 
             <div className="p-6 border-t border-gray-100 flex gap-3">
-              <button
-                onClick={handleAssignToPassenger}
-                disabled={!selectedPassenger || actionLoading}
-                className="flex-1 bg-gray-800 text-white py-2.5 rounded-xl font-medium hover:bg-gray-700 transition disabled:opacity-50"
-              >
+              <button onClick={handleAssignToPassenger} disabled={!selectedPassenger || actionLoading} className="flex-1 bg-gray-800 text-white py-2.5 rounded-xl font-medium hover:bg-gray-700 disabled:opacity-50">
                 {actionLoading ? "Assigning..." : "Assign Card"}
               </button>
-              <button
-                onClick={() => setShowPassengerModal(false)}
-                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-200 transition"
-              >
+              <button onClick={() => setShowPassengerModal(false)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-200">
                 Cancel
               </button>
             </div>
@@ -672,37 +674,17 @@ const CardDetails = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={rechargeAmount} 
-                  onChange={(e) => setRechargeAmount(e.target.value)} 
-                  className="w-full bg-gray-50 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  placeholder="100.00" 
-                />
+                <input type="number" step="0.01" value={rechargeAmount} onChange={(e) => setRechargeAmount(e.target.value)} className="w-full bg-gray-50 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="100.00" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Note (Optional)</label>
-                <textarea 
-                  value={rechargeNote} 
-                  onChange={(e) => setRechargeNote(e.target.value)} 
-                  rows="3" 
-                  className="w-full bg-gray-50 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
-                  placeholder="Cash received, etc." 
-                />
+                <textarea value={rechargeNote} onChange={(e) => setRechargeNote(e.target.value)} rows="3" className="w-full bg-gray-50 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none" placeholder="Cash received, etc." />
               </div>
               <div className="flex gap-3 pt-2">
-                <button 
-                  onClick={handleManualRecharge} 
-                  disabled={actionLoading} 
-                  className="flex-1 bg-gray-800 text-white py-2.5 rounded-xl font-medium hover:bg-gray-700 transition disabled:opacity-50"
-                >
+                <button onClick={handleManualRecharge} disabled={actionLoading} className="flex-1 bg-gray-800 text-white py-2.5 rounded-xl font-medium hover:bg-gray-700 disabled:opacity-50">
                   {actionLoading ? "Processing..." : "Add Recharge"}
                 </button>
-                <button 
-                  onClick={() => setShowRechargeModal(false)} 
-                  className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-200 transition"
-                >
+                <button onClick={() => setShowRechargeModal(false)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-200">
                   Cancel
                 </button>
               </div>
