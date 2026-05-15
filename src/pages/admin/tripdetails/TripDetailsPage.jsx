@@ -202,7 +202,7 @@
 //         const checkMobile = () => {
 //             setIsMobile(window.innerWidth < 1024);
 //         };
-        
+
 //         checkMobile();
 //         window.addEventListener('resize', checkMobile);
 //         return () => window.removeEventListener('resize', checkMobile);
@@ -323,7 +323,7 @@
 //             setLocationName(null);
 //             setTrackingError(null);
 //             setPassedStopIds([]);
-            
+
 //             if (isMobile) {
 //                 setTimeout(() => {
 //                     const rightPanel = document.querySelector('.right-panel-content');
@@ -398,7 +398,7 @@
 //         setSelectedPassenger(passenger);
 //         setShowPassengerModal(true);
 //         setPassengerDetails(null);
-        
+
 //         // Store the current trip's booking data for this passenger
 //         // This is the booking info from the trip API response
 //         setCurrentTripBooking({
@@ -652,7 +652,7 @@
 //                                     filteredTrips.map((trip) => {
 //                                         const statusStyle = getStatusBadge(trip.status);
 //                                         const isSelected = selectedTrip?.trip_id === trip.trip_id;
-                                        
+
 //                                         return (
 //                                             <div
 //                                                 key={trip.trip_id}
@@ -905,7 +905,7 @@
 //                                                     {selectedTrip.occupancy.passengers.map((passenger, index) => {
 //                                                         const hasActualDrop = passenger.actual_drop_stop_name && 
 //                                                             passenger.actual_drop_stop_name !== passenger.dropoff_stop_name;
-                                                        
+
 //                                                         return (
 //                                                             <div
 //                                                                 key={index}
@@ -1247,7 +1247,7 @@
 //                                                     {getStatusBadge(selectedTrip.status).label}
 //                                                 </span>
 //                                             </div>
-                                            
+
 //                                             {/* Pickup Stop */}
 //                                             <div>
 //                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Pickup Stop</label>
@@ -1256,7 +1256,7 @@
 //                                                     {currentTripBooking?.pickup_stop_name || selectedPassenger.pickup_stop_name || 'N/A'}
 //                                                 </p>
 //                                             </div>
-                                            
+
 //                                             {/* Planned Dropoff Stop */}
 //                                             <div>
 //                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Planned Dropoff Stop</label>
@@ -1265,7 +1265,7 @@
 //                                                     {currentTripBooking?.dropoff_stop_name || selectedPassenger.dropoff_stop_name || 'N/A'}
 //                                                 </p>
 //                                             </div>
-                                            
+
 //                                             {/* Actual Dropoff Stop */}
 //                                             {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) && (
 //                                                 <div className="mt-4 pt-3 border-t border-blue-100">
@@ -1286,7 +1286,7 @@
 //                                                     )}
 //                                                 </div>
 //                                             )}
-                                            
+
 //                                             {/* Date */}
 //                                             <div>
 //                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Trip Date</label>
@@ -1528,7 +1528,7 @@ const TripDetailsPage = () => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 1024);
         };
-        
+
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
@@ -1649,7 +1649,7 @@ const TripDetailsPage = () => {
             setLocationName(null);
             setTrackingError(null);
             setPassedStopIds([]);
-            
+
             if (isMobile) {
                 setTimeout(() => {
                     const rightPanel = document.querySelector('.right-panel-content');
@@ -1724,7 +1724,7 @@ const TripDetailsPage = () => {
         setSelectedPassenger(passenger);
         setShowPassengerModal(true);
         setPassengerDetails(null);
-        
+
         // Store the current trip's booking data for this passenger
         // This is the booking info from the trip API response
         setCurrentTripBooking({
@@ -1907,10 +1907,10 @@ const TripDetailsPage = () => {
             <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                 <Sidebar onClose={() => setSidebarOpen(false)} />
                 <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
-                    <TopNavbarUltra 
-                        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-                        isMobile={isMobile} 
-                        title="Trip Intelligence" 
+                    <TopNavbarUltra
+                        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+                        isMobile={isMobile}
+                        title="Trip Intelligence"
                     />
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
@@ -1929,10 +1929,10 @@ const TripDetailsPage = () => {
             <Sidebar onClose={() => setSidebarOpen(false)} />
 
             <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
-                <TopNavbarUltra 
-                    onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-                    isMobile={isMobile} 
-                    title="Trip Intelligence" 
+                <TopNavbarUltra
+                    onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+                    isMobile={isMobile}
+                    title="Trip Intelligence"
                 />
 
                 <div className="flex-1 overflow-hidden p-3 sm:p-4 md:p-6">
@@ -1978,7 +1978,7 @@ const TripDetailsPage = () => {
                                     filteredTrips.map((trip) => {
                                         const statusStyle = getStatusBadge(trip.status);
                                         const isSelected = selectedTrip?.trip_id === trip.trip_id;
-                                        
+
                                         return (
                                             <div
                                                 key={trip.trip_id}
@@ -1999,11 +1999,10 @@ const TripDetailsPage = () => {
                                                 onTouchCancel={(e) => {
                                                     e.currentTarget.style.transform = '';
                                                 }}
-                                                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${
-                                                    isSelected
+                                                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${isSelected
                                                         ? "border-indigo-500 bg-gradient-to-r from-indigo-50 to-white shadow-lg"
                                                         : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
-                                                }`}
+                                                    }`}
                                                 style={{ transform: 'scale(1)', transition: 'transform 0.1s ease' }}
                                             >
                                                 <div className="flex justify-between items-start mb-2">
@@ -2217,7 +2216,7 @@ const TripDetailsPage = () => {
                                                         <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.passengers?.length || 0}</p>
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* RFID Passengers List (if any) */}
                                                 {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
                                                     <div className="mt-4 pt-3 border-t border-gray-100">
@@ -2293,9 +2292,9 @@ const TripDetailsPage = () => {
                                             {selectedTrip.occupancy?.passengers?.length > 0 ? (
                                                 <div className="space-y-2 max-h-96 overflow-y-auto">
                                                     {selectedTrip.occupancy.passengers.map((passenger, index) => {
-                                                        const hasActualDrop = passenger.actual_drop_stop_name && 
+                                                        const hasActualDrop = passenger.actual_drop_stop_name &&
                                                             passenger.actual_drop_stop_name !== passenger.dropoff_stop_name;
-                                                        
+
                                                         return (
                                                             <div
                                                                 key={index}
@@ -2328,13 +2327,12 @@ const TripDetailsPage = () => {
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-0">
-                                                                    <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
-                                                                        passenger.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-                                                                        passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
-                                                                        passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
-                                                                        passenger.status === "boarded" ? "bg-blue-100 text-blue-700" : 
-                                                                        "bg-gray-100 text-gray-600"
-                                                                    }`}>
+                                                                    <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${passenger.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                                                            passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
+                                                                                passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                                                                    passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+                                                                                        "bg-gray-100 text-gray-600"
+                                                                        }`}>
                                                                         {passenger.status}
                                                                     </span>
                                                                     <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-indigo-500" />
@@ -2637,7 +2635,7 @@ const TripDetailsPage = () => {
                                                     {getStatusBadge(selectedTrip.status).label}
                                                 </span>
                                             </div>
-                                            
+
                                             {/* Pickup Stop */}
                                             <div>
                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Pickup Stop</label>
@@ -2646,7 +2644,7 @@ const TripDetailsPage = () => {
                                                     {currentTripBooking?.pickup_stop_name || selectedPassenger.pickup_stop_name || 'N/A'}
                                                 </p>
                                             </div>
-                                            
+
                                             {/* Planned Dropoff Stop */}
                                             <div>
                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Planned Dropoff Stop</label>
@@ -2655,7 +2653,7 @@ const TripDetailsPage = () => {
                                                     {currentTripBooking?.dropoff_stop_name || selectedPassenger.dropoff_stop_name || 'N/A'}
                                                 </p>
                                             </div>
-                                            
+
                                             {/* Actual Dropoff Stop */}
                                             {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) && (
                                                 <div className="mt-4 pt-3 border-t border-blue-100">
@@ -2676,14 +2674,14 @@ const TripDetailsPage = () => {
                                                     )}
                                                 </div>
                                             )}
-                                            
+
                                             {/* Date */}
                                             <div>
                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Trip Date</label>
                                                 <p className="text-sm text-gray-700 mt-1">
-                                                    {currentTripBooking?.created_at ? new Date(currentTripBooking.created_at).toLocaleString() : 
-                                                     selectedTrip.timing?.actual_start ? new Date(selectedTrip.timing.actual_start).toLocaleString() : 
-                                                     selectedTrip.timing?.planned_start ? new Date(selectedTrip.timing.planned_start).toLocaleString() : 'N/A'}
+                                                    {currentTripBooking?.created_at ? new Date(currentTripBooking.created_at).toLocaleString() :
+                                                        selectedTrip.timing?.actual_start ? new Date(selectedTrip.timing.actual_start).toLocaleString() :
+                                                            selectedTrip.timing?.planned_start ? new Date(selectedTrip.timing.planned_start).toLocaleString() : 'N/A'}
                                                 </p>
                                             </div>
                                         </div>

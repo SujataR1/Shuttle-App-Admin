@@ -1,4 +1,3 @@
-
 // import React, { useState, useEffect } from "react";
 // import Sidebar from "../../assets/components/sidebar/Sidebar";
 // import TopNavbar from "../../assets/components/navbar/TopNavbar";
@@ -187,6 +186,8 @@
 // // ============= MAIN COMPONENT =============
 
 // const CancellationFine = () => {
+//   const [sidebarOpen, setSidebarOpen] = useState(false);
+//   const [isMobile, setIsMobile] = useState(false);
 //   const [activeTab, setActiveTab] = useState("rules");
 //   const [loading, setLoading] = useState(false);
 //   const [updating, setUpdating] = useState(false);
@@ -243,6 +244,20 @@
 //       fine_value: "60.00"
 //     }
 //   });
+
+//   // Check if mobile view
+//   useEffect(() => {
+//     const checkMobile = () => {
+//       setIsMobile(window.innerWidth < 1024);
+//     };
+//     checkMobile();
+//     window.addEventListener("resize", checkMobile);
+//     return () => window.removeEventListener("resize", checkMobile);
+//   }, []);
+
+//   const toggleSidebar = () => {
+//     setSidebarOpen(!sidebarOpen);
+//   };
 
 //   // Function to get active fine percentage from commercial rules
 //   const getActiveFinePercentage = () => {
@@ -902,7 +917,7 @@
 //     </div>
 //   );
 
-//   // Fine Modal - Create adjustment (PENDING) - FIXED FOR SCROLLING
+//   // Fine Modal - Create adjustment (PENDING)
 //   const renderFineModal = () => {
 //     if (!showFineModal || !selectedDriver) return null;
     
@@ -912,9 +927,9 @@
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
 //           {/* Header - Fixed */}
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
 //             <div className="flex justify-between items-center">
 //               <div>
 //                 <h3 className="text-xl font-semibold text-gray-800">Create Cancellation Fine</h3>
@@ -1084,7 +1099,7 @@
 //           </div>
           
 //           {/* Footer - Fixed */}
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
 //             <button
 //               onClick={handleCreateAdjustment}
 //               disabled={updating || !selectedBooking || selectedBooking.hasAdjustments}
@@ -1117,7 +1132,7 @@
 //     );
 //   };
 
-//   // Review Adjustments Modal - FIXED FOR SCROLLING
+//   // Review Adjustments Modal
 //   const renderReviewModal = () => {
 //     if (!showReviewModal || !selectedBookingForReview) return null;
     
@@ -1127,9 +1142,9 @@
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
 //           {/* Header - Fixed */}
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
 //             <div className="flex justify-between items-center">
 //               <div>
 //                 <h3 className="text-xl font-semibold text-gray-800">Review Adjustments</h3>
@@ -1249,7 +1264,7 @@
 //           </div>
           
 //           {/* Footer - Fixed */}
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0">
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0 rounded-b-2xl">
 //             <button
 //               onClick={() => {
 //                 setShowReviewModal(false);
@@ -1265,15 +1280,15 @@
 //     );
 //   };
 
-//   // Rule Modal - FIXED FOR SCROLLING
+//   // Rule Modal
 //   const renderRuleModal = () => {
 //     if (!showRuleModal) return null;
     
 //     return (
 //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-300">
+//         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
 //           {/* Header - Fixed */}
-//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
+//           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
 //             <div className="flex justify-between items-center">
 //               <h3 className="text-xl font-semibold text-gray-800">
 //                 {selectedRule ? "Edit Rule" : "Create Rule"}
@@ -1420,7 +1435,7 @@
 //           </div>
           
 //           {/* Footer - Fixed */}
-//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+//           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
 //             <button
 //               onClick={handleCreateRule}
 //               disabled={updating}
@@ -1483,10 +1498,16 @@
 //   };
 
 //   return (
-//     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white">
-//       <Sidebar />
-//       <div className="flex-1 flex flex-col overflow-hidden">
-//         <TopNavbar />
+//     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white overflow-hidden">
+//       <Sidebar onClose={() => setSidebarOpen(false)} />
+      
+//       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
+//         <TopNavbar 
+//           title="Cancellation Fine Management" 
+//           onMenuClick={toggleSidebar} 
+//           isMobile={isMobile} 
+//         />
+        
 //         <div className="flex-1 overflow-y-auto p-8">
 //           {successMessage && (
 //             <div className="mb-5 p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 rounded-xl animate-in slide-in-from-top-2">
@@ -1568,7 +1589,8 @@ import {
   SparklesIcon,
   ShieldCheckIcon,
   CurrencyRupeeIcon,
-  EyeIcon
+  EyeIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 
 const API_BASE_URL = "https://be.shuttleapp.transev.site/admin";
@@ -1581,9 +1603,7 @@ const getAuthHeaders = () => {
   };
 };
 
-// ============= API CALLS =============
-
-// Commercial Rules API
+// API CALLS
 const getCommercialRules = async (filters = {}) => {
   const params = new URLSearchParams(filters).toString();
   const url = params ? `${API_BASE_URL}/commercial-rules?${params}` : `${API_BASE_URL}/commercial-rules`;
@@ -1634,24 +1654,20 @@ const deleteCommercialRule = async (ruleId) => {
   return response.json();
 };
 
-// Driver APIs
 const getAllDrivers = async () => {
   const response = await fetch(`${API_BASE_URL}/view/all-drivers`, { headers: getAuthHeaders() });
   if (!response.ok) throw new Error("Failed to fetch drivers");
   const data = await response.json();
-  
   if (Array.isArray(data)) return data;
   if (data.drivers && Array.isArray(data.drivers)) return data.drivers;
   if (data.data && Array.isArray(data.data)) return data.data;
   if (data.items && Array.isArray(data.items)) return data.items;
-  
   for (const key in data) {
     if (Array.isArray(data[key]) && data[key].length > 0) return data[key];
   }
   return [];
 };
 
-// Get cancelled bookings for a driver
 const getDriverCancelledBookings = async (driverUserId) => {
   const params = new URLSearchParams({ 
     driver_user_id: driverUserId,
@@ -1662,14 +1678,12 @@ const getDriverCancelledBookings = async (driverUserId) => {
   return response.json();
 };
 
-// Get booking details with adjustments
 const getBookingDetails = async (bookingId) => {
   const response = await fetch(`${API_BASE_URL}/payouts/bookings/${bookingId}`, { headers: getAuthHeaders() });
   if (!response.ok) throw new Error("Failed to fetch booking details");
   return response.json();
 };
 
-// Create adjustment (fine) on a booking - creates PENDING adjustment
 const createAdjustment = async (bookingId, adjustmentData) => {
   const response = await fetch(`${API_BASE_URL}/payouts/bookings/${bookingId}/adjustments`, {
     method: "POST",
@@ -1683,7 +1697,6 @@ const createAdjustment = async (bookingId, adjustmentData) => {
   return response.json();
 };
 
-// Get adjustments for a booking
 const getBookingAdjustments = async (bookingId) => {
   const response = await fetch(`${API_BASE_URL}/payouts/bookings/${bookingId}/adjustments`, { 
     headers: getAuthHeaders() 
@@ -1692,7 +1705,6 @@ const getBookingAdjustments = async (bookingId) => {
   return response.json();
 };
 
-// Get driver's open adjustments (INCLUDED + remaining > 0)
 const getDriverOpenAdjustments = async (driverUserId) => {
   const response = await fetch(`${API_BASE_URL}/payouts/drivers/${driverUserId}/open-adjustments`, { 
     headers: getAuthHeaders() 
@@ -1701,7 +1713,6 @@ const getDriverOpenAdjustments = async (driverUserId) => {
   return response.json();
 };
 
-// Update adjustment decision (INCLUDED / EXCLUDED)
 const updateAdjustmentDecision = async (adjustmentId, decisionStatus, adminNote) => {
   const response = await fetch(`${API_BASE_URL}/payouts/adjustments/${adjustmentId}/decision`, {
     method: "PATCH",
@@ -1715,7 +1726,6 @@ const updateAdjustmentDecision = async (adjustmentId, decisionStatus, adminNote)
   return response.json();
 };
 
-// Trigger payout for a booking with adjustments
 const triggerPayout = async (bookingId, adjustmentsToApply) => {
   const response = await fetch(`${API_BASE_URL}/payouts/bookings/${bookingId}/trigger`, {
     method: "POST",
@@ -1733,8 +1743,6 @@ const triggerPayout = async (bookingId, adjustmentsToApply) => {
   return response.json();
 };
 
-// ============= MAIN COMPONENT =============
-
 const CancellationFine = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -1744,19 +1752,16 @@ const CancellationFine = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   
-  // Data State
   const [rules, setRules] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [filteredDrivers, setFilteredDrivers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [cancelledBookings, setCancelledBookings] = useState([]);
   
-  // Adjustment Review State
   const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
   const [bookingAdjustments, setBookingAdjustments] = useState([]);
   const [openDriverAdjustments, setOpenDriverAdjustments] = useState([]);
   
-  // Modal State
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showFineModal, setShowFineModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -1764,13 +1769,10 @@ const CancellationFine = () => {
   const [selectedRule, setSelectedRule] = useState(null);
   const [ruleToDelete, setRuleToDelete] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   
-  // Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
-  // Fine Form State
   const [fineForm, setFineForm] = useState({
     amount: "",
     reason_text: "",
@@ -1778,24 +1780,23 @@ const CancellationFine = () => {
     booking_id: ""
   });
 
-  // Rule Form State
   const [ruleForm, setRuleForm] = useState({
-    rule_type: "driver_trip_cancel",
-    code: "cancel_within_24hrs_60_percent",
-    title: "Late Cancellation Penalty",
-    description: "Driver cancellation within 24 hours of trip start - 60% fare deduction",
+    rule_type: "commission_percentage",
+    code: "",
+    title: "",
+    description: "",
     priority: 100,
     is_active: true,
     config: {
       min_minutes_before: 0,
-      max_minutes_before: 1440,
+      max_minutes_before: 0,
       allowed: true,
       fine_mode: "percent_of_fare",
-      fine_value: "60.00"
+      fine_value: "10.00",
+      commission_percentage: "10.00"
     }
   });
 
-  // Check if mobile view
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -1809,31 +1810,25 @@ const CancellationFine = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  // Function to get active fine percentage from commercial rules
   const getActiveFinePercentage = () => {
     const activeRule = rules.find(rule => 
       rule.rule_type === "driver_trip_cancel" && 
       rule.is_active === true
     );
-    
     if (activeRule && activeRule.config && activeRule.config.fine_value) {
       return parseFloat(activeRule.config.fine_value);
     }
-    
     return 60;
   };
 
-  // Function to get fine mode (percentage or flat)
   const getFineMode = () => {
     const activeRule = rules.find(rule => 
       rule.rule_type === "driver_trip_cancel" && 
       rule.is_active === true
     );
-    
     if (activeRule && activeRule.config && activeRule.config.fine_mode) {
       return activeRule.config.fine_mode;
     }
-    
     return "percent_of_fare";
   };
 
@@ -1851,7 +1846,6 @@ const CancellationFine = () => {
 
   const filterDriversList = () => {
     let filtered = [...drivers];
-    
     if (searchTerm) {
       filtered = filtered.filter(driver => {
         const fullName = driver.profile?.full_name || driver.profile?.name || driver.name || "";
@@ -1862,7 +1856,6 @@ const CancellationFine = () => {
                phone.includes(searchTerm);
       });
     }
-    
     if (statusFilter !== "all") {
       if (statusFilter === "active") {
         filtered = filtered.filter(driver => driver.is_active === true);
@@ -1870,7 +1863,6 @@ const CancellationFine = () => {
         filtered = filtered.filter(driver => driver.is_active === false);
       }
     }
-    
     setFilteredDrivers(filtered);
   };
 
@@ -1903,24 +1895,20 @@ const CancellationFine = () => {
     }
   };
 
-  // Fetch cancelled bookings for a driver
   const fetchCancelledBookings = async (driver) => {
     setLoading(true);
     try {
       const bookings = await getDriverCancelledBookings(driver.user_id);
       const cancelledItems = bookings.items || [];
-      
       const finePercentage = getActiveFinePercentage();
       const fineMode = getFineMode();
       
       const enhancedBookings = await Promise.all(cancelledItems.map(async (booking) => {
-        // Check if booking already has adjustments
         const adjustments = await getBookingAdjustments(booking.booking_id);
         const hasAdjustments = adjustments.items && adjustments.items.length > 0;
         const existingAdjustment = hasAdjustments ? adjustments.items[0] : null;
         
         let recommendedFine = "0.00";
-        
         if (!hasAdjustments && booking.fare_amount) {
           if (fineMode === "percent_of_fare") {
             recommendedFine = ((parseFloat(booking.fare_amount) * finePercentage) / 100).toFixed(2);
@@ -1953,7 +1941,16 @@ const CancellationFine = () => {
     }
   };
 
-  // Create adjustment (PENDING state)
+  const resetFineForm = () => {
+    setFineForm({
+      amount: "",
+      reason_text: "",
+      admin_note: "",
+      booking_id: ""
+    });
+    setSelectedBooking(null);
+  };
+
   const handleCreateAdjustment = async () => {
     if (!fineForm.booking_id) {
       setErrorMessage("Please select a booking");
@@ -1971,7 +1968,7 @@ const CancellationFine = () => {
     setUpdating(true);
     setErrorMessage(null);
     try {
-      const result = await createAdjustment(fineForm.booking_id, {
+      await createAdjustment(fineForm.booking_id, {
         adjustment_type: "fine",
         amount: fineForm.amount,
         reason_code: "driver_cancellation",
@@ -1979,11 +1976,10 @@ const CancellationFine = () => {
         admin_note: fineForm.admin_note,
       });
       
-      setSuccessMessage(`✨ Adjustment created successfully! Status: PENDING. Review and include before payout.`);
+      setSuccessMessage(`✨ Adjustment created successfully! Status: PENDING.`);
       setShowFineModal(false);
       resetFineForm();
       
-      // Refresh the cancelled bookings list
       if (selectedDriver) {
         await fetchCancelledBookings(selectedDriver);
       }
@@ -1997,11 +1993,9 @@ const CancellationFine = () => {
     }
   };
 
-  // Open review modal to see and manage adjustments
   const handleReviewAdjustments = async (booking) => {
     setLoading(true);
     try {
-      // Get booking details with adjustments
       const bookingDetails = await getBookingDetails(booking.booking_id);
       setBookingAdjustments(bookingDetails.originated_adjustments || []);
       setOpenDriverAdjustments(bookingDetails.open_driver_adjustments?.items || []);
@@ -2015,15 +2009,12 @@ const CancellationFine = () => {
     }
   };
 
-  // Update adjustment decision (INCLUDED / EXCLUDED)
   const handleUpdateDecision = async (adjustmentId, decisionStatus, adminNote = "") => {
     setUpdating(true);
     try {
       await updateAdjustmentDecision(adjustmentId, decisionStatus, adminNote);
-      
       setSuccessMessage(`✅ Adjustment ${decisionStatus === 'included' ? 'included' : 'excluded'} successfully!`);
       
-      // Refresh the adjustments list
       if (selectedBookingForReview) {
         const bookingDetails = await getBookingDetails(selectedBookingForReview.booking_id);
         setBookingAdjustments(bookingDetails.originated_adjustments || []);
@@ -2039,7 +2030,6 @@ const CancellationFine = () => {
     }
   };
 
-  // Trigger payout with adjustments
   const handleTriggerPayout = async (bookingId, adjustmentsToApply) => {
     setUpdating(true);
     setErrorMessage(null);
@@ -2054,11 +2044,9 @@ const CancellationFine = () => {
         setSuccessMessage(`✅ Payout triggered successfully!`);
       }
       
-      // Close review modal
       setShowReviewModal(false);
       setSelectedBookingForReview(null);
       
-      // Refresh data
       if (selectedDriver) {
         await fetchCancelledBookings(selectedDriver);
       }
@@ -2072,6 +2060,26 @@ const CancellationFine = () => {
     }
   };
 
+  const resetRuleForm = () => {
+    setSelectedRule(null);
+    setRuleForm({
+      rule_type: "commission_percentage",
+      code: "",
+      title: "",
+      description: "",
+      priority: 100,
+      is_active: true,
+      config: {
+        min_minutes_before: 0,
+        max_minutes_before: 0,
+        allowed: true,
+        fine_mode: "percent_of_fare",
+        fine_value: "10.00",
+        commission_percentage: "10.00"
+      }
+    });
+  };
+
   const handleCreateRule = async () => {
     if (!ruleForm.code.trim()) {
       setErrorMessage("Rule code is required");
@@ -2081,19 +2089,33 @@ const CancellationFine = () => {
       setErrorMessage("Rule title is required");
       return;
     }
-    if (!ruleForm.config.fine_value || parseFloat(ruleForm.config.fine_value) <= 0) {
-      setErrorMessage("Valid fine value is required");
-      return;
+    
+    if (ruleForm.rule_type === "commission_percentage") {
+      if (!ruleForm.config.commission_percentage || parseFloat(ruleForm.config.commission_percentage) <= 0) {
+        setErrorMessage("Valid commission percentage is required");
+        return;
+      }
+    } else {
+      if (!ruleForm.config.fine_value || parseFloat(ruleForm.config.fine_value) <= 0) {
+        setErrorMessage("Valid fine value is required");
+        return;
+      }
     }
 
     setUpdating(true);
     setErrorMessage(null);
+    
+    const configToSend = { ...ruleForm.config };
+    if (ruleForm.rule_type === "commission_percentage") {
+      configToSend.fine_value = ruleForm.config.commission_percentage;
+    }
+    
     try {
       if (selectedRule) {
-        await updateCommercialRule(selectedRule.id, ruleForm);
+        await updateCommercialRule(selectedRule.id, { ...ruleForm, config: configToSend });
         setSuccessMessage("✨ Rule updated successfully!");
       } else {
-        await createCommercialRule(ruleForm);
+        await createCommercialRule({ ...ruleForm, config: configToSend });
         setSuccessMessage("✨ Rule created successfully!");
       }
       
@@ -2122,7 +2144,10 @@ const CancellationFine = () => {
       description: rule.description || "",
       priority: rule.priority,
       is_active: rule.is_active,
-      config: { ...rule.config }
+      config: { 
+        ...rule.config,
+        commission_percentage: rule.config?.fine_value || "10.00"
+      }
     });
     setShowRuleModal(true);
   };
@@ -2144,7 +2169,6 @@ const CancellationFine = () => {
 
   const handleDeleteRule = async () => {
     if (!ruleToDelete) return;
-    
     setUpdating(true);
     try {
       await deleteCommercialRule(ruleToDelete.id);
@@ -2159,35 +2183,6 @@ const CancellationFine = () => {
     } finally {
       setUpdating(false);
     }
-  };
-
-  const resetRuleForm = () => {
-    setSelectedRule(null);
-    setRuleForm({
-      rule_type: "driver_trip_cancel",
-      code: "cancel_within_24hrs_60_percent",
-      title: "Late Cancellation Penalty",
-      description: "Driver cancellation within 24 hours of trip start - 60% fare deduction",
-      priority: 100,
-      is_active: true,
-      config: {
-        min_minutes_before: 0,
-        max_minutes_before: 1440,
-        allowed: true,
-        fine_mode: "percent_of_fare",
-        fine_value: "60.00"
-      }
-    });
-  };
-
-  const resetFineForm = () => {
-    setFineForm({
-      amount: "",
-      reason_text: "",
-      admin_note: "",
-      booking_id: ""
-    });
-    setSelectedBooking(null);
   };
 
   const getDriverDisplayName = (driver) => {
@@ -2216,14 +2211,10 @@ const CancellationFine = () => {
 
   const getDecisionBadge = (status) => {
     switch (status) {
-      case 'included':
-        return <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Included</span>;
-      case 'excluded':
-        return <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">Excluded</span>;
-      case 'pending':
-        return <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">Pending</span>;
-      default:
-        return <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">{status}</span>;
+      case 'included': return <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Included</span>;
+      case 'excluded': return <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">Excluded</span>;
+      case 'pending': return <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">Pending</span>;
+      default: return <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">{status}</span>;
     }
   };
 
@@ -2233,7 +2224,7 @@ const CancellationFine = () => {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Commercial Rules</h2>
-          <p className="text-gray-400 text-sm mt-1">Define fine policies and cancellation rules</p>
+          <p className="text-gray-400 text-sm mt-1">Define commission percentages, fine policies, and cancellation rules</p>
         </div>
         <button
           onClick={() => {
@@ -2278,19 +2269,36 @@ const CancellationFine = () => {
               className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden"
             >
               <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <ShieldCheckIcon className="w-4 h-4 text-gray-600" />
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      rule.is_active ? 'bg-emerald-100' : 'bg-gray-100'
+                    }`}>
+                      {rule.rule_type === "commission_percentage" ? (
+                        <CurrencyRupeeIcon className={`w-5 h-5 ${rule.is_active ? 'text-emerald-600' : 'text-gray-500'}`} />
+                      ) : (
+                        <ShieldCheckIcon className={`w-5 h-5 ${rule.is_active ? 'text-emerald-600' : 'text-gray-500'}`} />
+                      )}
                     </div>
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {rule.rule_type === 'driver_trip_cancel' ? 'Driver Cancel' : 'Trip Latency'}
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <code className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                          {rule.code}
+                        </code>
+                        {rule.is_active ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Active</span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Inactive</span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-gray-900 mt-2">{rule.title}</h4>
+                    </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
                       onClick={() => handleEditRule(rule)}
                       className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                      title="Edit Rule"
                     >
                       <PencilIcon className="w-3.5 h-3.5" />
                     </button>
@@ -2299,8 +2307,9 @@ const CancellationFine = () => {
                       className={`p-1.5 rounded-lg transition ${
                         rule.is_active 
                           ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100" 
-                          : "text-gray-400 hover:text-green-600 hover:bg-gray-100"
+                          : "text-gray-400 hover:text-emerald-600 hover:bg-gray-100"
                       }`}
+                      title={rule.is_active ? "Deactivate Rule" : "Activate Rule"}
                     >
                       {rule.is_active ? <XCircleIcon className="w-3.5 h-3.5" /> : <CheckCircleIcon className="w-3.5 h-3.5" />}
                     </button>
@@ -2310,41 +2319,31 @@ const CancellationFine = () => {
                         setShowDeleteConfirm(true);
                       }}
                       className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Delete Rule"
                     >
                       <TrashIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
                 
-                <div>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <code className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded">{rule.code}</code>
-                    {rule.is_active ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Active</span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">Inactive</span>
-                    )}
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{rule.description}</p>
+                
+                <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">
+                      {rule.rule_type === "commission_percentage" ? "Commission" : "Fine"}
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {rule.rule_type === "commission_percentage" 
+                        ? `${parseFloat(rule.config?.fine_value || 0).toFixed(2)}%` 
+                        : rule.config.fine_mode === 'flat_per_booking' 
+                          ? `₹${parseFloat(rule.config.fine_value).toFixed(2)}` 
+                          : `${parseFloat(rule.config.fine_value).toFixed(0)}% of fare`}
+                    </span>
                   </div>
-                  <h4 className="font-semibold text-gray-800 mb-1">{rule.title}</h4>
-                  <p className="text-xs text-gray-400 line-clamp-2">{rule.description}</p>
-                  
-                  <div className="mt-4 pt-3 border-t border-gray-100">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Fine</span>
-                      <span className="font-semibold text-gray-700">
-                        {rule.config.fine_mode === 'flat_per_booking' 
-                          ? `₹${rule.config.fine_value}` 
-                          : `${rule.config.fine_value}% of fare`}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-1">
-                      <span className="text-gray-400">Condition</span>
-                      <span className="text-xs text-gray-500">
-                        {rule.config.max_minutes_before >= 1440 
-                          ? 'Within 24h before start' 
-                          : `${rule.config.max_minutes_before} min before`}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Priority</span>
+                    <span className="text-sm font-mono text-gray-600">{rule.priority}</span>
                   </div>
                 </div>
               </div>
@@ -2373,7 +2372,6 @@ const CancellationFine = () => {
         </button>
       </div>
 
-      {/* Search and Filter */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[250px]">
@@ -2467,7 +2465,7 @@ const CancellationFine = () => {
     </div>
   );
 
-  // Fine Modal - Create adjustment (PENDING)
+  // Fine Modal
   const renderFineModal = () => {
     if (!showFineModal || !selectedDriver) return null;
     
@@ -2478,7 +2476,6 @@ const CancellationFine = () => {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-          {/* Header - Fixed */}
           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <div>
@@ -2487,16 +2484,18 @@ const CancellationFine = () => {
                   Driver: <span className="font-medium text-gray-600">{getDriverDisplayName(selectedDriver)}</span>
                 </p>
               </div>
-              <button onClick={() => {
-                setShowFineModal(false);
-                resetFineForm();
-              }} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                ✕
+              <button 
+                onClick={() => {
+                  setShowFineModal(false);
+                  resetFineForm();
+                }} 
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+              >
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
             {cancelledBookings.length === 0 ? (
               <div className="text-center py-12">
@@ -2648,12 +2647,11 @@ const CancellationFine = () => {
             )}
           </div>
           
-          {/* Footer - Fixed */}
           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
             <button
               onClick={handleCreateAdjustment}
               disabled={updating || !selectedBooking || selectedBooking.hasAdjustments}
-              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {updating ? (
                 <span className="flex items-center justify-center gap-2">
@@ -2693,7 +2691,6 @@ const CancellationFine = () => {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-          {/* Header - Fixed */}
           <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <div>
@@ -2705,39 +2702,25 @@ const CancellationFine = () => {
               <button onClick={() => {
                 setShowReviewModal(false);
                 setSelectedBookingForReview(null);
-              }} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                ✕
+              }} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            {/* Booking Info */}
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Passenger</p>
-                  <p className="font-medium text-gray-800">{selectedBookingForReview.passenger_name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Fare Amount</p>
-                  <p className="font-medium text-gray-800">₹{parseFloat(selectedBookingForReview.fareAmount || 0).toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Cancelled On</p>
-                  <p className="text-sm text-gray-600">{formatDate(selectedBookingForReview.created_at)}</p>
-                </div>
+                <div><p className="text-gray-500">Passenger</p><p className="font-medium text-gray-800">{selectedBookingForReview.passenger_name || 'N/A'}</p></div>
+                <div><p className="text-gray-500">Fare Amount</p><p className="font-medium text-gray-800">₹{parseFloat(selectedBookingForReview.fareAmount || 0).toFixed(2)}</p></div>
+                <div><p className="text-gray-500">Cancelled On</p><p className="text-sm text-gray-600">{formatDate(selectedBookingForReview.created_at)}</p></div>
               </div>
             </div>
             
-            {/* Adjustments List */}
             <div className="mb-6">
               <h4 className="font-semibold text-gray-800 mb-3">Adjustments / Fines</h4>
               {allAdjustments.length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-xl">
-                  <p className="text-gray-500">No adjustments found for this booking</p>
-                </div>
+                <div className="text-center py-8 bg-gray-50 rounded-xl"><p className="text-gray-500">No adjustments found for this booking</p></div>
               ) : (
                 <div className="space-y-3">
                   {allAdjustments.map((adj) => (
@@ -2747,36 +2730,20 @@ const CancellationFine = () => {
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${
                               adj.adjustment_type === 'fine' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                            }`}>
-                              {adj.adjustment_type}
-                            </span>
+                            }`}>{adj.adjustment_type}</span>
                             {getDecisionBadge(adj.decision_status)}
                           </div>
                           <p className="text-sm text-gray-700 font-medium">₹{parseFloat(adj.amount).toFixed(2)}</p>
                           <p className="text-sm text-gray-600 mt-1">{adj.reason_text}</p>
-                          {adj.admin_note && (
-                            <p className="text-xs text-gray-500 mt-1">Note: {adj.admin_note}</p>
-                          )}
+                          {adj.admin_note && <p className="text-xs text-gray-500 mt-1">Note: {adj.admin_note}</p>}
                           {adj.remaining_amount > 0 && adj.decision_status === 'included' && (
-                            <p className="text-xs text-green-600 mt-1">
-                              Remaining: ₹{parseFloat(adj.remaining_amount).toFixed(2)}
-                            </p>
+                            <p className="text-xs text-green-600 mt-1">Remaining: ₹{parseFloat(adj.remaining_amount).toFixed(2)}</p>
                           )}
                         </div>
                         {adj.decision_status === 'pending' && (
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => handleUpdateDecision(adj.id, 'included', 'Approved by admin')}
-                              className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700"
-                            >
-                              Include
-                            </button>
-                            <button
-                              onClick={() => handleUpdateDecision(adj.id, 'excluded', 'Rejected by admin')}
-                              className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700"
-                            >
-                              Exclude
-                            </button>
+                            <button onClick={() => handleUpdateDecision(adj.id, 'included', 'Approved by admin')} className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700">Include</button>
+                            <button onClick={() => handleUpdateDecision(adj.id, 'excluded', 'Rejected by admin')} className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700">Exclude</button>
                           </div>
                         )}
                       </div>
@@ -2786,7 +2753,6 @@ const CancellationFine = () => {
               )}
             </div>
             
-            {/* Trigger Payout Section */}
             {canTriggerPayout && (
               <div className="border-t pt-4 mt-4">
                 <div className="bg-amber-50/50 rounded-xl p-4 border border-amber-100 mb-4">
@@ -2795,7 +2761,6 @@ const CancellationFine = () => {
                     {includedAdjustments.length} adjustment(s) are INCLUDED and ready to be applied.
                   </p>
                 </div>
-                
                 <button
                   onClick={() => {
                     const adjustmentsToApply = includedAdjustments.map(adj => ({
@@ -2813,194 +2778,341 @@ const CancellationFine = () => {
             )}
           </div>
           
-          {/* Footer - Fixed */}
           <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end flex-shrink-0 rounded-b-2xl">
-            <button
-              onClick={() => {
-                setShowReviewModal(false);
-                setSelectedBookingForReview(null);
-              }}
-              className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-300"
-            >
-              Close
-            </button>
+            <button onClick={() => {
+              setShowReviewModal(false);
+              setSelectedBookingForReview(null);
+            }} className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-300">Close</button>
           </div>
         </div>
       </div>
     );
   };
 
-  // Rule Modal
+  // Rule Modal - Commission Percentage box moved further down
   const renderRuleModal = () => {
     if (!showRuleModal) return null;
     
+    const isCommissionRule = ruleForm.rule_type === "commission_percentage";
+    
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-          {/* Header - Fixed */}
-          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-100 flex-shrink-0 rounded-t-2xl">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+          
+          {/* Header */}
+          <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0">
             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {selectedRule ? "Edit Rule" : "Create Rule"}
-              </h3>
-              <button onClick={() => {
-                setShowRuleModal(false);
-                resetRuleForm();
-              }} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                ✕
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center shadow-md">
+                  {selectedRule ? (
+                    <PencilIcon className="w-5 h-5 text-white" />
+                  ) : (
+                    <PlusIcon className="w-5 h-5 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {selectedRule ? "Edit Commercial Rule" : "Create Commercial Rule"}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {selectedRule ? "Update rule configuration" : "Define new commercial policy"}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowRuleModal(false);
+                  resetRuleForm();
+                }} 
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+              >
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rule Type</label>
-                <select
-                  value={ruleForm.rule_type}
-                  onChange={(e) => setRuleForm({ ...ruleForm, rule_type: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                >
-                  <option value="driver_trip_cancel">Driver Trip Cancel</option>
-                  <option value="trip_latency">Trip Latency</option>
-                </select>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-5">
+              {/* Rule Type & Code */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Rule Type
+                  </label>
+                  <select
+                    value={ruleForm.rule_type}
+                    onChange={(e) => setRuleForm({ ...ruleForm, rule_type: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm"
+                  >
+                    <option value="commission_percentage">Commission Percentage</option>
+                    <option value="driver_trip_cancel">Driver Trip Cancellation</option>
+                    <option value="trip_latency">Trip Latency</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Rule Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={ruleForm.code}
+                    onChange={(e) => setRuleForm({ ...ruleForm, code: e.target.value })}
+                    placeholder={isCommissionRule ? "e.g., driver_commission_10" : "e.g., cancel_within_24hrs"}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm placeholder:text-gray-400"
+                  />
+                </div>
               </div>
+
+              {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rule Code</label>
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Title <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
-                  value={ruleForm.code}
-                  onChange={(e) => setRuleForm({ ...ruleForm, code: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                  placeholder="cancel_within_24hrs"
+                  value={ruleForm.title}
+                  onChange={(e) => setRuleForm({ ...ruleForm, title: e.target.value })}
+                  placeholder={isCommissionRule ? "e.g., Driver Commission 10%" : "e.g., Late Cancellation Penalty"}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm placeholder:text-gray-400"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-              <input
-                type="text"
-                value={ruleForm.title}
-                onChange={(e) => setRuleForm({ ...ruleForm, title: e.target.value })}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                value={ruleForm.description}
-                onChange={(e) => setRuleForm({ ...ruleForm, description: e.target.value })}
-                rows="2"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Description
+                </label>
+                <textarea
+                  value={ruleForm.description}
+                  onChange={(e) => setRuleForm({ ...ruleForm, description: e.target.value })}
+                  rows="2"
+                  placeholder={isCommissionRule ? "Describe the commission policy for this rule..." : "Describe when and how this rule applies..."}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm resize-none placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Priority - Moved UP before Commission */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Priority
+                </label>
                 <input
                   type="number"
                   value={ruleForm.priority}
-                  onChange={(e) => setRuleForm({ ...ruleForm, priority: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  onChange={(e) => setRuleForm({ ...ruleForm, priority: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm"
                 />
+                <p className="text-xs text-gray-400 mt-1">Higher priority rules are evaluated first</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fine Mode</label>
-                <select
-                  value={ruleForm.config.fine_mode}
-                  onChange={(e) => setRuleForm({
-                    ...ruleForm,
-                    config: { ...ruleForm.config, fine_mode: e.target.value }
-                  })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                >
-                  <option value="flat_per_booking">Flat Rate</option>
-                  <option value="percent_of_fare">Percentage of Fare</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min Minutes Before
-                </label>
-                <input
-                  type="number"
-                  value={ruleForm.config.min_minutes_before}
-                  onChange={(e) => setRuleForm({
-                    ...ruleForm,
-                    config: { ...ruleForm.config, min_minutes_before: parseInt(e.target.value) || 0 }
-                  })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Minutes Before <span className="text-xs text-gray-400">(1440 = 24 hrs)</span>
-                </label>
-                <input
-                  type="number"
-                  value={ruleForm.config.max_minutes_before}
-                  onChange={(e) => setRuleForm({
-                    ...ruleForm,
-                    config: { ...ruleForm.config, max_minutes_before: parseInt(e.target.value) || 0 }
-                  })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                />
-              </div>
-            </div>
+              {/* Commission Percentage - Moved DOWN here (after Priority) */}
+              {isCommissionRule && (
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100 mt-2">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md">
+                      <CurrencyRupeeIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Commission Percentage</h4>
+                      <p className="text-sm text-gray-500">Set the commission percentage for drivers</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Commission Rate (%)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={ruleForm.config.commission_percentage}
+                        onChange={(e) => setRuleForm({
+                          ...ruleForm,
+                          config: { ...ruleForm.config, commission_percentage: e.target.value }
+                        })}
+                        className="w-full pl-8 pr-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-800 text-lg font-semibold"
+                        placeholder="Enter commission percentage"
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, parseFloat(ruleForm.config.commission_percentage) || 0)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-purple-600 min-w-[60px] text-right">
+                        {parseFloat(ruleForm.config.commission_percentage) || 0}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      This percentage will be deducted from driver's earnings as commission
+                    </p>
+                  </div>
+                </div>
+              )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fine Value {ruleForm.config.fine_mode === 'percent_of_fare' && '(%)'}
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={ruleForm.config.fine_value}
-                onChange={(e) => setRuleForm({
-                  ...ruleForm,
-                  config: { ...ruleForm.config, fine_value: e.target.value }
-                })}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-              />
-            </div>
+              {/* Fine Mode - Only for non-commission rules */}
+              {!isCommissionRule && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Fine Mode
+                    </label>
+                    <select
+                      value={ruleForm.config.fine_mode}
+                      onChange={(e) => setRuleForm({
+                        ...ruleForm,
+                        config: { ...ruleForm.config, fine_mode: e.target.value }
+                      })}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm"
+                    >
+                      <option value="percent_of_fare">Percentage of Fare</option>
+                      <option value="flat_per_booking">Flat Rate</option>
+                    </select>
+                  </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ruleForm.is_active}
-                  onChange={(e) => setRuleForm({ ...ruleForm, is_active: e.target.checked })}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-400"
-                />
-                <span className="text-sm text-gray-700">Rule is active</span>
-              </label>
+                  {/* Min/Max Minutes for fine rules */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                        Min Minutes Before
+                      </label>
+                      <div className="relative">
+                        <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="number"
+                          value={ruleForm.config.min_minutes_before}
+                          onChange={(e) => setRuleForm({
+                            ...ruleForm,
+                            config: { ...ruleForm.config, min_minutes_before: parseInt(e.target.value) || 0 }
+                          })}
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                        Max Minutes Before
+                      </label>
+                      <div className="relative">
+                        <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="number"
+                          value={ruleForm.config.max_minutes_before}
+                          onChange={(e) => setRuleForm({
+                            ...ruleForm,
+                            config: { ...ruleForm.config, max_minutes_before: parseInt(e.target.value) || 0 }
+                          })}
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">1440 minutes = 24 hours</p>
+                    </div>
+                  </div>
+
+                  {/* Fine Value */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Fine Value {ruleForm.config.fine_mode === 'percent_of_fare' ? '(Percentage %)' : '(Amount ₹)'}
+                    </label>
+                    <div className="relative">
+                      {ruleForm.config.fine_mode === 'percent_of_fare' ? (
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">%</span>
+                      ) : (
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+                      )}
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={ruleForm.config.fine_value}
+                        onChange={(e) => setRuleForm({
+                          ...ruleForm,
+                          config: { ...ruleForm.config, fine_value: e.target.value }
+                        })}
+                        className={`w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-gray-50 text-gray-800 text-sm ${
+                          parseFloat(ruleForm.config.fine_value) > 0 ? 'border-green-200 bg-green-50/30' : ''
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Active Status Toggle */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      ruleForm.is_active ? 'bg-green-100' : 'bg-gray-200'
+                    }`}>
+                      {ruleForm.is_active ? (
+                        <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <XCircleIcon className="w-5 h-5 text-gray-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Rule Status</p>
+                      <p className="text-xs text-gray-500">
+                        {ruleForm.is_active ? 'Rule is active and will be applied' : 'Rule is inactive and will not be applied'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRuleForm({ ...ruleForm, is_active: !ruleForm.is_active })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none ${
+                      ruleForm.is_active ? 'bg-gray-800' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-300 ${
+                        ruleForm.is_active ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           
-          {/* Footer - Fixed */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
-            <button
-              onClick={handleCreateRule}
-              disabled={updating}
-              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 disabled:opacity-50 font-medium"
-            >
-              {updating ? "Saving..." : (selectedRule ? "Update Rule" : "Create Rule")}
-            </button>
+          {/* Footer */}
+          <div className="px-6 py-5 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0 rounded-b-2xl">
             <button
               onClick={() => {
                 setShowRuleModal(false);
                 resetRuleForm();
               }}
-              className="flex-1 px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-300"
+              className="flex-1 px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium text-sm"
             >
               Cancel
+            </button>
+            <button
+              onClick={handleCreateRule}
+              disabled={updating}
+              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 disabled:opacity-50 font-medium text-sm shadow-md hover:shadow-lg"
+            >
+              {updating ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  {selectedRule ? "Updating..." : "Creating..."}
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  {selectedRule ? (
+                    <>
+                      <PencilIcon className="w-4 h-4" />
+                      Update Rule
+                    </>
+                  ) : (
+                    <>
+                      <PlusIcon className="w-4 h-4" />
+                      Create Rule
+                    </>
+                  )}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -3053,7 +3165,7 @@ const CancellationFine = () => {
       
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
         <TopNavbar 
-          title="Cancellation Fine Management" 
+          title="Commercial Rules & Fine Management" 
           onMenuClick={toggleSidebar} 
           isMobile={isMobile} 
         />
@@ -3075,8 +3187,8 @@ const CancellationFine = () => {
           )}
           
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold text-gray-800">Cancellation Fine Management</h1>
-            <p className="text-gray-400 text-sm mt-1">Manage commercial rules and apply cancellation fines to drivers</p>
+            <h1 className="text-3xl font-semibold text-gray-800">Commercial Rules Management</h1>
+            <p className="text-gray-400 text-sm mt-1">Manage commission percentages, fine policies, and commercial rules</p>
           </div>
           
           <div className="flex gap-6 mb-6 border-b border-gray-100 flex-wrap">
@@ -3098,7 +3210,7 @@ const CancellationFine = () => {
                   : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              Drivers
+              Drivers & Fines
               {filteredDrivers.length > 0 && (
                 <span className="ml-1.5 text-xs text-gray-400">({filteredDrivers.length})</span>
               )}

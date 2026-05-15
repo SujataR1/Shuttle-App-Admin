@@ -3346,7 +3346,7 @@ const PayoutService = () => {
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Navigation State
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -5528,14 +5528,14 @@ const PayoutService = () => {
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Sidebar onClose={() => setSidebarOpen(false)} />
-      
+
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
-        <TopNavbar 
-          title="Payout Management" 
-          onMenuClick={toggleSidebar} 
-          isMobile={isMobile} 
+        <TopNavbar
+          title="Payout Management"
+          onMenuClick={toggleSidebar}
+          isMobile={isMobile}
         />
-        
+
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {successMessage && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -5559,6 +5559,7 @@ const PayoutService = () => {
             </div>
           )}
 
+
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -5569,10 +5570,10 @@ const PayoutService = () => {
             </div>
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+              className="group px-5 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
             >
-              <Cog6ToothIcon className="w-5 h-5" />
-              Commission: {settings?.commission_percent || 0}%
+              <Cog6ToothIcon className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+              <span>Commission: <span className="font-bold text-emerald-300">{settings?.commission_percent || 0}%</span></span>
             </button>
           </div>
 
@@ -5684,30 +5685,66 @@ const PayoutService = () => {
         </div>
       )}
 
+
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Commission Settings</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <CurrencyRupeeIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Commission Settings</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Configure global commission rate</p>
+                </div>
+              </div>
               <button onClick={() => setShowSettingsModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Commission Percentage (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={commissionPercent}
-                onChange={(e) => setCommissionPercent(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Commission Percentage (%)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={commissionPercent}
+                  onChange={(e) => setCommissionPercent(e.target.value)}
+                  className="w-full pl-8 pr-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 text-gray-800 text-lg font-semibold"
+                  placeholder="Enter commission percentage"
+                />
+              </div>
+
+              {/* Visual Progress Bar */}
+              <div className="mt-3 flex items-center gap-2">
+                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, parseFloat(commissionPercent) || 0)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-semibold text-purple-600 min-w-[60px] text-right">
+                  {parseFloat(commissionPercent) || 0}%
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-2">
+                This percentage will be deducted from driver's earnings as commission
+              </p>
             </div>
-            <div className="flex gap-3 pt-4">
-              <button onClick={handleUpdateSettings} disabled={updating} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+
+            <div className="flex gap-3 pt-6 mt-2 border-t border-gray-100">
+              <button onClick={handleUpdateSettings} disabled={updating} className="flex-1 px-4 py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-300 font-medium">
                 {updating ? "Saving..." : "Save Changes"}
               </button>
-              <button onClick={() => setShowSettingsModal(false)} className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+              <button onClick={() => setShowSettingsModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-medium">
+                Cancel
+              </button>
             </div>
           </div>
         </div>
