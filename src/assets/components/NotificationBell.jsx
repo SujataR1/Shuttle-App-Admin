@@ -400,61 +400,237 @@
 
 // export default NotificationBell;
 
-import React, { useState, useEffect, useRef } from "react";
-import { useNotifications } from "../../context/NotificationContext";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
+import { BellIcon, CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
+const API_BASE = "https://be.shuttleapp.transev.site";
 
 const NotificationBell = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, wsConnected, fetchNotifications, fetchUnreadCount } = useNotifications();
-  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [markingAsRead, setMarkingAsRead] = useState(false);
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
-  // Debug: Log when props change
-  useEffect(() => {
-    console.log("NotificationBell - Notifications updated:", notifications);
-    console.log("NotificationBell - Unread count from context:", unreadCount);
-    console.log("NotificationBell - WebSocket connected:", wsConnected);
-  }, [notifications, unreadCount, wsConnected]);
+  const token = localStorage.getItem("access_token");
 
-  // Fetch initial data when component mounts
-  useEffect(() => {
-    const loadInitialData = async () => {
-      console.log("Loading initial notification data...");
-      await fetchNotifications();
-      await fetchUnreadCount();
-    };
-    loadInitialData();
-  }, [fetchNotifications, fetchUnreadCount]);
-
-  // Refresh data periodically (every 15 seconds) as fallback - increased frequency
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      console.log("Polling for notification updates...");
-      await fetchNotifications();
-      await fetchUnreadCount();
-    }, 15000); // Changed from 30s to 15s for faster updates
+  // Fetch notifications from API
+  const fetchNotifications = useCallback(async () => {
+    if (!token) return;
     
-    return () => clearInterval(interval);
-  }, [fetchNotifications, fetchUnreadCount]);
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = response.data;
+      const notificationsList = data.items || data.notifications || data.data || [];
+      setNotifications(notificationsList);
+      
+      const unread = notificationsList.filter(n => n.is_read === false).length;
+      setUnreadCount(unread);
+      console.log("Fetched notifications, unread count:", unread);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
-  // Also refresh when page becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log("Page became visible, refreshing notifications...");
+  // Mark single notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      await axios.patch(
+        `${API_BASE}/notifications/${notificationId}/read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setNotifications(prev => {
+        const updated = prev.map(n =>
+          n.id === notificationId ? { ...n, is_read: true } : n
+        );
+        const newUnreadCount = updated.filter(n => n.is_read === false).length;
+        setUnreadCount(newUnreadCount);
+        console.log("After mark as read, unread count:", newUnreadCount);
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = async () => {
+    if (markingAsRead) return;
+    
+    setMarkingAsRead(true);
+    try {
+      await axios.post(
+        `${API_BASE}/notifications/mark-all-read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setNotifications(prev => {
+        const updated = prev.map(n => ({ ...n, is_read: true }));
+        setUnreadCount(0);
+        console.log("Marked all as read, unread count: 0");
+        return updated;
+      });
+      
+      setTimeout(() => {
         fetchNotifications();
-        fetchUnreadCount();
+      }, 1000);
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    } finally {
+      setMarkingAsRead(false);
+    }
+  };
+
+  // Connect to WebSocket for real-time notifications
+  const connectWebSocket = useCallback(() => {
+    if (!token) return;
+    
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.close();
+    }
+    
+    const wsUrl = `wss://be.shuttleapp.transev.site/notifications/ws?token=${encodeURIComponent(token)}`;
+    const websocket = new WebSocket(wsUrl);
+    
+    websocket.onopen = () => {
+      console.log("Notification WebSocket connected");
+    };
+    
+    websocket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("WebSocket message received:", payload);
+        
+        // Handle ping/pong
+        if (payload?.type === "ping") {
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: "pong" }));
+          }
+          return;
+        }
+        
+        // Authentication success
+        if (payload?.message === "WebSocket authenticated successfully.") {
+          console.log("WebSocket authenticated");
+          return;
+        }
+        
+        // Check for notification in different possible formats
+        let notificationData = null;
+        
+        if (payload?.type === "notification" || payload?.notification) {
+          notificationData = payload.notification || payload;
+        } else if (payload?.id && (payload?.title || payload?.message)) {
+          notificationData = payload;
+        }
+        
+        if (notificationData && notificationData.id) {
+          const newNotification = {
+            id: notificationData.id,
+            title: notificationData.title || "New Notification",
+            message: notificationData.message || notificationData.content || "",
+            content: notificationData.message || notificationData.content,
+            created_at: notificationData.created_at || new Date().toISOString(),
+            is_read: false
+          };
+          
+          console.log("New notification received:", newNotification);
+          
+          setNotifications(prev => {
+            // Check if notification already exists
+            const exists = prev.some(n => n.id === newNotification.id);
+            if (exists) {
+              console.log("Notification already exists, skipping");
+              return prev;
+            }
+            const updated = [newNotification, ...prev];
+            const newUnreadCount = updated.filter(n => n.is_read === false).length;
+            setUnreadCount(newUnreadCount);
+            console.log("Updated unread count to:", newUnreadCount);
+            return updated;
+          });
+          
+          // Show browser notification if permitted
+          if (Notification.permission === "granted") {
+            new Notification(newNotification.title, {
+              body: newNotification.message,
+              icon: "/favicon.ico"
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
       }
     };
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [fetchNotifications, fetchUnreadCount]);
+    websocket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+    
+    websocket.onclose = () => {
+      console.log("WebSocket disconnected, reconnecting...");
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = setTimeout(() => connectWebSocket(), 5000);
+    };
+    
+    wsRef.current = websocket;
+  }, [token]);
 
-  // Close dropdown when clicking outside
+  // Poll for notifications every 10 seconds as fallback
+  const startPolling = useCallback(() => {
+    const interval = setInterval(() => {
+      console.log("Polling for new notifications...");
+      fetchNotifications();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Request notification permission
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Initial fetch and WebSocket connection
+  useEffect(() => {
+    fetchNotifications();
+    connectWebSocket();
+    const cleanupPolling = startPolling();
+    
+    return () => {
+      cleanupPolling();
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
+      }
+    };
+  }, [fetchNotifications, connectWebSocket, startPolling]);
+
+  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
       }
     };
     
@@ -462,17 +638,17 @@ const NotificationBell = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleNotificationClick = async (notificationId) => {
-    console.log("Marking notification as read:", notificationId);
-    await markAsRead(notificationId);
+  // Toggle dropdown
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+    // Refresh notifications when opening dropdown
+    if (!showDropdown) {
+      fetchNotifications();
+    }
   };
 
-  const handleMarkAllAsRead = async () => {
-    console.log("Marking all notifications as read");
-    await markAllAsRead();
-  };
-
-  const formatDate = (dateString) => {
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return "Just now";
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
@@ -481,96 +657,125 @@ const NotificationBell = () => {
     const diffDays = Math.floor(diffMs / 86400000);
     
     if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Bell Icon with connection indicator */}
+    <div className="relative inline-block">
+      {/* Notification Bell Button */}
       <button
-        onClick={() => {
-          console.log("Toggling notification dropdown");
-          setIsOpen(!isOpen);
-          // Refresh when opening dropdown
-          fetchNotifications();
-          fetchUnreadCount();
-        }}
-        className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none"
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="relative p-1 rounded-lg transition-all duration-200 hover:bg-gray-100 focus:outline-none"
+        aria-label="Notifications"
       >
-        {/* Connection status dot */}
-        <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+        <BellIcon className="w-4 h-4 text-gray-600" />
         
-        {/* Bell Icon */}
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        
-        {/* Unread count badge */}
+        {/* Badge - Shows number of unread notifications */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
-            {unreadCount > 9 ? "9+" : unreadCount}
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full">
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
-
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+      
+      {/* Dropdown Menu */}
+      {showDropdown && (
+        <div 
+          ref={dropdownRef}
+          className="absolute right-0 mt-1 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
+        >
+          {/* Header */}
+          <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div>
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Notifications</h3>
               {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800 transition"
-                >
-                  Mark all as read
-                </button>
+                <p className="text-[10px] text-gray-400 mt-0.5">{unreadCount} unread</p>
               )}
             </div>
-            {!wsConnected && (
-              <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
-                ⚠️ Reconnecting to notification service...
-              </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                disabled={markingAsRead}
+                className="text-[10px] sm:text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 disabled:opacity-50"
+              >
+                <CheckCircleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                Mark all read
+              </button>
             )}
           </div>
           
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <p>No notifications</p>
+          {/* Notifications List */}
+          <div className="max-h-80 sm:max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-800 mx-auto"></div>
+                <p className="text-[10px] text-gray-400 mt-2">Loading...</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-6 text-center">
+                <BellIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs text-gray-500">No notifications</p>
+                <p className="text-[10px] text-gray-400 mt-1">You're all caught up!</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification.id)}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition ${
-                    !notification.read_at ? "bg-blue-50" : ""
+                  className={`p-3 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer ${
+                    !notification.is_read ? 'bg-blue-50/30' : ''
                   }`}
+                  onClick={() => {
+                    if (!notification.is_read) {
+                      markAsRead(notification.id);
+                    }
+                  }}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium ${!notification.read_at ? "text-gray-900" : "text-gray-700"}`}>
-                        {notification.title}
+                  <div className="flex items-start gap-2">
+                    {!notification.is_read && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs truncate ${!notification.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                        {notification.title || "Notification"}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-2">{formatDate(notification.created_at)}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 break-words">
+                        {notification.message || notification.content}
+                      </p>
+                      <p className="text-[9px] text-gray-400 mt-1">
+                        {formatTimeAgo(notification.created_at || notification.timestamp)}
+                      </p>
                     </div>
-                    {!notification.read_at && (
-                      <div className="w-2 h-2 bg-blue-600 rounded-full mt-1"></div>
+                    {!notification.is_read && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                      >
+                        <XMarkIcon className="w-3 h-3" />
+                      </button>
                     )}
                   </div>
                 </div>
               ))
             )}
           </div>
+          
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50 text-center">
+              <button
+                onClick={() => setShowDropdown(false)}
+                className="text-[10px] text-gray-500 hover:text-gray-700"
+              >
+                Close
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
