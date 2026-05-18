@@ -418,6 +418,7 @@ const NotificationBell = () => {
   const reconnectTimeoutRef = useRef(null);
 
   const token = localStorage.getItem("access_token");
+  
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {

@@ -4,17 +4,38 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { DevicePhoneMobileIcon, PlusIcon, FunnelIcon, XMarkIcon, PowerIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { 
+  DevicePhoneMobileIcon, 
+  PlusIcon, 
+  FunnelIcon, 
+  XMarkIcon, 
+  ChevronLeftIcon, 
+  ChevronRightIcon,
+  MapPinIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  TrashIcon,
+  EyeIcon,
+  CalendarIcon,
+  TagIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline';
 
 const DevicesList = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ vehicle_id: "", is_active: "" });
+  const [filters, setFilters] = useState({ search: "", status: "" });
   const [actionLoading, setActionLoading] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedDeviceId, setExpandedDeviceId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const API_BASE = "https://be.shuttleapp.transev.site";
 
@@ -23,8 +44,8 @@ const DevicesList = () => {
     try {
       const token = localStorage.getItem("access_token");
       let url = `${API_BASE}/admin/rfid/devices?page=${page}&page_size=25`;
-      if (filters.vehicle_id) url += `&vehicle_id=${filters.vehicle_id}`;
-      if (filters.is_active !== "") url += `&is_active=${filters.is_active}`;
+      if (filters.search) url += `&search=${filters.search}`;
+      if (filters.status) url += `&status=${filters.status}`;
 
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -37,6 +58,13 @@ const DevicesList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshData = async () => {
+    setRefreshing(true);
+    await fetchDevices();
+    setRefreshing(false);
+    toast.info("Device list refreshed");
   };
 
   useEffect(() => {
@@ -54,7 +82,7 @@ const DevicesList = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Device ${actionText} successfully`);
+      toast.success(`✓ Device ${actionText} successfully`);
       fetchDevices();
     } catch (error) {
       const message = error.response?.data?.detail?.message || `Failed to ${actionText} device`;
@@ -65,7 +93,7 @@ const DevicesList = () => {
   };
 
   const handleDecommission = async (deviceId) => {
-    if (!window.confirm("⚠️ WARNING: This will permanently decommission the device. Are you sure?")) return;
+    if (!window.confirm("⚠️ This action cannot be undone. Are you sure you want to decommission this device?")) return;
 
     setActionLoading(deviceId);
     try {
@@ -85,273 +113,438 @@ const DevicesList = () => {
     }
   };
 
-  const getStatusBadge = (isActive, decommissionedAt) => {
-    if (decommissionedAt) {
-      return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
-          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-          Decommissioned
-        </span>
-      );
+  const getStatusConfig = (device) => {
+    if (device.decommissioned_at) {
+      return {
+        label: 'Decommissioned',
+        color: 'red',
+        bgColor: 'bg-red-50',
+        textColor: 'text-red-700',
+        icon: XCircleIcon,
+        dotColor: 'bg-red-500'
+      };
     }
-    if (isActive) {
-      return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-          Active
-        </span>
-      );
+    if (device.is_active) {
+      return {
+        label: 'Active',
+        color: 'green',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-700',
+        icon: CheckCircleIcon,
+        dotColor: 'bg-emerald-500'
+      };
     }
-    return (
-      <span className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
-        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
-        Inactive
-      </span>
-    );
+    return {
+      label: 'Inactive',
+      color: 'gray',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-600',
+      icon: XCircleIcon,
+      dotColor: 'bg-gray-400'
+    };
+  };
+
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
   };
 
   const clearFilters = () => {
-    setFilters({ vehicle_id: "", is_active: "" });
-    setShowFilters(false);
-    toast.info("Filters cleared");
-    fetchDevices();
-  };
-
-  const applyFilters = () => {
+    setFilters({ search: "", status: "" });
     setPage(1);
-    fetchDevices();
-    toast.success("Filters applied");
+    setShowFilters(false);
   };
 
-  const hasActiveFilters = filters.vehicle_id || filters.is_active;
+  const hasActiveFilters = filters.search || filters.status;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar onClose={() => setSidebarOpen(false)} />
       
-      {/* Main content with proper margin to avoid sidebar */}
       <div className="lg:ml-64">
         <TopNavbar />
         
-        <main className="px-4 md:px-6 lg:px-8 py-6 lg:py-8">
+        <main className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-6 lg:mb-8">
+            {/* Header Section */}
+            <div className="mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-xl lg:text-2xl font-semibold text-slate-900">RFID Devices</h1>
-                  <p className="text-slate-500 text-sm mt-1">Manage and monitor all RFID scanner devices</p>
+                  <h1 className="text-3xl font-bold text-gray-900">RFID Devices</h1>
+                  <p className="text-gray-500 mt-1">Monitor and manage your fleet's RFID scanners</p>
                 </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={refreshData}
+                    disabled={refreshing}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                  >
+                    <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <Link
+                    to="/admin/rfid/devices/register"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition shadow-sm"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Register Device
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Devices</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-1">{totalCount}</p>
+                  </div>
+                  <DevicePhoneMobileIcon className="w-10 h-10 text-gray-400" />
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Active</p>
+                    <p className="text-3xl font-bold text-emerald-600 mt-1">
+                      {devices.filter(d => d.is_active && !d.decommissioned_at).length}
+                    </p>
+                  </div>
+                  <CheckCircleIcon className="w-10 h-10 text-emerald-500" />
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Inactive</p>
+                    <p className="text-3xl font-bold text-amber-600 mt-1">
+                      {devices.filter(d => !d.is_active && !d.decommissioned_at).length}
+                    </p>
+                  </div>
+                  <XCircleIcon className="w-10 h-10 text-amber-500" />
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Decommissioned</p>
+                    <p className="text-3xl font-bold text-red-600 mt-1">
+                      {devices.filter(d => d.decommissioned_at).length}
+                    </p>
+                  </div>
+                  <TrashIcon className="w-10 h-10 text-red-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* Search & Filters Bar */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by serial number or vehicle ID..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="decommissioned">Decommissioned</option>
+                  </select>
+                  {(filters.search || filters.status) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Devices Grid/List */}
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="h-5 bg-gray-200 rounded w-48 mb-3"></div>
+                        <div className="h-4 bg-gray-100 rounded w-64"></div>
+                      </div>
+                      <div className="h-8 bg-gray-200 rounded w-32"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : devices.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+                <DevicePhoneMobileIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
+                <p className="text-gray-500 mb-4">Get started by registering your first RFID device</p>
                 <Link
                   to="/admin/rfid/devices/register"
-                  className="inline-flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm w-full sm:w-auto"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                 >
                   <PlusIcon className="w-4 h-4" />
                   Register Device
                 </Link>
               </div>
-            </div>
-
-            {/* Filters Bar */}
-            <div className="bg-white rounded-lg border border-slate-200 p-4 mb-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition text-sm"
-                  >
-                    <FunnelIcon className="w-4 h-4" />
-                    <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
-                    {hasActiveFilters && (
-                      <span className="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">Active</span>
-                    )}
-                  </button>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearFilters}
-                      className="inline-flex items-center gap-1 text-red-500 hover:text-red-600 text-sm"
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <div className="text-sm text-slate-500">
-                  Total: <span className="font-semibold text-slate-900">{totalCount}</span> devices
-                </div>
-              </div>
-
-              {showFilters && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Vehicle ID</label>
-                      <input
-                        type="text"
-                        placeholder="Search by vehicle ID"
-                        value={filters.vehicle_id}
-                        onChange={(e) => setFilters({ ...filters, vehicle_id: e.target.value })}
-                        className="w-full bg-slate-50 text-slate-900 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Device Status</label>
-                      <select
-                        value={filters.is_active}
-                        onChange={(e) => setFilters({ ...filters, is_active: e.target.value })}
-                        className="w-full bg-slate-50 text-slate-900 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 text-sm"
-                      >
-                        <option value="">All Status</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                      </select>
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        onClick={applyFilters}
-                        className="w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition"
-                      >
-                        Apply Filters
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-              <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4">
-                <p className="text-slate-500 text-xs uppercase tracking-wide">Total Devices</p>
-                <p className="text-xl md:text-2xl font-semibold text-slate-900 mt-1">{totalCount}</p>
-              </div>
-              <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4">
-                <p className="text-slate-500 text-xs uppercase tracking-wide">Active</p>
-                <p className="text-xl md:text-2xl font-semibold text-emerald-600 mt-1">{devices.filter(d => d.is_active && !d.decommissioned_at).length}</p>
-              </div>
-              <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4">
-                <p className="text-slate-500 text-xs uppercase tracking-wide">Inactive</p>
-                <p className="text-xl md:text-2xl font-semibold text-amber-600 mt-1">{devices.filter(d => !d.is_active && !d.decommissioned_at).length}</p>
-              </div>
-              <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4">
-                <p className="text-slate-500 text-xs uppercase tracking-wide">Decommissioned</p>
-                <p className="text-xl md:text-2xl font-semibold text-red-600 mt-1">{devices.filter(d => d.decommissioned_at).length}</p>
-              </div>
-            </div>
-
-            {/* Devices Table */}
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Serial Number</th>
-                      <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Vehicle ID</th>
-                      <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created</th>
-                      <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {loading ? (
-                      [...Array(5)].map((_, i) => (
-                        <tr key={i} className="animate-pulse">
-                          <td className="px-4 md:px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24 md:w-32"></div></td>
-                          <td className="px-4 md:px-6 py-4"><div className="h-4 bg-slate-100 rounded w-28 md:w-40"></div></td>
-                          <td className="px-4 md:px-6 py-4"><div className="h-6 bg-slate-100 rounded w-20 md:w-24"></div></td>
-                          <td className="px-4 md:px-6 py-4"><div className="h-4 bg-slate-100 rounded w-20 md:w-24"></div></td>
-                          <td className="px-4 md:px-6 py-4"><div className="h-8 bg-slate-100 rounded w-28 md:w-32"></div></td>
-                        </tr>
-                      ))
-                    ) : devices.length === 0 ? (
-                      <tr>
-                        <td colSpan="5" className="px-4 md:px-6 py-12 text-center">
-                          <DevicePhoneMobileIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                          <p className="text-slate-500">No devices found</p>
-                          <Link to="/admin/rfid/devices/register" className="text-slate-600 text-sm hover:underline mt-2 inline-block">
-                            + Register a device
-                          </Link>
-                        </td>
-                      </tr>
-                    ) : (
-                      devices.map((device) => (
-                        <tr key={device.id} className="hover:bg-slate-50 transition">
-                          <td className="px-4 md:px-6 py-4">
-                            <div className="font-medium text-slate-900 text-sm md:text-base break-words">{device.serial_number}</div>
-                            <div className="text-slate-400 text-xs font-mono mt-0.5">{device.id.slice(0, 8)}...</div>
-                          </td>
-                          <td className="px-4 md:px-6 py-4">
-                            <code className="text-xs md:text-sm bg-slate-100 px-2 py-1 rounded text-slate-700 break-all">{device.vehicle_id}</code>
-                          </td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">{getStatusBadge(device.is_active, device.decommissioned_at)}</td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                            <div className="text-slate-700 text-sm">{new Date(device.created_at).toLocaleDateString()}</div>
-                           </td>
-                          <td className="px-4 md:px-6 py-4">
+            ) : (
+              <div className="space-y-4">
+                {devices.map((device) => {
+                  const statusConfig = getStatusConfig(device);
+                  const StatusIcon = statusConfig.icon;
+                  const lastSeen = formatRelativeTime(device.last_seen_at);
+                  const hasLocation = device.last_seen_lat && device.last_seen_lng;
+                  
+                  return (
+                    <div key={device.id} className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+                      {/* Device Header */}
+                      <div className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          {/* Left: Device Info */}
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-3 mb-3">
+                              <DevicePhoneMobileIcon className="w-6 h-6 text-gray-400" />
+                              <h3 className="font-mono text-lg font-semibold text-gray-900">
+                                {device.serial_number}
+                              </h3>
+                              <div className={`inline-flex items-center gap-2 px-3 py-1 ${statusConfig.bgColor} rounded-full`}>
+                                <StatusIcon className={`w-4 h-4 ${statusConfig.textColor}`} />
+                                <span className={`text-xs font-medium ${statusConfig.textColor}`}>
+                                  {statusConfig.label}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                              {/* Vehicle Info */}
+                              <div className="flex items-start gap-2">
+                                <TagIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Vehicle ID</p>
+                                  <code className="text-sm text-gray-900 font-mono">
+                                    {device.vehicle_id}
+                                  </code>
+                                </div>
+                              </div>
+                              
+                              {/* Last Seen */}
+                              {device.last_seen_at && (
+                                <div className="flex items-start gap-2">
+                                  <ClockIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+                                  <div>
+                                    <p className="text-xs text-gray-500">Last Seen</p>
+                                    <p className="text-sm text-gray-900">
+                                      {lastSeen}
+                                      <span className="text-xs text-gray-400 ml-2">
+                                        ({new Date(device.last_seen_at).toLocaleString()})
+                                      </span>
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Location */}
+                              {hasLocation && (
+                                <div className="flex items-start gap-2">
+                                  <MapPinIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+                                  <div>
+                                    <p className="text-xs text-gray-500">Location</p>
+                                    <p className="text-sm text-gray-900">
+                                      {device.last_seen_lat.toFixed(4)}°, {device.last_seen_lng.toFixed(4)}°
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Right: Actions */}
+                          <div className="flex items-center gap-2">
                             {!device.decommissioned_at && (
-                              <div className="flex flex-col sm:flex-row gap-2">
+                              <>
                                 {device.is_active ? (
                                   <button
                                     onClick={() => handleAction(device.id, "deactivate", "deactivate")}
                                     disabled={actionLoading === device.id}
-                                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 text-xs md:text-sm font-medium"
+                                    className="px-4 py-2 text-sm text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition disabled:opacity-50"
                                   >
-                                    <PowerIcon className="w-3.5 h-3.5" />
                                     Deactivate
                                   </button>
                                 ) : (
                                   <button
                                     onClick={() => handleAction(device.id, "activate", "activate")}
                                     disabled={actionLoading === device.id}
-                                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 text-xs md:text-sm font-medium"
+                                    className="px-4 py-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition disabled:opacity-50"
                                   >
-                                    <PowerIcon className="w-3.5 h-3.5" />
                                     Activate
                                   </button>
                                 )}
                                 <button
                                   onClick={() => handleDecommission(device.id)}
                                   disabled={actionLoading === device.id}
-                                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-xs md:text-sm font-medium"
+                                  className="px-4 py-2 text-sm text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
                                 >
-                                  <TrashIcon className="w-3.5 h-3.5" />
                                   Decommission
                                 </button>
-                              </div>
+                              </>
                             )}
-                           </td>
-                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                            <button
+                              onClick={() => setExpandedDeviceId(expandedDeviceId === device.id ? null : device.id)}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                            >
+                              {expandedDeviceId === device.id ? (
+                                <ChevronUpIcon className="w-5 h-5" />
+                              ) : (
+                                <ChevronDownIcon className="w-5 h-5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Expanded Details */}
+                      {expandedDeviceId === device.id && (
+                        <div className="border-t border-gray-100 bg-gray-50 px-6 py-5 rounded-b-xl">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            {/* Notes Section */}
+                            <div className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <DocumentTextIcon className="w-5 h-5 text-gray-500" />
+                                <h4 className="font-medium text-gray-900">Device Notes</h4>
+                              </div>
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-sm text-gray-700">
+                                  {device.notes || <span className="text-gray-400 italic">No additional notes</span>}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Location Details */}
+                            <div className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <MapPinIcon className="w-5 h-5 text-gray-500" />
+                                <h4 className="font-medium text-gray-900">Location Details</h4>
+                              </div>
+                              {hasLocation ? (
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-xs text-gray-500">Coordinates</p>
+                                    <p className="text-sm font-mono text-gray-900">
+                                      {device.last_seen_lat.toFixed(6)}, {device.last_seen_lng.toFixed(6)}
+                                    </p>
+                                  </div>
+                                  <a
+                                    href={`https://www.google.com/maps?q=${device.last_seen_lat},${device.last_seen_lng}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                  >
+                                    Open in Google Maps →
+                                  </a>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-400 italic">No location data available</p>
+                              )}
+                            </div>
+                            
+                            {/* Metadata */}
+                            <div className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <CalendarIcon className="w-5 h-5 text-gray-500" />
+                                <h4 className="font-medium text-gray-900">Timeline</h4>
+                              </div>
+                              <div className="space-y-2">
+                                <div>
+                                  <p className="text-xs text-gray-500">Created</p>
+                                  <p className="text-sm text-gray-900">{new Date(device.created_at).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500">Last Updated</p>
+                                  <p className="text-sm text-gray-900">{new Date(device.updated_at).toLocaleString()}</p>
+                                </div>
+                                {device.decommissioned_at && (
+                                  <div>
+                                    <p className="text-xs text-gray-500">Decommissioned</p>
+                                    <p className="text-sm text-red-600">{new Date(device.decommissioned_at).toLocaleString()}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Device ID */}
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <p className="text-xs text-gray-400 font-mono">
+                              Device UUID: {device.id}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Pagination */}
-              {totalCount > 25 && (
-                <div className="bg-slate-50 px-4 md:px-6 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="inline-flex items-center gap-1 text-sm text-slate-600 disabled:opacity-40 hover:text-slate-900 order-2 sm:order-1"
-                  >
-                    <ChevronLeftIcon className="w-4 h-4" />
-                    Previous
-                  </button>
-                  <div className="text-sm text-slate-500 order-1 sm:order-2">
-                    Page <span className="font-medium text-slate-900">{page}</span> of {Math.ceil(totalCount / 25)}
-                  </div>
-                  <button
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={page * 25 >= totalCount}
-                    className="inline-flex items-center gap-1 text-sm text-slate-600 disabled:opacity-40 hover:text-slate-900 order-3"
-                  >
-                    Next
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </button>
+            )}
+            
+            {/* Pagination */}
+            {totalCount > 25 && (
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  Previous
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    Page <span className="font-semibold text-gray-900">{page}</span> of {Math.ceil(totalCount / 25)}
+                  </span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <span className="text-sm text-gray-600">
+                    {((page - 1) * 25) + 1} - {Math.min(page * 25, totalCount)} of {totalCount}
+                  </span>
                 </div>
-              )}
-            </div>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page * 25 >= totalCount}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
+                >
+                  Next
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </main>
       </div>
