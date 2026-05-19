@@ -37,7 +37,7 @@ const PayoutTransfers = () => {
     rfid_ride_id: ""
   });
   const [pagination, setPagination] = useState({ page: 1, page_size: 25, total: 0 });
-  const [triggering, setTriggering] = useState(false);
+  const [triggeringId, setTriggeringId] = useState(null);
   const [bulkTriggering, setBulkTriggering] = useState(false);
   
   // Dropdown states
@@ -107,6 +107,8 @@ const PayoutTransfers = () => {
       
       setTransfers(response.data.items || []);
       setPagination(prev => ({ ...prev, total: response.data.count || 0 }));
+      // Clear selections when data changes
+      setSelectedTransfers(new Set());
     } catch (error) {
       console.error("Error fetching transfers:", error);
       toast.error("Failed to load payout transfers");
@@ -116,9 +118,9 @@ const PayoutTransfers = () => {
   };
 
   const triggerTransfer = async (transferId) => {
-    if (!window.confirm("Trigger this payout transfer?")) return;
+    if (!window.confirm("Are you sure you want to trigger this payout transfer?")) return;
     
-    setTriggering(true);
+    setTriggeringId(transferId);
     try {
       const token = localStorage.getItem("access_token");
       await axios.post(
@@ -127,35 +129,43 @@ const PayoutTransfers = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Payout transfer triggered successfully");
-      fetchTransfers();
+      // Remove from selected set if it was selected
+      setSelectedTransfers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(transferId);
+        return newSet;
+      });
+      await fetchTransfers();
     } catch (error) {
       const message = error.response?.data?.detail?.message || "Failed to trigger transfer";
       toast.error(message);
+      console.error("Error triggering transfer:", error);
     } finally {
-      setTriggering(false);
+      setTriggeringId(null);
     }
   };
 
   const bulkTriggerReady = async () => {
-    if (selectedTransfers.size === 0) {
+    const selectedArray = Array.from(selectedTransfers);
+    if (selectedArray.length === 0) {
       toast.warning("No transfers selected");
       return;
     }
     
-    if (!window.confirm(`Trigger ${selectedTransfers.size} selected payout transfers?`)) return;
+    if (!window.confirm(`Trigger ${selectedArray.length} selected payout transfers?`)) return;
     
     setBulkTriggering(true);
     try {
       const token = localStorage.getItem("access_token");
       const response = await axios.post(
         `${API_BASE}/admin/rfid/payout-transfers/trigger-ready`,
-        { transfer_ids: Array.from(selectedTransfers) },
+        { transfer_ids: selectedArray },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       toast.success(`Triggered ${response.data.processed_count || 0} transfers`);
       setSelectedTransfers(new Set());
-      fetchTransfers();
+      await fetchTransfers();
     } catch (error) {
       console.error("Error bulk triggering:", error);
       toast.error("Failed to trigger transfers");
@@ -172,18 +182,22 @@ const PayoutTransfers = () => {
     if (selectedTransfers.size === transfers.length) {
       setSelectedTransfers(new Set());
     } else {
-      setSelectedTransfers(new Set(transfers.map(t => t.id)));
+      // Only select transfers with status 'ready'
+      const readyTransferIds = transfers.filter(t => t.status === 'ready').map(t => t.id);
+      setSelectedTransfers(new Set(readyTransferIds));
     }
   };
 
   const toggleSelect = (transferId) => {
-    const newSet = new Set(selectedTransfers);
-    if (newSet.has(transferId)) {
-      newSet.delete(transferId);
-    } else {
-      newSet.add(transferId);
-    }
-    setSelectedTransfers(newSet);
+    setSelectedTransfers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(transferId)) {
+        newSet.delete(transferId);
+      } else {
+        newSet.add(transferId);
+      }
+      return newSet;
+    });
   };
 
   // Load drivers and trips on mount
@@ -299,6 +313,13 @@ const PayoutTransfers = () => {
     setSelectedTripInfo("");
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
+  // Count how many ready transfers are selected
+  const selectedReadyCount = Array.from(selectedTransfers).filter(id => 
+    transfers.find(t => t.id === id)?.status === 'ready'
+  ).length;
+
+  const hasReadyTransfers = transfers.some(t => t.status === 'ready');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -587,14 +608,14 @@ const PayoutTransfers = () => {
               </div>
             </div>
 
-            {/* Bulk Actions */}
-            {selectedTransfers.size > 0 && (
+            {/* Bulk Actions - Only show if there are selected ready transfers */}
+            {selectedReadyCount > 0 && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center justify-between animate-fadeIn">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <CheckCircleIcon className="w-5 h-5 text-blue-600" />
                   </div>
-                  <span className="text-sm font-medium text-blue-700">{selectedTransfers.size} transfers selected</span>
+                  <span className="text-sm font-medium text-blue-700">{selectedReadyCount} ready transfer{selectedReadyCount !== 1 ? 's' : ''} selected</span>
                 </div>
                 <button
                   onClick={bulkTriggerReady}
@@ -616,9 +637,10 @@ const PayoutTransfers = () => {
                       <th className="px-4 py-4 text-left">
                         <input
                           type="checkbox"
-                          checked={selectedTransfers.size === transfers.length && transfers.length > 0}
+                          checked={hasReadyTransfers && selectedTransfers.size === transfers.filter(t => t.status === 'ready').length}
                           onChange={toggleSelectAll}
                           className="rounded border-gray-300 w-4 h-4 cursor-pointer"
+                          disabled={!hasReadyTransfers}
                         />
                       </th>
                       <th className="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
@@ -655,7 +677,7 @@ const PayoutTransfers = () => {
                               checked={selectedTransfers.has(transfer.id)}
                               onChange={() => toggleSelect(transfer.id)}
                               disabled={transfer.status !== 'ready'}
-                              className="rounded border-gray-300 disabled:opacity-50 cursor-pointer"
+                              className="rounded border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -689,11 +711,15 @@ const PayoutTransfers = () => {
                               {transfer.status === 'ready' && (
                                 <button
                                   onClick={() => triggerTransfer(transfer.id)}
-                                  disabled={triggering}
-                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200"
+                                  disabled={triggeringId === transfer.id}
+                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                   title="Trigger Payout"
                                 >
-                                  <PlayIcon className="w-4 h-4" />
+                                  {triggeringId === transfer.id ? (
+                                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <PlayIcon className="w-4 h-4" />
+                                  )}
                                 </button>
                               )}
                             </div>

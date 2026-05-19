@@ -1,400 +1,3 @@
-// import React, { useEffect, useState, useRef } from "react";
-// import { useLocation, useParams } from "react-router-dom";
-// import axios from "axios";
-// import Sidebar from "../../../assets/components/sidebar/Sidebar";
-// import TopNavbarUltra from "../../../assets/components/navbar/TopNavbar";
-
-// const BASE_URL = "https://be.shuttleapp.transev.site/";
-
-// const getFullUrl = (url) => {
-//   if (!url || url === "NA") return null;
-//   return url.startsWith("http") ? url : BASE_URL + url;
-// };
-
-// const Providers = () => {
-//   const location = useLocation();
-//   const { userId } = useParams();
-//   const singleDriver = location.state?.driver;
-
-//   const [drivers, setDrivers] = useState([]);
-//   const [driver, setDriver] = useState(singleDriver || null);
-//   const hasFetched = useRef(false);
-
-//   const [showRejectBox, setShowRejectBox] = useState(false);
-//   const [rejectionReason, setRejectionReason] = useState("");
-//   const [showConfirm, setShowConfirm] = useState(false);
-//   const [updating, setUpdating] = useState(false);
-
-//   // Fetch driver if coming via URL
-//   useEffect(() => {
-//     const fetchDriverById = async () => {
-//       try {
-//         const token = localStorage.getItem("access_token");
-//         const response = await axios.get(
-//           `https://be.shuttleapp.transev.site/admin/driver/${userId}`,
-//           { headers: { Authorization: `Bearer ${token}` } }
-//         );
-//         setDriver(response.data);
-//       } catch (error) {
-//         console.error("Error fetching driver:", error);
-//         alert("Failed to fetch driver details");
-//       }
-//     };
-
-//     if (!singleDriver && userId) {
-//       fetchDriverById();
-//     }
-//   }, [singleDriver, userId]);
-
-//   // Fetch all drivers for list view
-//   useEffect(() => {
-//     if (singleDriver || hasFetched.current) return;
-//     hasFetched.current = true;
-
-//     const fetchDrivers = async () => {
-//       try {
-//         const token = localStorage.getItem("access_token");
-//         const response = await axios.get(
-//           "https://be.shuttleapp.transev.site/admin/view/all-drivers",
-//           { headers: { Authorization: `Bearer ${token}` } }
-//         );
-//         setDrivers(response.data || []);
-//       } catch (error) {
-//         console.error("Error fetching drivers:", error);
-//       }
-//     };
-//     fetchDrivers();
-//   }, [singleDriver]);
-
-//   const handleVerification = async (status) => {
-//     if (status === "rejected" && !rejectionReason.trim()) {
-//       return alert("Please provide a rejection reason");
-//     }
-
-//     try {
-//       setUpdating(true);
-//       const token = localStorage.getItem("access_token");
-
-//       const payload = {
-//         status,
-//         ...(status === "rejected" ? { rejection_reason: rejectionReason } : {}),
-//       };
-
-//       const response = await axios.post(
-//         `https://be.shuttleapp.transev.site/admin/driver/verify/${driver.user_id}`,
-//         payload,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-
-//       alert(response.data.message);
-
-//       setDriver((prev) => ({
-//         ...prev,
-//         profile: { ...prev.profile, verification: status },
-//         bus_details: { ...prev.bus_details, status },
-//       }));
-
-//       setShowRejectBox(false);
-//       setShowConfirm(false);
-//       setRejectionReason("");
-//     } catch (error) {
-//       console.error("Verification error:", error);
-//       alert("Failed to update verification status");
-//     } finally {
-//       setUpdating(false);
-//     }
-//   };
-
-// const renderVerificationUI = () => {
-//   const profileStatus = driver.profile?.verification?.toLowerCase();
-//   const busStatus = driver.bus_details?.status?.toLowerCase();
-
-//   if (profileStatus === "verified" && busStatus === "verified")
-//     return (
-//       <span className="border border-green-500 text-green-700 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
-//         ✓ Verified
-//       </span>
-//     );
-
-//   if (profileStatus === "rejected" || busStatus === "rejected")
-//     return (
-//       <span className="border border-red-500 text-red-700 bg-red-50 px-3 py-1 rounded-full text-sm font-medium">
-//         ✗ Rejected
-//       </span>
-//     );
-
-//   return (
-//     <div className="flex flex-col space-y-2">
-//       <div className="flex space-x-3">
-//         <button
-//           className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
-//           onClick={() => setShowConfirm(true)}
-//           disabled={updating}
-//         >
-//           Verify Driver & Bus
-//         </button>
-//         <button
-//           className="bg-white border border-black text-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
-//           onClick={() => setShowRejectBox(true)}
-//           disabled={updating}
-//         >
-//           Reject
-//         </button>
-//       </div>
-
-//       {showConfirm && (
-//         <div className="bg-white p-4 rounded-lg border border-black shadow mt-2 flex justify-between items-center">
-//           <span className="text-black font-medium">
-//             Confirm verification for {driver.profile?.name}?
-//           </span>
-//           <div className="flex space-x-2">
-//             <button
-//               className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
-//               onClick={() => handleVerification("verified")}
-//               disabled={updating}
-//             >
-//               Yes
-//             </button>
-//             <button
-//               className="bg-white border border-black text-black px-3 py-1 rounded hover:bg-gray-100"
-//               onClick={() => setShowConfirm(false)}
-//               disabled={updating}
-//             >
-//               Cancel
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {showRejectBox && (
-//         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-//           <div className="bg-white rounded-2xl shadow-lg p-6 w-96">
-//             <h3 className="text-xl font-bold mb-4 text-black">
-//               Reject Driver
-//             </h3>
-//             <textarea
-//               placeholder="Enter rejection reason..."
-//               className="w-full border border-black rounded-lg p-2 mb-4 focus:ring-2 focus:ring-black focus:outline-none"
-//               value={rejectionReason}
-//               onChange={(e) => setRejectionReason(e.target.value)}
-//               disabled={updating}
-//             />
-//             <div className="flex justify-end space-x-3">
-//               <button
-//                 className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-//                 onClick={() => handleVerification("rejected")}
-//                 disabled={updating}
-//               >
-//                 Submit
-//               </button>
-//               <button
-//                 className="bg-white border border-black text-black px-4 py-2 rounded-lg hover:bg-gray-100"
-//                 onClick={() => {
-//                   setShowRejectBox(false);
-//                   setRejectionReason("");
-//                 }}
-//                 disabled={updating}
-//               >
-//                 Cancel
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-// const renderDriverCard = (driver) => (
-//   <div className="max-w-6xl mx-auto space-y-6">
-//     {/* Back Button */}
-//     <button
-//       onClick={() => setDriver(null)}
-//       className="mb-2 flex items-center gap-2 text-gray-600 hover:text-black transition-colors duration-200"
-//     >
-//       <svg 
-//         xmlns="http://www.w3.org/2000/svg" 
-//         className="h-5 w-5" 
-//         viewBox="0 0 20 20" 
-//         fill="currentColor"
-//       >
-//         <path 
-//           fillRule="evenodd" 
-//           d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" 
-//           clipRule="evenodd" 
-//         />
-//       </svg>
-//       <span>Back to all providers</span>
-//     </button>
-
-//     {/* Header */}
-//     <div className="bg-white rounded-2xl shadow p-6 border border-gray-200 flex justify-between items-center">
-//       <div>
-//         <h2 className="text-2xl font-bold text-black">{driver.profile?.name}</h2>
-//         <p className="text-sm text-gray-500">{driver.email}</p>
-//       </div>
-//       <div>{renderVerificationUI()}</div>
-//     </div>
-
-//     {/* Basic Info */}
-//     <div className="bg-white rounded-2xl shadow p-6 border border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-//       <div>
-//         <p className="text-gray-500">Phone</p>
-//         <p className="font-medium">{driver.profile?.phone || "N/A"}</p>
-//       </div>
-//       <div>
-//         <p className="text-gray-500">Active</p>
-//         <p className="font-medium">{driver.is_active ? "Yes" : "No"}</p>
-//       </div>
-//       <div>
-//         <p className="text-gray-500">AC</p>
-//         <p className="font-medium">{driver.bus_details?.ac ? "Yes" : "No"}</p>
-//       </div>
-//       <div>
-//         <p className="text-gray-500">Bus Status</p>
-//         <p className="font-medium">{driver.bus_details?.status || "Pending"}</p>
-//       </div>
-//     </div>
-
-//     {/* Documents Section */}
-//     <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
-//       <h3 className="text-lg font-semibold mb-4 text-black">Documents</h3>
-
-//       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-//         {["aadhaar", "pan", "dl", "passbook"].map((docType) => {
-//           let number, url, title;
-//           switch (docType) {
-//             case "aadhaar":
-//               number = driver.profile?.documents?.aadhaar_number;
-//               url = driver.profile?.documents?.aadhaar_url;
-//               title = "Aadhaar";
-//               break;
-//             case "pan":
-//               number = driver.profile?.documents?.pan_number;
-//               url = driver.profile?.documents?.pan_url;
-//               title = "PAN";
-//               break;
-//             case "dl":
-//               number = driver.profile?.documents?.driving_license_number;
-//               url = driver.profile?.documents?.dl_url;
-//               title = "Driving License";
-//               break;
-//             case "passbook":
-//               number = driver.account_info?.account_number;
-//               url = driver.account_info?.passbook_url;
-//               title = "Passbook";
-//               break;
-//             default:
-//               break;
-//           }
-//           return (
-//             <div key={docType} className="border rounded-xl p-3 hover:shadow transition">
-//               <p className="text-sm text-gray-500 mb-1">{title}</p>
-//               <p className="text-xs mb-2">{number || "N/A"}</p>
-//               {url && (
-//                 <>
-//                   <img
-//                     src={getFullUrl(url)}
-//                     className="w-full h-28 object-cover rounded-lg"
-//                     alt={title}
-//                   />
-//                   <a
-//                     href={getFullUrl(url)}
-//                     target="_blank"
-//                     rel="noreferrer"
-//                     className="text-xs text-blue-600 mt-1 block"
-//                   >
-//                     View Full →
-//                   </a>
-//                 </>
-//               )}
-//             </div>
-//           );
-//         })}
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// const renderAllDrivers = () => (
-//   <div className="overflow-x-auto bg-white rounded-2xl shadow p-6 border border-gray-200">
-//     <table className="min-w-full divide-y divide-gray-200 text-sm">
-//       <thead className="bg-gray-50">
-//         <tr>
-//           <th className="px-6 py-3 text-left font-medium text-black">Name</th>
-//           <th className="px-6 py-3 text-left font-medium text-black">Email</th>
-//           <th className="px-6 py-3 text-left font-medium text-black">Phone</th>
-//           <th className="px-6 py-3 text-left font-medium text-black">Status</th>
-//           <th className="px-6 py-3 text-left font-medium text-black">Action</th>
-//         </tr>
-//       </thead>
-//       <tbody className="divide-y divide-gray-200">
-//         {drivers.map((d) => {
-//           const verificationStatus = d.profile?.verification?.toLowerCase();
-//           const isVerified = verificationStatus === "verified";
-//           const isPending = verificationStatus === "draft" || verificationStatus === "pending" || !verificationStatus;
-
-//           return (
-//             <tr 
-//               key={d.user_id} 
-//               className="hover:bg-gray-50 transition-all cursor-pointer"
-//               onClick={() => setDriver(d)}
-//             >
-//               <td className="px-6 py-3 font-medium text-black">{d.profile?.name || "N/A"}</td>
-//               <td className="px-6 py-3 text-gray-600">{d.email || "N/A"}</td>
-//               <td className="px-6 py-3 text-gray-600">{d.profile?.phone || "N/A"}</td>
-//               <td className="px-6 py-3">
-//                 {isVerified ? (
-//                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-//                     Verified
-//                   </span>
-//                 ) : isPending ? (
-//                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
-//                     Pending
-//                   </span>
-//                 ) : (
-//                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
-//                     Rejected
-//                   </span>
-//                 )}
-//               </td>
-//               <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
-//                 <button
-//                   className="bg-black text-white px-3 py-1 rounded-full text-xs hover:bg-gray-800 transition"
-//                   onClick={() => setDriver(d)}
-//                 >
-//                   {isVerified ? "View Details" : "Verify Details"}
-//                 </button>
-//               </td>
-//             </tr>
-//           );
-//         })}
-//       </tbody>
-//     </table>
-
-//     {drivers.length === 0 && (
-//       <p className="text-center mt-10 text-gray-500">No drivers found</p>
-//     )}
-//   </div>
-// );
-
-//   return (
-//     <div className="flex min-h-screen bg-gray-100">
-//       <Sidebar />
-//       <div className="flex-1 flex flex-col">
-//         <TopNavbarUltra />
-//         <div className="p-6 flex-1 overflow-auto">
-//           <h1 className="text-3xl font-bold text-black mb-6">
-//             {driver ? "Driver Verification" : "All Providers"}
-//           </h1>
-//           {driver ? renderDriverCard(driver) : renderAllDrivers()}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Providers;
-
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -406,6 +9,17 @@ const BASE_URL = "https://be.shuttleapp.transev.site/";
 const getFullUrl = (url) => {
   if (!url || url === "NA") return null;
   return url.startsWith("http") ? url : BASE_URL + url;
+};
+
+const isPDF = (url) => {
+  if (!url) return false;
+  return url.toLowerCase().endsWith('.pdf');
+};
+
+const isImage = (url) => {
+  if (!url) return false;
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
 };
 
 const Providers = () => {
@@ -423,6 +37,7 @@ const Providers = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [modalImage, setModalImage] = useState(null);
+  const [modalPdf, setModalPdf] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -547,6 +162,20 @@ const Providers = () => {
     }
   };
 
+  const handleDocumentClick = (url) => {
+    const fullUrl = getFullUrl(url);
+    if (!fullUrl) return;
+    
+    if (isPDF(fullUrl)) {
+      setModalPdf(fullUrl);
+    } else if (isImage(fullUrl)) {
+      setModalImage(fullUrl);
+    } else {
+      // For other file types, open in new tab
+      window.open(fullUrl, '_blank');
+    }
+  };
+
   // Helper function to get KYC verification status badge
   const getKycVerificationBadge = (verificationStatus, userIdParam = null) => {
     const status = verificationStatus?.toLowerCase();
@@ -583,6 +212,56 @@ const Providers = () => {
       default:
         return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 cursor-default">Not Started</span>;
     }
+  };
+
+  const renderDocumentThumbnail = (url, title) => {
+    const fullUrl = getFullUrl(url);
+    if (!fullUrl) {
+      return (
+        <div className="w-full h-24 sm:h-28 bg-gray-100 rounded-lg flex items-center justify-center">
+          <p className="text-xs text-gray-400">No file</p>
+        </div>
+      );
+    }
+
+    if (isPDF(fullUrl)) {
+      return (
+        <div 
+          className="w-full h-24 sm:h-28 bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition"
+          onClick={() => handleDocumentClick(fullUrl)}
+        >
+          <svg className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13l-3 3-3-3" />
+          </svg>
+          <span className="text-xs text-gray-600">PDF Document</span>
+        </div>
+      );
+    }
+
+    if (isImage(fullUrl)) {
+      return (
+        <img
+          src={fullUrl}
+          className="w-full h-24 sm:h-28 object-cover rounded-lg cursor-pointer"
+          alt={title}
+          onClick={() => handleDocumentClick(fullUrl)}
+        />
+      );
+    }
+
+    // For other file types
+    return (
+      <div 
+        className="w-full h-24 sm:h-28 bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition"
+        onClick={() => handleDocumentClick(fullUrl)}
+      >
+        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span className="text-xs text-gray-600">View File</span>
+      </div>
+    );
   };
 
   const renderVerificationUI = () => {
@@ -795,12 +474,7 @@ const Providers = () => {
                 <p className="text-xs mb-2 break-words">{number || "N/A"}</p>
                 {url && (
                   <>
-                    <img
-                      src={getFullUrl(url)}
-                      className="w-full h-24 sm:h-28 object-cover rounded-lg cursor-pointer"
-                      alt={title}
-                      onClick={() => setModalImage(getFullUrl(url))}
-                    />
+                    {renderDocumentThumbnail(url, title)}
                     <a
                       href={getFullUrl(url)}
                       target="_blank"
@@ -966,6 +640,28 @@ const Providers = () => {
             >
               ✕
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Modal */}
+      {modalPdf && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+          onClick={() => setModalPdf(null)}
+        >
+          <div className="relative w-[90vw] h-[90vh] bg-white rounded-lg" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute -top-2 -right-2 bg-white rounded-full p-1 hover:bg-gray-200 transition w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-sm sm:text-base shadow-lg z-10"
+              onClick={() => setModalPdf(null)}
+            >
+              ✕
+            </button>
+            <iframe
+              src={`${modalPdf}#toolbar=1&navpanes=1&scrollbar=1`}
+              className="w-full h-full rounded-lg"
+              title="PDF Viewer"
+            />
           </div>
         </div>
       )}

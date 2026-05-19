@@ -7,8 +7,6 @@ import { Link } from "react-router-dom";
 import { 
   DevicePhoneMobileIcon, 
   PlusIcon, 
-  FunnelIcon, 
-  XMarkIcon, 
   ChevronLeftIcon, 
   ChevronRightIcon,
   MapPinIcon,
@@ -19,11 +17,13 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   TrashIcon,
-  EyeIcon,
   CalendarIcon,
-  TagIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  UserIcon,
+  TruckIcon
 } from '@heroicons/react/24/outline';
+
+const API_BASE = "https://be.shuttleapp.transev.site";
 
 const DevicesList = () => {
   const [devices, setDevices] = useState([]);
@@ -33,11 +33,12 @@ const DevicesList = () => {
   const [filters, setFilters] = useState({ search: "", status: "" });
   const [actionLoading, setActionLoading] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
   const [expandedDeviceId, setExpandedDeviceId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-
-  const API_BASE = "https://be.shuttleapp.transev.site";
+  
+  // Store all vehicle-driver mappings from the API
+  const [allVehicleOptions, setAllVehicleOptions] = useState([]);
+  const [loadingVehicleInfo, setLoadingVehicleInfo] = useState(false);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -52,11 +53,76 @@ const DevicesList = () => {
       });
       setDevices(response.data.items);
       setTotalCount(response.data.count);
+      
+      // Fetch all vehicle-driver options once
+      await fetchAllVehicleOptions();
     } catch (error) {
       toast.error("Failed to fetch devices");
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch ALL vehicle-driver options (not just by search)
+  const fetchAllVehicleOptions = async () => {
+    setLoadingVehicleInfo(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      let allItems = [];
+      let currentPage = 1;
+      let hasMore = true;
+      
+      // Fetch all pages to get complete list
+      while (hasMore) {
+        const response = await axios.get(`${API_BASE}/admin/rfid/device-vehicle-options`, {
+          params: { page: currentPage, page_size: 100 },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const items = response.data.items || [];
+        allItems = [...allItems, ...items];
+        
+        hasMore = items.length === 100;
+        currentPage++;
+      }
+      
+      setAllVehicleOptions(allItems);
+      console.log("All vehicle options loaded:", allItems);
+    } catch (error) {
+      console.error("Error fetching vehicle options:", error);
+      // If the endpoint doesn't support fetching all, try alternative approach
+      await fetchVehicleOptionsByDrivers();
+    } finally {
+      setLoadingVehicleInfo(false);
+    }
+  };
+
+  // Alternative: Fetch vehicle options by searching for known drivers
+  const fetchVehicleOptionsByDrivers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      // Get unique driver names from devices (if any)
+      const driverNames = [...new Set(devices.map(d => d.driver_name).filter(name => name))];
+      
+      const allItems = [];
+      for (const driverName of driverNames) {
+        try {
+          const response = await axios.get(`${API_BASE}/admin/rfid/device-vehicle-options`, {
+            params: { page: 1, page_size: 25, q: driverName },
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const items = response.data.items || [];
+          allItems.push(...items);
+        } catch (err) {
+          console.error(`Failed to fetch for driver ${driverName}:`, err);
+        }
+      }
+      
+      setAllVehicleOptions(allItems);
+      console.log("Vehicle options by driver:", allItems);
+    } catch (error) {
+      console.error("Error fetching vehicle options by drivers:", error);
     }
   };
 
@@ -163,10 +229,31 @@ const DevicesList = () => {
   const clearFilters = () => {
     setFilters({ search: "", status: "" });
     setPage(1);
-    setShowFilters(false);
   };
 
   const hasActiveFilters = filters.search || filters.status;
+
+  // Helper to get vehicle display info from the loaded options
+  const getVehicleDisplayInfo = (vehicleId) => {
+    if (!vehicleId) return null;
+    // Find matching vehicle by vehicle_id in the loaded options
+    const info = allVehicleOptions.find(item => item.vehicle_id === vehicleId);
+    if (info) {
+      return {
+        driverName: info.driver_name,
+        licensePlate: info.vehicle_license_plate,
+        driverId: info.driver_user_id
+      };
+    }
+    return null;
+  };
+
+  // Helper to safely format coordinates
+  const formatCoordinate = (coord) => {
+    if (!coord) return null;
+    const num = parseFloat(coord);
+    return isNaN(num) ? null : num;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -259,7 +346,7 @@ const DevicesList = () => {
                 <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="Search by serial number or vehicle ID..."
+                    placeholder="Search by serial number..."
                     value={filters.search}
                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
@@ -276,7 +363,7 @@ const DevicesList = () => {
                     <option value="inactive">Inactive</option>
                     <option value="decommissioned">Decommissioned</option>
                   </select>
-                  {(filters.search || filters.status) && (
+                  {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
                       className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -288,7 +375,7 @@ const DevicesList = () => {
               </div>
             </div>
 
-            {/* Devices Grid/List */}
+            {/* Devices List */}
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -322,7 +409,10 @@ const DevicesList = () => {
                   const statusConfig = getStatusConfig(device);
                   const StatusIcon = statusConfig.icon;
                   const lastSeen = formatRelativeTime(device.last_seen_at);
-                  const hasLocation = device.last_seen_lat && device.last_seen_lng;
+                  const lat = formatCoordinate(device.last_seen_lat);
+                  const lng = formatCoordinate(device.last_seen_lng);
+                  const hasLocation = lat !== null && lng !== null;
+                  const vehicleInfo = getVehicleDisplayInfo(device.vehicle_id);
                   
                   return (
                     <div key={device.id} className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow duration-200">
@@ -345,14 +435,41 @@ const DevicesList = () => {
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                              {/* Vehicle Info */}
+                              {/* Vehicle License Plate */}
                               <div className="flex items-start gap-2">
-                                <TagIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+                                <TruckIcon className="w-4 h-4 text-gray-400 mt-0.5" />
                                 <div>
-                                  <p className="text-xs text-gray-500">Vehicle ID</p>
-                                  <code className="text-sm text-gray-900 font-mono">
-                                    {device.vehicle_id}
-                                  </code>
+                                  <p className="text-xs text-gray-500">Vehicle License Plate</p>
+                                  {vehicleInfo ? (
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {vehicleInfo.licensePlate}
+                                    </p>
+                                  ) : loadingVehicleInfo ? (
+                                    <div className="animate-pulse">
+                                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-400 italic">Not assigned</p>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Driver Name */}
+                              <div className="flex items-start gap-2">
+                                <UserIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Driver Name</p>
+                                  {vehicleInfo ? (
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {vehicleInfo.driverName}
+                                    </p>
+                                  ) : loadingVehicleInfo ? (
+                                    <div className="animate-pulse">
+                                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-400 italic">Not assigned</p>
+                                  )}
                                 </div>
                               </div>
                               
@@ -364,9 +481,6 @@ const DevicesList = () => {
                                     <p className="text-xs text-gray-500">Last Seen</p>
                                     <p className="text-sm text-gray-900">
                                       {lastSeen}
-                                      <span className="text-xs text-gray-400 ml-2">
-                                        ({new Date(device.last_seen_at).toLocaleString()})
-                                      </span>
                                     </p>
                                   </div>
                                 </div>
@@ -379,7 +493,7 @@ const DevicesList = () => {
                                   <div>
                                     <p className="text-xs text-gray-500">Location</p>
                                     <p className="text-sm text-gray-900">
-                                      {device.last_seen_lat.toFixed(4)}°, {device.last_seen_lng.toFixed(4)}°
+                                      {lat.toFixed(4)}°, {lng.toFixed(4)}°
                                     </p>
                                   </div>
                                 </div>
@@ -435,16 +549,39 @@ const DevicesList = () => {
                       {expandedDeviceId === device.id && (
                         <div className="border-t border-gray-100 bg-gray-50 px-6 py-5 rounded-b-xl">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            {/* Notes Section */}
+                            {/* Vehicle & Driver Details */}
                             <div className="bg-white rounded-lg p-4 border border-gray-200">
                               <div className="flex items-center gap-2 mb-3">
-                                <DocumentTextIcon className="w-5 h-5 text-gray-500" />
-                                <h4 className="font-medium text-gray-900">Device Notes</h4>
+                                <TruckIcon className="w-5 h-5 text-gray-500" />
+                                <h4 className="font-medium text-gray-900">Vehicle & Driver</h4>
                               </div>
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <p className="text-sm text-gray-700">
-                                  {device.notes || <span className="text-gray-400 italic">No additional notes</span>}
-                                </p>
+                              <div className="space-y-3">
+                                {vehicleInfo ? (
+                                  <>
+                                    <div>
+                                      <p className="text-xs text-gray-500">License Plate</p>
+                                      <p className="text-sm font-mono font-medium text-gray-900">{vehicleInfo.licensePlate}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Driver Name</p>
+                                      <p className="text-sm font-medium text-gray-900">{vehicleInfo.driverName}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Driver User ID</p>
+                                      <p className="text-sm font-mono text-gray-600">{vehicleInfo.driverId}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Vehicle ID (UUID)</p>
+                                      <p className="text-xs font-mono text-gray-400 break-all">{device.vehicle_id}</p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div>
+                                    <p className="text-sm text-gray-500 mb-2">No vehicle or driver information available</p>
+                                    <p className="text-xs text-gray-400">Vehicle ID: {device.vehicle_id}</p>
+                                    <p className="text-xs text-gray-400 mt-2">This device is not currently assigned to any vehicle.</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             
@@ -459,11 +596,11 @@ const DevicesList = () => {
                                   <div>
                                     <p className="text-xs text-gray-500">Coordinates</p>
                                     <p className="text-sm font-mono text-gray-900">
-                                      {device.last_seen_lat.toFixed(6)}, {device.last_seen_lng.toFixed(6)}
+                                      {lat.toFixed(6)}, {lng.toFixed(6)}
                                     </p>
                                   </div>
                                   <a
-                                    href={`https://www.google.com/maps?q=${device.last_seen_lat},${device.last_seen_lng}`}
+                                    href={`https://www.google.com/maps?q=${lat},${lng}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
@@ -476,7 +613,7 @@ const DevicesList = () => {
                               )}
                             </div>
                             
-                            {/* Metadata */}
+                            {/* Timeline */}
                             <div className="bg-white rounded-lg p-4 border border-gray-200">
                               <div className="flex items-center gap-2 mb-3">
                                 <CalendarIcon className="w-5 h-5 text-gray-500" />

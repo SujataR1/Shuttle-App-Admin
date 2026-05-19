@@ -581,10 +581,10 @@
 //             <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
 //                 <Sidebar onClose={() => setSidebarOpen(false)} />
 //                 <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
-//                     <TopNavbarUltra 
-//                         onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-//                         isMobile={isMobile} 
-//                         title="Trip Intelligence" 
+//                     <TopNavbarUltra
+//                         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+//                         isMobile={isMobile}
+//                         title="Trip Intelligence"
 //                     />
 //                     <div className="flex-1 flex items-center justify-center">
 //                         <div className="text-center">
@@ -603,10 +603,10 @@
 //             <Sidebar onClose={() => setSidebarOpen(false)} />
 
 //             <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${!isMobile ? 'lg:ml-72' : ''}`}>
-//                 <TopNavbarUltra 
-//                     onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-//                     isMobile={isMobile} 
-//                     title="Trip Intelligence" 
+//                 <TopNavbarUltra
+//                     onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+//                     isMobile={isMobile}
+//                     title="Trip Intelligence"
 //                 />
 
 //                 <div className="flex-1 overflow-hidden p-3 sm:p-4 md:p-6">
@@ -673,11 +673,10 @@
 //                                                 onTouchCancel={(e) => {
 //                                                     e.currentTarget.style.transform = '';
 //                                                 }}
-//                                                 className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${
-//                                                     isSelected
+//                                                 className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${isSelected
 //                                                         ? "border-indigo-500 bg-gradient-to-r from-indigo-50 to-white shadow-lg"
 //                                                         : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
-//                                                 }`}
+//                                                     }`}
 //                                                 style={{ transform: 'scale(1)', transition: 'transform 0.1s ease' }}
 //                                             >
 //                                                 <div className="flex justify-between items-start mb-2">
@@ -860,6 +859,70 @@
 //                                         </div>
 //                                     )}
 
+//                                     {/* RFID SECTION - NEW */}
+//                                     {selectedTrip.rfid && (
+//                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+//                                             <div className="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-white">
+//                                                 <div className="flex items-center justify-between">
+//                                                     <div>
+//                                                         <h3 className="font-semibold text-gray-800 text-sm sm:text-base">RFID Trip Details</h3>
+//                                                         <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">RFID seat and ride information</p>
+//                                                     </div>
+//                                                     <div className="bg-indigo-100 rounded-full p-2">
+//                                                         <svg className="h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+//                                                         </svg>
+//                                                     </div>
+//                                                 </div>
+//                                             </div>
+//                                             <div className="p-4 sm:p-5">
+//                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+//                                                     <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
+//                                                         <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Reserved Seat Count</p>
+//                                                         <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.reserved_seat_count || 0}</p>
+//                                                     </div>
+//                                                     <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
+//                                                         <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Total RFID Rides</p>
+//                                                         <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.total_rfid_rides || 0}</p>
+//                                                     </div>
+//                                                     <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
+//                                                         <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">RFID Passengers</p>
+//                                                         <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.passengers?.length || 0}</p>
+//                                                     </div>
+//                                                 </div>
+
+//                                                 {/* RFID Passengers List (if any) */}
+//                                                 {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
+//                                                     <div className="mt-4 pt-3 border-t border-gray-100">
+//                                                         <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-2">
+//                                                             <svg className="h-3 w-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+//                                                             </svg>
+//                                                             RFID Passengers ({selectedTrip.rfid.passengers.length})
+//                                                         </p>
+//                                                         <div className="space-y-2 max-h-48 overflow-y-auto">
+//                                                             {selectedTrip.rfid.passengers.map((passenger, idx) => (
+//                                                                 <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+//                                                                     <div className="flex items-center gap-2">
+//                                                                         <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+//                                                                             <span className="text-indigo-600 text-xs font-semibold">
+//                                                                                 {passenger.name?.charAt(0) || "?"}
+//                                                                             </span>
+//                                                                         </div>
+//                                                                         <span className="text-sm text-gray-700">{passenger.name || "N/A"}</span>
+//                                                                     </div>
+//                                                                     {passenger.boarded && (
+//                                                                         <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Boarded</span>
+//                                                                     )}
+//                                                                 </div>
+//                                                             ))}
+//                                                         </div>
+//                                                     </div>
+//                                                 )}
+//                                             </div>
+//                                         </div>
+//                                     )}
+
 //                                     {/* STATS GRID */}
 //                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 //                                         <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
@@ -903,7 +966,7 @@
 //                                             {selectedTrip.occupancy?.passengers?.length > 0 ? (
 //                                                 <div className="space-y-2 max-h-96 overflow-y-auto">
 //                                                     {selectedTrip.occupancy.passengers.map((passenger, index) => {
-//                                                         const hasActualDrop = passenger.actual_drop_stop_name && 
+//                                                         const hasActualDrop = passenger.actual_drop_stop_name &&
 //                                                             passenger.actual_drop_stop_name !== passenger.dropoff_stop_name;
 
 //                                                         return (
@@ -938,13 +1001,12 @@
 //                                                                     </div>
 //                                                                 </div>
 //                                                                 <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-0">
-//                                                                     <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
-//                                                                         passenger.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-//                                                                         passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
-//                                                                         passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
-//                                                                         passenger.status === "boarded" ? "bg-blue-100 text-blue-700" : 
-//                                                                         "bg-gray-100 text-gray-600"
-//                                                                     }`}>
+//                                                                     <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${passenger.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+//                                                                             passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
+//                                                                                 passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+//                                                                                     passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+//                                                                                         "bg-gray-100 text-gray-600"
+//                                                                         }`}>
 //                                                                         {passenger.status}
 //                                                                     </span>
 //                                                                     <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-indigo-500" />
@@ -1291,9 +1353,9 @@
 //                                             <div>
 //                                                 <label className="text-xs text-gray-500 uppercase tracking-wide">Trip Date</label>
 //                                                 <p className="text-sm text-gray-700 mt-1">
-//                                                     {currentTripBooking?.created_at ? new Date(currentTripBooking.created_at).toLocaleString() : 
-//                                                      selectedTrip.timing?.actual_start ? new Date(selectedTrip.timing.actual_start).toLocaleString() : 
-//                                                      selectedTrip.timing?.planned_start ? new Date(selectedTrip.timing.planned_start).toLocaleString() : 'N/A'}
+//                                                     {currentTripBooking?.created_at ? new Date(currentTripBooking.created_at).toLocaleString() :
+//                                                         selectedTrip.timing?.actual_start ? new Date(selectedTrip.timing.actual_start).toLocaleString() :
+//                                                             selectedTrip.timing?.planned_start ? new Date(selectedTrip.timing.planned_start).toLocaleString() : 'N/A'}
 //                                                 </p>
 //                                             </div>
 //                                         </div>
@@ -1323,7 +1385,6 @@
 // };
 
 // export default TripDetailsPage;
-
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -1520,7 +1581,6 @@ const TripDetailsPage = () => {
     const [showPassengerModal, setShowPassengerModal] = useState(false);
     const [loadingPassenger, setLoadingPassenger] = useState(false);
     const [passengerDetails, setPassengerDetails] = useState(null);
-    // NEW: Store current trip's booking for the selected passenger
     const [currentTripBooking, setCurrentTripBooking] = useState(null);
 
     // Check if mobile/tablet view
@@ -1685,7 +1745,6 @@ const TripDetailsPage = () => {
         }
     };
 
-    // UPDATED: Fetch only the passenger's profile info, not full history
     const fetchPassengerProfile = async (passengerId) => {
         if (!passengerId || passengerId === 'undefined') {
             console.error("Invalid passenger ID:", passengerId);
@@ -1697,7 +1756,6 @@ const TripDetailsPage = () => {
         try {
             const url = `${BASE_URL}/passenger/${passengerId}`;
             const res = await axios.get(url, axiosConfig);
-            // Only store the profile info, not the booking history
             setPassengerDetails({
                 profile: res.data.profile,
                 email: res.data.email,
@@ -1719,14 +1777,11 @@ const TripDetailsPage = () => {
         }
     };
 
-    // UPDATED: Handle passenger click - show only current trip's booking
     const handlePassengerClick = async (passenger) => {
         setSelectedPassenger(passenger);
         setShowPassengerModal(true);
         setPassengerDetails(null);
 
-        // Store the current trip's booking data for this passenger
-        // This is the booking info from the trip API response
         setCurrentTripBooking({
             booking_id: selectedTrip.trip_id,
             passenger_id: passenger.passenger_id,
@@ -1737,10 +1792,9 @@ const TripDetailsPage = () => {
             actual_drop_stop_name: passenger.actual_drop_stop_name,
             actual_dropped_at: passenger.actual_dropped_at,
             created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
-            fare: null // Fare might not be available in trip API, can be fetched separately if needed
+            fare: null
         });
 
-        // Fetch just the passenger's profile info (name, email, etc.)
         if (passenger.passenger_id) {
             await fetchPassengerProfile(passenger.passenger_id);
         } else {
@@ -2185,7 +2239,7 @@ const TripDetailsPage = () => {
                                         </div>
                                     )}
 
-                                    {/* RFID SECTION - NEW */}
+                                    {/* RFID SECTION - UPDATED WITH FULL DETAILS */}
                                     {selectedTrip.rfid && (
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                             <div className="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-white">
@@ -2217,28 +2271,122 @@ const TripDetailsPage = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* RFID Passengers List (if any) */}
+                                                {/* RFID Passengers List - FULL DETAILS */}
                                                 {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
                                                     <div className="mt-4 pt-3 border-t border-gray-100">
-                                                        <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                                        <p className="text-xs font-medium text-gray-700 mb-3 flex items-center gap-2">
                                                             <svg className="h-3 w-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             </svg>
                                                             RFID Passengers ({selectedTrip.rfid.passengers.length})
                                                         </p>
-                                                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                                                        <div className="space-y-3 max-h-96 overflow-y-auto">
                                                             {selectedTrip.rfid.passengers.map((passenger, idx) => (
-                                                                <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                                            <span className="text-indigo-600 text-xs font-semibold">
-                                                                                {passenger.name?.charAt(0) || "?"}
-                                                                            </span>
+                                                                <div key={idx} className="bg-gray-50 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all">
+                                                                    {/* Passenger Header */}
+                                                                    <div className="flex items-center justify-between mb-3">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                                                                <span className="text-indigo-600 text-xs font-semibold">
+                                                                                    {passenger.passenger_name?.charAt(0) || "?"}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="font-semibold text-gray-800 text-sm">{passenger.passenger_name || "N/A"}</p>
+                                                                                <p className="text-[10px] text-gray-500">{passenger.passenger_email || "No email"}</p>
+                                                                            </div>
                                                                         </div>
-                                                                        <span className="text-sm text-gray-700">{passenger.name || "N/A"}</span>
+                                                                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                                                                            passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                            passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
+                                                                            'bg-gray-100 text-gray-600'
+                                                                        }`}>
+                                                                            {passenger.transfer_status || passenger.status || "N/A"}
+                                                                        </span>
                                                                     </div>
-                                                                    {passenger.boarded && (
-                                                                        <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Boarded</span>
+
+                                                                    {/* Card Info */}
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                                            </svg>
+                                                                            <span className="text-gray-600">Card:</span>
+                                                                            <span className="font-mono text-gray-800">{passenger.card_uid_masked || "N/A"}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                                                            </svg>
+                                                                            <span className="text-gray-600">Ride ID:</span>
+                                                                            <span className="font-mono text-gray-800 text-[10px]">{passenger.rfid_ride_id?.slice(0, 12)}...</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Stops */}
+                                                                    <div className="space-y-1.5 text-xs">
+                                                                        <div className="flex items-start gap-2">
+                                                                            <span className="text-green-600 mt-0.5">🚏</span>
+                                                                            <div>
+                                                                                <span className="text-gray-500">Pickup:</span>
+                                                                                <span className="text-gray-700 ml-1">{passenger.pickup_stop?.name || "N/A"}</span>
+                                                                                {passenger.pickup_stop?.sequence && (
+                                                                                    <span className="text-gray-400 text-[10px] ml-1">(Stop {passenger.pickup_stop.sequence})</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-start gap-2">
+                                                                            <span className="text-red-600 mt-0.5">📍</span>
+                                                                            <div>
+                                                                                <span className="text-gray-500">Dropoff:</span>
+                                                                                <span className="text-gray-700 ml-1">{passenger.dropoff_stop?.name || "N/A"}</span>
+                                                                                {passenger.dropoff_stop?.sequence && (
+                                                                                    <span className="text-gray-400 text-[10px] ml-1">(Stop {passenger.dropoff_stop.sequence})</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Amounts */}
+                                                                    <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-gray-200">
+                                                                        <div className="text-center">
+                                                                            <p className="text-[10px] text-gray-400">Fare</p>
+                                                                            <p className="text-sm font-bold text-gray-800">₹{passenger.fare_amount?.toFixed(2) || "0"}</p>
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                            <p className="text-[10px] text-gray-400">Driver Payout</p>
+                                                                            <p className="text-sm font-bold text-emerald-600">₹{passenger.driver_payout_amount?.toFixed(2) || "0"}</p>
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                            <p className="text-[10px] text-gray-400">Fare Reversed</p>
+                                                                            <p className="text-sm font-bold text-red-500">₹{passenger.fare_reversed_amount?.toFixed(2) || "0"}</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Timestamps */}
+                                                                    {(passenger.boarded_at || passenger.dropped_at) && (
+                                                                        <div className="mt-2 pt-2 border-t border-gray-100">
+                                                                            {passenger.boarded_at && (
+                                                                                <p className="text-[9px] text-gray-400">
+                                                                                    Boarded: {new Date(passenger.boarded_at).toLocaleString()}
+                                                                                </p>
+                                                                            )}
+                                                                            {passenger.dropped_at && (
+                                                                                <p className="text-[9px] text-gray-400">
+                                                                                    Dropped: {new Date(passenger.dropped_at).toLocaleString()}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Transfer Status Note */}
+                                                                    {passenger.transfer_status === 'withheld' && (
+                                                                        <div className="mt-2 p-2 bg-orange-50 rounded-lg border border-orange-100">
+                                                                            <p className="text-[10px] text-orange-700 flex items-center gap-1">
+                                                                                <span>⚠️</span>
+                                                                                Payout withheld - funding source not ready
+                                                                            </p>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             ))}
@@ -2570,7 +2718,7 @@ const TripDetailsPage = () => {
                 </div>
             )}
 
-            {/* PASSENGER DETAILS MODAL - SHOWS ONLY CURRENT TRIP BOOKING */}
+            {/* PASSENGER DETAILS MODAL */}
             {showPassengerModal && selectedPassenger && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowPassengerModal(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -2669,7 +2817,8 @@ const TripDetailsPage = () => {
                                                     )}
                                                     {(currentTripBooking?.actual_drop_stop_name !== currentTripBooking?.dropoff_stop_name) && (
                                                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                                                            <span>⚠️</span> Passenger was dropped at a different location than planned
+                                                            <span>⚠️</span>
+                                                            Passenger was dropped at a different location than planned
                                                         </p>
                                                     )}
                                                 </div>
