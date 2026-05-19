@@ -116,6 +116,10 @@ import CardActivityLog from "./pages/admin/reports/CardActivityLog";
 import SeatPolicy from "./pages/admin/devices/SeatPolicy";
 import ScanEvents from "./pages/admin/rfid/ScanEvents";
 import RideHistory from "./pages/admin/rfid/RideHistory";
+import PayoutDashboard from "./pages/admin/rfid/PayoutDashboard";
+import PayoutTransfers from "./pages/admin/rfid/PayoutTransfers";
+import PayoutTransferDetail from "./pages/admin/rfid/PayoutTransferDetail";
+import PayoutReversals from "./pages/admin/rfid/PayoutReversals";
 
 function App() {
   return (
@@ -184,6 +188,13 @@ function App() {
       
       {/* Catch-all redirect - MUST BE LAST */}
       <Route path="*" element={<Navigate to="/admin/login" replace />} />
+
+      {/* RFID Management - Settings */}
+      <Route path="/admin/rfid/payout-dashboard" element={<PayoutDashboard />} /> 
+      <Route path="/admin/rfid/payout-transfers" element={<PayoutTransfers />} />
+      <Route path="/admin/rfid/payout-transfers/:transferId" element={<PayoutTransferDetail />} />
+      <Route path="/admin/rfid/payout-reversals" element={<PayoutReversals />} />
+      <Route path="/admin/rfid/payout-ready" element={<PayoutTransfers />} />
     </Routes>
   );
 }

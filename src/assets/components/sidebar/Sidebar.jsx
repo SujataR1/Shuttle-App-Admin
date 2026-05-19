@@ -490,7 +490,6 @@
 // };
 
 // export default Sidebar;
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -513,7 +512,10 @@ import {
   ChartBarIcon,
   UserCircleIcon,
   ShieldCheckIcon,
-  QrCodeIcon
+  QrCodeIcon,
+  CurrencyRupeeIcon,
+  BanknotesIcon,
+  ArrowPathIcon
 } from "@heroicons/react/24/outline";
 
 const menuSections = [
@@ -567,6 +569,21 @@ const menuSections = [
         name: "Seat Policy",
         icon: ShieldCheckIcon,
         path: "/admin/rfid/seat-policy",
+      },
+    ],
+  },
+  {
+    title: "RFID PAYOUT MANAGEMENT",
+    items: [
+      {
+        name: "Payout Operations",
+        icon: CurrencyRupeeIcon,
+        subItems: [
+          { name: "Payout Dashboard", path: "/admin/rfid/payout-dashboard" },
+          { name: "Payout Transfers", path: "/admin/rfid/payout-transfers" },
+          { name: "Ready Queue", path: "/admin/rfid/payout-ready" },
+          { name: "Reversal Audit", path: "/admin/rfid/payout-reversals" },
+        ],
       },
     ],
   },
@@ -664,6 +681,8 @@ const Sidebar = ({ onClose }) => {
             const menuKey = `${section.title}-${iIdx}`;
             newOpenSubmenus[menuKey] = true;
           }
+        } else if (item.path === location.pathname) {
+          // For non-submenu items, we don't need to expand anything
         }
       });
     });

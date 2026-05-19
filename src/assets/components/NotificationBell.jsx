@@ -399,7 +399,6 @@
 // };
 
 // export default NotificationBell;
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { BellIcon, CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -418,7 +417,6 @@ const NotificationBell = () => {
   const reconnectTimeoutRef = useRef(null);
 
   const token = localStorage.getItem("access_token");
-  
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -676,7 +674,7 @@ const NotificationBell = () => {
         
         {/* Badge - Shows number of unread notifications */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full">
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full shadow-sm">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

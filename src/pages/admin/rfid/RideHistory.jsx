@@ -8,10 +8,8 @@ import {
   ClockIcon,
   DocumentTextIcon,
   CurrencyRupeeIcon,
-  UserIcon,
-  MapPinIcon,
-  CalendarIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 const RideHistory = () => {
@@ -38,11 +36,26 @@ const RideHistory = () => {
         `${API_BASE}/admin/rfid/rides/${rideId}/money-detail`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setRideDetails(response.data);
+      
+      // The response structure might be nested, let's handle it safely
+      const data = response.data;
+      setRideDetails({
+        ride: data.ride || data,
+        ledger_entries: data.ledger_entries || data.entries || [],
+        funding_allocations: data.funding_allocations || data.allocations || [],
+        payout_transfers: data.payout_transfers || data.transfers || [],
+        ledger_entry_count: data.ledger_entry_count || data.ledger_entries?.length || 0,
+        funding_allocation_count: data.funding_allocation_count || data.funding_allocations?.length || 0,
+        payout_transfer_count: data.payout_transfer_count || data.payout_transfers?.length || 0,
+        payout_transfer_reversal_count: data.payout_transfer_reversal_count || 0
+      });
+      
       toast.success("Ride details loaded successfully");
     } catch (error) {
       console.error("Error fetching ride details:", error);
-      const message = error.response?.data?.detail?.message || "Failed to fetch ride details. Please check the Ride ID.";
+      const message = error.response?.data?.detail?.message || 
+                      error.response?.data?.message || 
+                      "Failed to fetch ride details. Please check the Ride ID.";
       setError(message);
       toast.error(message);
     } finally {
@@ -96,7 +109,7 @@ const RideHistory = () => {
                   value={rideId}
                   onChange={(e) => setRideId(e.target.value)}
                   placeholder="e.g., ride_123456789"
-                  className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent font-mono text-sm"
                   onKeyPress={(e) => e.key === 'Enter' && fetchRideMoneyDetails()}
                 />
                 <button
@@ -104,7 +117,11 @@ const RideHistory = () => {
                   disabled={loading}
                   className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  <MagnifyingGlassIcon className="w-4 h-4" />
+                  {loading ? (
+                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <MagnifyingGlassIcon className="w-4 h-4" />
+                  )}
                   {loading ? "Searching..." : "Search"}
                 </button>
               </div>
@@ -130,7 +147,7 @@ const RideHistory = () => {
             )}
 
             {/* Ride Details Display */}
-            {rideDetails && (
+            {rideDetails && rideDetails.ride && (
               <div className="space-y-6">
                 {/* Ride Information Card */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -144,39 +161,39 @@ const RideHistory = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Ride ID</p>
-                        <p className="text-sm font-mono text-gray-900 break-all">{rideDetails.ride?.id || 'N/A'}</p>
+                        <p className="text-sm font-mono text-gray-900 break-all">{rideDetails.ride.id || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Status</p>
                         <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          rideDetails.ride?.status === 'completed' 
+                          rideDetails.ride.status === 'completed' 
                             ? 'bg-emerald-50 text-emerald-700'
-                            : rideDetails.ride?.status === 'cancelled'
+                            : rideDetails.ride.status === 'cancelled'
                             ? 'bg-red-50 text-red-700'
                             : 'bg-amber-50 text-amber-700'
                         }`}>
-                          {rideDetails.ride?.status?.toUpperCase() || 'N/A'}
+                          {rideDetails.ride.status?.toUpperCase() || 'N/A'}
                         </span>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Amount</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(rideDetails.ride?.amount)}</p>
+                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(rideDetails.ride.amount)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Started At</p>
                         <div className="flex items-center gap-1">
                           <ClockIcon className="w-3 h-3 text-gray-400" />
-                          <span className="text-sm text-gray-900">{formatDateTime(rideDetails.ride?.started_at)}</span>
+                          <span className="text-sm text-gray-900">{formatDateTime(rideDetails.ride.started_at)}</span>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Completed At</p>
                         <div className="flex items-center gap-1">
                           <ClockIcon className="w-3 h-3 text-gray-400" />
-                          <span className="text-sm text-gray-900">{formatDateTime(rideDetails.ride?.completed_at)}</span>
+                          <span className="text-sm text-gray-900">{formatDateTime(rideDetails.ride.completed_at)}</span>
                         </div>
                       </div>
-                      {rideDetails.ride?.card_id && (
+                      {rideDetails.ride.card_id && (
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Card ID</p>
                           <p className="text-sm font-mono text-gray-900">{rideDetails.ride.card_id}</p>
@@ -219,15 +236,15 @@ const RideHistory = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           {rideDetails.ledger_entries.map((entry, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
+                            <tr key={idx} className="hover:bg-gray-50 transition">
                               <td className="px-6 py-4 text-sm text-gray-900">{entry.type || 'N/A'}</td>
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(entry.amount)}</td>
                               <td className="px-6 py-4 text-sm text-gray-600">{entry.description || '-'}</td>
@@ -250,14 +267,14 @@ const RideHistory = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           {rideDetails.funding_allocations.map((allocation, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
+                            <tr key={idx} className="hover:bg-gray-50 transition">
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(allocation.amount)}</td>
                               <td className="px-6 py-4 text-sm text-gray-600">{allocation.source || 'N/A'}</td>
                               <td className="px-6 py-4 text-sm text-gray-500">{formatDateTime(allocation.created_at)}</td>
@@ -279,15 +296,15 @@ const RideHistory = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipient</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           {rideDetails.payout_transfers.map((transfer, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
+                            <tr key={idx} className="hover:bg-gray-50 transition">
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(transfer.amount)}</td>
                               <td className="px-6 py-4 text-sm text-gray-600">{transfer.recipient_id || 'N/A'}</td>
                               <td className="px-6 py-4">
