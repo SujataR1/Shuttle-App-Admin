@@ -741,7 +741,9 @@ const TransactionsPage = () => {
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Comm %</th>
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Admin Earned</th>
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Driver Payout</th>
-                                            <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Audit</th>
+                                            <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase"> Audit
+                                                <span className="ml-1 cursor-help text-gray-400" title="Financial audit status - Passed means transaction calculations are correct">ⓘ</span>
+                                                </th>
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Status</th>
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Payment</th>
                                             <th className="p-2 sm:p-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Date</th>

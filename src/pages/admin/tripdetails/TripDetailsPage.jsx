@@ -1385,6 +1385,10 @@
 // };
 
 // export default TripDetailsPage;
+
+
+
+
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -2239,162 +2243,225 @@ const TripDetailsPage = () => {
                                         </div>
                                     )}
 
-                                    {/* RFID SECTION - UPDATED WITH FULL DETAILS */}
-                                    {selectedTrip.rfid && (
-                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-white">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">RFID Trip Details</h3>
-                                                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">RFID seat and ride information</p>
-                                                    </div>
-                                                    <div className="bg-indigo-100 rounded-full p-2">
-                                                        <svg className="h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
+{/* RFID SECTION - ELEGANT REDESIGN */}
+{selectedTrip.rfid && (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-gray-100">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">RFID Trip Details</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Seat reservations & ride information</p>
+                </div>
+                <div className="bg-indigo-100 rounded-xl p-2.5">
+                    <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 p-5 bg-gray-50/30">
+            <div className="text-center">
+                <p className="text-xs text-gray-500 mb-1">Reserved Seats</p>
+                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.reserved_seat_count || 0}</p>
+            </div>
+            <div className="text-center">
+                <p className="text-xs text-gray-500 mb-1">Total RFID Rides</p>
+                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.total_rfid_rides || 0}</p>
+            </div>
+            <div className="text-center">
+                <p className="text-xs text-gray-500 mb-1">RFID Passengers</p>
+                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.passengers?.length || 0}</p>
+            </div>
+        </div>
+
+        {/* Passengers Section */}
+        {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
+            <div className="p-5 pt-0">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <svg className="h-3 w-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">Passengers</span>
+                        <span className="text-xs text-gray-400">{selectedTrip.rfid.passengers.length}</span>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    {selectedTrip.rfid.passengers.map((passenger, idx) => (
+                        <div key={idx} className="group">
+                            {/* Main Passenger Card */}
+                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
+                                {/* Header */}
+                                <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                                <span className="text-indigo-700 font-semibold text-sm">
+                                                    {passenger.passenger_name?.charAt(0) || "?"}
+                                                </span>
                                             </div>
-                                            <div className="p-4 sm:p-5">
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                    <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
-                                                        <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Reserved Seat Count</p>
-                                                        <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.reserved_seat_count || 0}</p>
-                                                    </div>
-                                                    <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
-                                                        <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Total RFID Rides</p>
-                                                        <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.total_rfid_rides || 0}</p>
-                                                    </div>
-                                                    <div className="bg-indigo-50/50 rounded-xl p-3 sm:p-4 border border-indigo-100">
-                                                        <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">RFID Passengers</p>
-                                                        <p className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1">{selectedTrip.rfid.passengers?.length || 0}</p>
-                                                    </div>
-                                                </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900 text-sm">{passenger.passenger_name || "N/A"}</p>
+                                                <p className="text-xs text-gray-500">{passenger.passenger_email || "No email"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+                                                passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
+                                                'bg-gray-100 text-gray-600'
+                                            }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                    passenger.transfer_status === 'completed' ? 'bg-green-500' :
+                                                    passenger.transfer_status === 'withheld' ? 'bg-orange-500' :
+                                                    'bg-gray-400'
+                                                }`}></span>
+                                                {passenger.transfer_status || passenger.status || "Unknown"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                                {/* RFID Passengers List - FULL DETAILS */}
-                                                {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
-                                                    <div className="mt-4 pt-3 border-t border-gray-100">
-                                                        <p className="text-xs font-medium text-gray-700 mb-3 flex items-center gap-2">
-                                                            <svg className="h-3 w-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                            RFID Passengers ({selectedTrip.rfid.passengers.length})
-                                                        </p>
-                                                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                                                            {selectedTrip.rfid.passengers.map((passenger, idx) => (
-                                                                <div key={idx} className="bg-gray-50 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all">
-                                                                    {/* Passenger Header */}
-                                                                    <div className="flex items-center justify-between mb-3">
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                                                <span className="text-indigo-600 text-xs font-semibold">
-                                                                                    {passenger.passenger_name?.charAt(0) || "?"}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="font-semibold text-gray-800 text-sm">{passenger.passenger_name || "N/A"}</p>
-                                                                                <p className="text-[10px] text-gray-500">{passenger.passenger_email || "No email"}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                                                passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
-                                                                                    'bg-gray-100 text-gray-600'
-                                                                            }`}>
-                                                                            {passenger.transfer_status || passenger.status || "N/A"}
-                                                                        </span>
-                                                                    </div>
+                                {/* Body */}
+                                <div className="p-4 space-y-3">
+                                    {/* Card & Ride Info */}
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                        <div className="flex items-center gap-1.5">
+                                            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                            </svg>
+                                            <span className="text-gray-500">Card:</span>
+                                            <span className="font-mono text-gray-700">{passenger.card_uid_masked || "N/A"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                            </svg>
+                                            <span className="text-gray-500">Ride ID:</span>
+                                            <span className="font-mono text-gray-700 text-xs">{passenger.rfid_ride_id?.slice(0, 12)}...</span>
+                                        </div>
+                                    </div>
 
-                                                                    {/* Card Info */}
-                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                                                            </svg>
-                                                                            <span className="text-gray-600">Card:</span>
-                                                                            <span className="font-mono text-gray-800">{passenger.card_uid_masked || "N/A"}</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                                                            </svg>
-                                                                            <span className="text-gray-600">Ride ID:</span>
-                                                                            <span className="font-mono text-gray-800 text-[10px]">{passenger.rfid_ride_id?.slice(0, 12)}...</span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Stops */}
-                                                                    <div className="space-y-1.5 text-xs">
-                                                                        <div className="flex items-start gap-2">
-                                                                            <span className="text-green-600 mt-0.5">🚏</span>
-                                                                            <div>
-                                                                                <span className="text-gray-500">Pickup:</span>
-                                                                                <span className="text-gray-700 ml-1">{passenger.pickup_stop?.name || "N/A"}</span>
-                                                                                {passenger.pickup_stop?.sequence && (
-                                                                                    <span className="text-gray-400 text-[10px] ml-1">(Stop {passenger.pickup_stop.sequence})</span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-start gap-2">
-                                                                            <span className="text-red-600 mt-0.5">📍</span>
-                                                                            <div>
-                                                                                <span className="text-gray-500">Dropoff:</span>
-                                                                                <span className="text-gray-700 ml-1">{passenger.dropoff_stop?.name || "N/A"}</span>
-                                                                                {passenger.dropoff_stop?.sequence && (
-                                                                                    <span className="text-gray-400 text-[10px] ml-1">(Stop {passenger.dropoff_stop.sequence})</span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Amounts */}
-                                                                    <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-gray-200">
-                                                                        <div className="text-center">
-                                                                            <p className="text-[10px] text-gray-400">Fare</p>
-                                                                            <p className="text-sm font-bold text-gray-800">₹{passenger.fare_amount?.toFixed(2) || "0"}</p>
-                                                                        </div>
-                                                                        <div className="text-center">
-                                                                            <p className="text-[10px] text-gray-400">Driver Payout</p>
-                                                                            <p className="text-sm font-bold text-emerald-600">₹{passenger.driver_payout_amount?.toFixed(2) || "0"}</p>
-                                                                        </div>
-                                                                        <div className="text-center">
-                                                                            <p className="text-[10px] text-gray-400">Fare Reversed</p>
-                                                                            <p className="text-sm font-bold text-red-500">₹{passenger.fare_reversed_amount?.toFixed(2) || "0"}</p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Timestamps */}
-                                                                    {(passenger.boarded_at || passenger.dropped_at) && (
-                                                                        <div className="mt-2 pt-2 border-t border-gray-100">
-                                                                            {passenger.boarded_at && (
-                                                                                <p className="text-[9px] text-gray-400">
-                                                                                    Boarded: {new Date(passenger.boarded_at).toLocaleString()}
-                                                                                </p>
-                                                                            )}
-                                                                            {passenger.dropped_at && (
-                                                                                <p className="text-[9px] text-gray-400">
-                                                                                    Dropped: {new Date(passenger.dropped_at).toLocaleString()}
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Transfer Status Note */}
-                                                                    {passenger.transfer_status === 'withheld' && (
-                                                                        <div className="mt-2 p-2 bg-orange-50 rounded-lg border border-orange-100">
-                                                                            <p className="text-[10px] text-orange-700 flex items-center gap-1">
-                                                                                <span>⚠️</span>
-                                                                                Payout withheld - funding source not ready
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                    {/* Stops */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-start gap-2">
+                                            <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <span className="text-green-600 text-xs">🚏</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-gray-500">Pickup Stop</p>
+                                                <p className="text-sm font-medium text-gray-800">{passenger.pickup_stop?.name || "N/A"}</p>
+                                                {passenger.pickup_stop?.sequence && (
+                                                    <p className="text-xs text-gray-400">Stop #{passenger.pickup_stop.sequence}</p>
                                                 )}
                                             </div>
                                         </div>
+                                        <div className="relative">
+                                            <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                                            <div className="flex items-start gap-2 ml-2">
+                                                <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5 z-10">
+                                                    <span className="text-red-600 text-xs">📍</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-gray-500">Dropoff Stop</p>
+                                                    <p className="text-sm font-medium text-gray-800">{passenger.dropoff_stop?.name || "N/A"}</p>
+                                                    {passenger.dropoff_stop?.sequence && (
+                                                        <p className="text-xs text-gray-400">Stop #{passenger.dropoff_stop.sequence}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Financial Breakdown - Clean Grid */}
+                                    <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                                        <p className="text-xs font-medium text-gray-700 mb-2">Financial Breakdown</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <p className="text-[10px] text-gray-500">Fare Net Amount</p>
+                                                <p className="text-base font-bold text-gray-900">₹{passenger.fare_net_amount?.toFixed(2) || "0"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-500">Commission</p>
+                                                <p className="text-base font-bold text-purple-600">
+                                                    ₹{passenger.commission_amount?.toFixed(2) || "0"}
+                                                    <span className="text-[9px] text-gray-400 ml-1">({passenger.commission_percent_snapshot || 0}%)</span>
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-500">Driver Payout (Net)</p>
+                                                <p className="text-base font-bold text-emerald-600">₹{passenger.driver_payout_net_amount?.toFixed(2) || "0"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-500">Platform Net</p>
+                                                <p className="text-base font-bold text-blue-600">₹{passenger.platform_net_amount?.toFixed(2) || "0"}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Additional Details - Collapsible section */}
+                                        <details className="mt-3">
+                                            <summary className="text-[10px] text-gray-400 cursor-pointer hover:text-gray-600">
+                                                Show original amounts
+                                            </summary>
+                                            <div className="mt-2 pt-2 border-t border-gray-200">
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div>
+                                                        <span className="text-gray-500">Fare Amount:</span>
+                                                        <span className="ml-1 text-gray-700">₹{passenger.fare_amount?.toFixed(2) || "0"}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500">Fare Reversed:</span>
+                                                        <span className="ml-1 text-red-500">₹{passenger.fare_reversed_amount?.toFixed(2) || "0"}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500">Driver Payout:</span>
+                                                        <span className="ml-1 text-emerald-600">₹{passenger.driver_payout_amount?.toFixed(2) || "0"}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500">Platform Amount:</span>
+                                                        <span className="ml-1 text-gray-700">₹{passenger.platform_amount?.toFixed(2) || "0"}</span>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="text-gray-500">Platform Reversed:</span>
+                                                        <span className="ml-1 text-red-500">₹{passenger.platform_amount_reversed?.toFixed(2) || "0"}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </details>
+                                    </div>
+
+                                    {/* Timestamps */}
+                                    {(passenger.boarded_at || passenger.dropped_at) && (
+                                        <div className="flex items-center gap-3 text-[10px] text-gray-400 pt-1">
+                                            {passenger.boarded_at && (
+                                                <div className="flex items-center gap-1">
+                                                    <span>🚌</span>
+                                                    <span>Boarded: {new Date(passenger.boarded_at).toLocaleTimeString()}</span>
+                                                </div>
+                                            )}
+                                            {passenger.dropped_at && (
+                                                <div className="flex items-center gap-1">
+                                                    <span>🏁</span>
+                                                    <span>Dropped: {new Date(passenger.dropped_at).toLocaleTimeString()}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
+    </div>
+)}
 
                                     {/* STATS GRID */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
