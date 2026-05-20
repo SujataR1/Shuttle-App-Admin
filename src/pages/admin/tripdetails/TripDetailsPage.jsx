@@ -2054,8 +2054,8 @@ const TripDetailsPage = () => {
                                                     e.currentTarget.style.transform = '';
                                                 }}
                                                 className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${isSelected
-                                                        ? "border-indigo-500 bg-gradient-to-r from-indigo-50 to-white shadow-lg"
-                                                        : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
+                                                    ? "border-indigo-500 bg-gradient-to-r from-indigo-50 to-white shadow-lg"
+                                                    : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
                                                     }`}
                                                 style={{ transform: 'scale(1)', transition: 'transform 0.1s ease' }}
                                             >
@@ -2296,11 +2296,10 @@ const TripDetailsPage = () => {
                                                                                 <p className="text-[10px] text-gray-500">{passenger.passenger_email || "No email"}</p>
                                                                             </div>
                                                                         </div>
-                                                                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
-                                                                            passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                                            passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
-                                                                            'bg-gray-100 text-gray-600'
-                                                                        }`}>
+                                                                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                                passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
+                                                                                    'bg-gray-100 text-gray-600'
+                                                                            }`}>
                                                                             {passenger.transfer_status || passenger.status || "N/A"}
                                                                         </span>
                                                                     </div>
@@ -2476,10 +2475,10 @@ const TripDetailsPage = () => {
                                                                 </div>
                                                                 <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-0">
                                                                     <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${passenger.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-                                                                            passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
-                                                                                passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
-                                                                                    passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
-                                                                                        "bg-gray-100 text-gray-600"
+                                                                        passenger.status === "booked" ? "bg-amber-100 text-amber-700" :
+                                                                            passenger.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                                                                passenger.status === "boarded" ? "bg-blue-100 text-blue-700" :
+                                                                                    "bg-gray-100 text-gray-600"
                                                                         }`}>
                                                                         {passenger.status}
                                                                     </span>
