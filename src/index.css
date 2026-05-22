@@ -150,6 +150,41 @@
 }
 
 /* ========================================
+   MODAL SPECIFIC ANIMATIONS
+   ======================================== */
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
    UTILITY CLASSES
    ======================================== */
 
@@ -186,6 +221,19 @@
 .animate-slideRight {
   animation: slideRight 0.4s ease-out forwards;
   opacity: 0;
+}
+
+/* Modal Specific Animations */
+.animate-modalFadeIn {
+  animation: modalFadeIn 0.2s ease-out forwards;
+}
+
+.animate-modalSlideUp {
+  animation: modalSlideUp 0.3s ease-out forwards;
+}
+
+.animate-modalSlideDown {
+  animation: modalSlideDown 0.3s ease-out forwards;
 }
 
 /* Special Effects */
@@ -445,6 +493,120 @@
 }
 
 /* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ========================================
+   LEaFLET CUSTOM STYLES
+   ======================================== */
+
+/* Leaflet popup custom styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 240px !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Leaflet tooltip styles */
+.leaflet-tooltip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  color: #1f2937 !important;
+}
+
+.leaflet-tooltip::before {
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Leaflet marker cluster customization */
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 15px;
+  font-weight: bold;
+}
+
+/* ========================================
+   MODAL Z-INDEX FIXES
+   ======================================== */
+
+.fixed {
+  z-index: 50;
+}
+
+/* Ensure modals are on top */
+.modal-overlay {
+  z-index: 9999;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  z-index: 10000;
+  position: relative;
+}
+
+/* Ensure dropdowns and popups are above everything */
+.dropdown-content,
+.popup-content,
+.tooltip-content {
+  z-index: 1000;
+}
+
+/* Leaflet map container z-index fix */
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-control-container {
+  z-index: 2;
+}
+
+/* ========================================
    RESPONSIVE BREAKPOINTS
    ======================================== */
 
@@ -452,6 +614,10 @@
 @media (min-width: 640px) {
   .sm\:animate-slideUp {
     animation: slideUp 0.4s ease-out forwards;
+  }
+  
+  .leaflet-popup-content {
+    min-width: 260px !important;
   }
 }
 
@@ -465,6 +631,41 @@
   .lg\:animate-slideUp {
     animation: slideUp 0.4s ease-out forwards;
   }
+  
+  .leaflet-popup-content {
+    min-width: 280px !important;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES FOR MODALS
+   ======================================== */
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus ring improvements */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
 }
 
 /* ========================================
@@ -482,5 +683,10 @@
   
   .print-margin {
     margin: 2cm;
+  }
+  
+  .leaflet-container {
+    height: 500px !important;
+    break-inside: avoid;
   }
 }

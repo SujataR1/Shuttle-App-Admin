@@ -1500,7 +1500,6 @@ const UsersList = () => {
           </div>
         </div>
       )}
-
       {/* Avatar Popup Modal - Responsive */}
       {showAvatarModal && selectedUser?.avatar && (
         <div
