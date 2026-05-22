@@ -19,7 +19,11 @@
 //   DevicePhoneMobileIcon,
 //   ChartBarIcon,
 //   UserCircleIcon,
-//   ShieldCheckIcon
+//   ShieldCheckIcon,
+//   QrCodeIcon,
+//   CurrencyRupeeIcon,
+//   BanknotesIcon,
+//   ArrowPathIcon
 // } from "@heroicons/react/24/outline";
 
 // const menuSections = [
@@ -32,44 +36,65 @@
 //       { name: "Driver Payments", path: "/admin/payments", icon: DocumentTextIcon },
 //     ],
 //   },
-//  {
-//   title: "RFID MANAGEMENT",
-//   items: [
-//     {
-//       name: "RFID Devices",
-//       icon: DevicePhoneMobileIcon,
-//       subItems: [
-//         { name: "All Devices", path: "/admin/rfid/devices" },
-//         { name: "Register Device", path: "/admin/rfid/devices/register" },
-//       ],
-//     },
-//     {
-//       name: "Cards Inventory",
-//       icon: CreditCardIcon,
-//       subItems: [
-//         { name: "All Cards", path: "/admin/rfid/cards" },
-//         { name: "Register Card", path: "/admin/rfid/cards/register" },
-//         { name: "Bulk Register", path: "/admin/rfid/cards/bulk-register" },
-//       ],
-//     },
-//     {
-//       name: "Reports & History",
-//       icon: ChartBarIcon,
-//       subItems: [
-//         { name: "Transaction Ledger", path: "/admin/rfid/transaction-ledger" },
-//         { name: "Recharge History", path: "/admin/rfid/recharge-history" },
-//         { name: "Card Activity Log", path: "/admin/rfid/card-activity-log" },
-//       ],
-//     },
-    
-//     // ✅ ADD THIS NEW MENU ITEM
-//     {
-//       name: "Seat Policy",
-//       icon: ShieldCheckIcon,  // Make sure to import ShieldCheckIcon
-//       path: "/admin/rfid/seat-policy",
-//     },
-//   ],
-// },
+//   {
+//     title: "RFID MANAGEMENT",
+//     items: [
+//       {
+//         name: "RFID Devices",
+//         icon: DevicePhoneMobileIcon,
+//         subItems: [
+//           { name: "All Devices", path: "/admin/rfid/devices" },
+//           { name: "Register Device", path: "/admin/rfid/devices/register" },
+//         ],
+//       },
+//       {
+//         name: "Cards Inventory",
+//         icon: CreditCardIcon,
+//         subItems: [
+//           { name: "All Cards", path: "/admin/rfid/cards" },
+//           { name: "Register Card", path: "/admin/rfid/cards/register" },
+//           { name: "Bulk Register", path: "/admin/rfid/cards/bulk-register" },
+//         ],
+//       },
+//       {
+//         name: "Reports & History",
+//         icon: ChartBarIcon,
+//         subItems: [
+//           { name: "Transaction Ledger", path: "/admin/rfid/transaction-ledger" },
+//           { name: "Recharge History", path: "/admin/rfid/recharge-history" },
+//           { name: "Card Activity Log", path: "/admin/rfid/card-activity-log" },
+//         ],
+//       },
+//       {
+//         name: "Scan & Ride",
+//         icon: QrCodeIcon,
+//         subItems: [
+//           { name: "Scan Events", path: "/admin/rfid/scan-events" },
+//           { name: "Ride History", path: "/admin/rfid/ride-history" },
+//         ],
+//       },
+//       {
+//         name: "Seat Policy",
+//         icon: ShieldCheckIcon,
+//         path: "/admin/rfid/seat-policy",
+//       },
+//     ],
+//   },
+//   {
+//     title: "RFID PAYOUT MANAGEMENT",
+//     items: [
+//       {
+//         name: "Payout Operations",
+//         icon: CurrencyRupeeIcon,
+//         subItems: [
+//           { name: "Payout Dashboard", path: "/admin/rfid/payout-dashboard" },
+//           { name: "Payout Transfers", path: "/admin/rfid/payout-transfers" },
+//           { name: "Ready Queue", path: "/admin/rfid/payout-ready" },
+//           { name: "Reversal Audit", path: "/admin/rfid/payout-reversals" },
+//         ],
+//       },
+//     ],
+//   },
 //   {
 //     title: "MEMBERS",
 //     items: [
@@ -115,6 +140,7 @@
 //   const [isMobile, setIsMobile] = useState(false);
 //   const location = useLocation();
 //   const navigate = useNavigate();
+//   const logoutTimeoutRef = useRef(null);
 
 //   const API_BASE = "https://be.shuttleapp.transev.site";
 
@@ -164,6 +190,8 @@
 //             const menuKey = `${section.title}-${iIdx}`;
 //             newOpenSubmenus[menuKey] = true;
 //           }
+//         } else if (item.path === location.pathname) {
+//           // For non-submenu items, we don't need to expand anything
 //         }
 //       });
 //     });
@@ -234,6 +262,33 @@
 
 //   const handleMouseLeave = useCallback(() => {
 //     setTooltip({ show: false, text: '', x: 0, y: 0 });
+//   }, []);
+
+//   // Open logout modal with delay to prevent immediate closing
+//   const handleLogoutClick = useCallback((e) => {
+//     if (e) {
+//       e.preventDefault();
+//       e.stopPropagation();
+//     }
+    
+//     // Clear any existing timeout
+//     if (logoutTimeoutRef.current) {
+//       clearTimeout(logoutTimeoutRef.current);
+//     }
+    
+//     // Small delay to ensure proper state update
+//     logoutTimeoutRef.current = setTimeout(() => {
+//       setShowLogoutConfirm(true);
+//     }, 10);
+//   }, []);
+
+//   // Cleanup timeout on unmount
+//   useEffect(() => {
+//     return () => {
+//       if (logoutTimeoutRef.current) {
+//         clearTimeout(logoutTimeoutRef.current);
+//       }
+//     };
 //   }, []);
 
 //   // Memoize section render to prevent unnecessary re-renders
@@ -364,6 +419,10 @@
 //         .animate-fadeIn {
 //           animation: fadeIn 0.2s ease-in-out;
 //         }
+//         /* Prevent body scroll when modal is open */
+//         body.modal-open {
+//           overflow: hidden;
+//         }
 //       `}</style>
 
 //       {/* Tooltip */}
@@ -438,7 +497,7 @@
 //         {/* Logout Button */}
 //         <div className="p-3 border-t border-slate-100 shrink-0">
 //           <button
-//             onClick={() => setShowLogoutConfirm(true)}
+//             onClick={handleLogoutClick}
 //             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors duration-200 group"
 //           >
 //             <ArrowRightOnRectangleIcon className="w-5 h-5" />
@@ -456,10 +515,24 @@
 //         </div>
 //       </div>
 
-//       {/* Logout Modal */}
+//       {/* Logout Modal - Fixed to prevent auto-closing */}
 //       {showLogoutConfirm && (
-//         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowLogoutConfirm(false)}>
-//           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+//         <div 
+//           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" 
+//           onClick={(e) => {
+//             e.preventDefault();
+//             e.stopPropagation();
+//             setShowLogoutConfirm(false);
+//           }}
+//           style={{ animation: 'fadeIn 0.2s ease-in-out' }}
+//         >
+//           <div 
+//             className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative"
+//             onClick={(e) => {
+//               e.preventDefault();
+//               e.stopPropagation();
+//             }}
+//           >
 //             <div className="text-center">
 //               <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
 //                 <ArrowRightOnRectangleIcon className="w-7 h-7 text-red-500" />
@@ -468,15 +541,25 @@
 //               <p className="text-slate-500 text-sm mb-6">Are you sure you want to logout from your admin account?</p>
 //               <div className="flex gap-3">
 //                 <button
-//                   onClick={() => setShowLogoutConfirm(false)}
+//                   onClick={(e) => {
+//                     e.preventDefault();
+//                     e.stopPropagation();
+//                     setShowLogoutConfirm(false);
+//                   }}
 //                   className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors duration-200"
+//                   type="button"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
-//                   onClick={handleLogout}
+//                   onClick={(e) => {
+//                     e.preventDefault();
+//                     e.stopPropagation();
+//                     handleLogout();
+//                   }}
 //                   disabled={loading}
 //                   className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors duration-200 disabled:opacity-50"
+//                   type="button"
 //                 >
 //                   {loading ? "Logging out..." : "Yes, Logout"}
 //                 </button>
@@ -490,7 +573,6 @@
 // };
 
 // export default Sidebar;
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -516,7 +598,9 @@ import {
   QrCodeIcon,
   CurrencyRupeeIcon,
   BanknotesIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ComputerDesktopIcon, // Added for Device Management
+  AdjustmentsHorizontalIcon // Added for Device Settings
 } from "@heroicons/react/24/outline";
 
 const menuSections = [
@@ -601,6 +685,19 @@ const menuSections = [
       },
       { name: "Verify KYC Details", path: "/admin/providers", icon: UserCircleIcon },
       { name: "Verify Bus Details", path: "/admin/verify-drivers", icon: TruckIcon },
+    ],
+  },
+  {
+    title: "DEVICE MANAGEMENT",
+    items: [
+      {
+        name: "Device Management",
+        icon: ComputerDesktopIcon,
+        subItems: [
+          { name: "All Devices", path: "/admin/all-devices" },
+          { name: "Device Settings", path: "/admin/device-settings" },
+        ],
+      },
     ],
   },
   {
@@ -1066,4 +1163,3 @@ const Sidebar = ({ onClose }) => {
 };
 
 export default Sidebar;
-// iphone 11 pro and 17 p[ro max ]

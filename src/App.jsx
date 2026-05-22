@@ -120,6 +120,8 @@ import PayoutDashboard from "./pages/admin/rfid/PayoutDashboard";
 import PayoutTransfers from "./pages/admin/rfid/PayoutTransfers";
 import PayoutTransferDetail from "./pages/admin/rfid/PayoutTransferDetail";
 import PayoutReversals from "./pages/admin/rfid/PayoutReversals";
+import AllDevice from "./pages/admin/devices/AllDevice";
+import DeviceSettings from "./pages/admin/devices/DeviceSettings";
 
 function App() {
   return (
@@ -195,6 +197,8 @@ function App() {
       <Route path="/admin/rfid/payout-transfers/:transferId" element={<PayoutTransferDetail />} />
       <Route path="/admin/rfid/payout-reversals" element={<PayoutReversals />} />
       <Route path="/admin/rfid/payout-ready" element={<PayoutTransfers />} />
+      <Route path="/admin/all-devices" element={<AllDevice />} />
+      <Route path="/admin/device-settings" element={<DeviceSettings />} />
     </Routes>
   );
 }
