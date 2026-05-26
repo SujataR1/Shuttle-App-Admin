@@ -508,7 +508,6 @@ const PassengerRatingsReviews = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const hasFetched = useRef(false);
-
   const token = localStorage.getItem("access_token");
   const BASE_URL = "https://be.shuttleapp.transev.site";
 
