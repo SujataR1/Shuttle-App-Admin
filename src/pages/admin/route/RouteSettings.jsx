@@ -841,6 +841,12 @@
 // export default RouteSettings;
 
 
+
+// import React, { useEffect, useState } from "react";
+// import axios from "axios";
+
+
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -1142,6 +1148,7 @@ const RouteSettings = () => {
     const createMultipleStops = async () => {
         if (isSubmitting) return;
         setIsSubmitting(true);
+
 
         try {
             const cleanedStops = multiStops
