@@ -1760,13 +1760,31 @@ const TripDetailsPage = () => {
         try {
             const url = `${BASE_URL}/passenger/${passengerId}`;
             const res = await axios.get(url, axiosConfig);
+
+            // Extract pickup_stop and dropoff_stop with bus times from the response
+            const passengerData = res.data;
+
             setPassengerDetails({
-                profile: res.data.profile,
-                email: res.data.email,
-                is_active: res.data.is_active,
-                joined_at: res.data.joined_at,
-                user_id: res.data.user_id
+                profile: passengerData.profile,
+                email: passengerData.email,
+                is_active: passengerData.is_active,
+                joined_at: passengerData.joined_at,
+                user_id: passengerData.user_id,
+                // Store the booking data which contains the stops with bus times
+                current_booking: passengerData.current_booking || null,
+                pickup_stop: passengerData.pickup_stop || null,
+                dropoff_stop: passengerData.dropoff_stop || null
             });
+
+            // Also update currentTripBooking with stop details if available
+            if (passengerData.pickup_stop || passengerData.dropoff_stop) {
+                setCurrentTripBooking(prev => ({
+                    ...prev,
+                    pickup_stop_details: passengerData.pickup_stop,
+                    dropoff_stop_details: passengerData.dropoff_stop
+                }));
+            }
+
         } catch (err) {
             console.error("Error fetching passenger profile:", err);
             if (err.response?.status === 401) {
@@ -1785,25 +1803,135 @@ const TripDetailsPage = () => {
         setSelectedPassenger(passenger);
         setShowPassengerModal(true);
         setPassengerDetails(null);
+        setCurrentTripBooking(null);
 
-        setCurrentTripBooking({
-            booking_id: selectedTrip.trip_id,
-            passenger_id: passenger.passenger_id,
-            name: passenger.name,
-            status: passenger.status,
-            pickup_stop_name: passenger.pickup_stop_name,
-            dropoff_stop_name: passenger.dropoff_stop_name,
-            actual_drop_stop_name: passenger.actual_drop_stop_name,
-            actual_dropped_at: passenger.actual_dropped_at,
-            created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
-            fare: null
-        });
+        try {
+            setLoadingPassenger(true);
 
-        if (passenger.passenger_id) {
-            await fetchPassengerProfile(passenger.passenger_id);
-        } else {
+            // Fetch the passenger's complete profile
+            const passengerUrl = `${BASE_URL}/passenger/${passenger.passenger_id}`;
+            const response = await axios.get(passengerUrl, axiosConfig);
+
+            const passengerData = response.data;
+
+            console.log("Full Passenger Data:", passengerData);
+
+            // Find the booking that matches the current trip
+            // The current trip ID is in selectedTrip.trip_id
+            let currentBooking = null;
+
+            if (passengerData.booking_history && passengerData.booking_history.bookings) {
+                // Find the booking that matches the current trip's booking_id
+                // You need to identify which booking is for the current trip
+                // Usually you can match by trip_id or find the most recent booking
+                currentBooking = passengerData.booking_history.bookings.find(
+                    booking => booking.booking_id === selectedTrip.trip_id ||
+                        booking.booking_id === passenger.booking_id
+                );
+
+                // If not found by ID, get the most recent booking that matches the trip date
+                if (!currentBooking && selectedTrip.timing?.actual_start) {
+                    const tripDate = new Date(selectedTrip.timing.actual_start).toDateString();
+                    currentBooking = passengerData.booking_history.bookings.find(booking => {
+                        const bookingDate = new Date(booking.created_at).toDateString();
+                        return bookingDate === tripDate;
+                    });
+                }
+            }
+
+            console.log("Current Booking Found:", currentBooking);
+
+            // Set passenger profile details
+            setPassengerDetails({
+                email: passengerData.email,
+                is_active: passengerData.is_active,
+                joined_at: passengerData.joined_at,
+                user_id: passengerData.user_id,
+                profile: passengerData.profile
+            });
+
+            if (currentBooking) {
+                // Set the current trip booking with stop details INCLUDING bus times
+                setCurrentTripBooking({
+                    booking_id: currentBooking.booking_id,
+                    passenger_id: passenger.passenger_id,
+                    name: passenger.name,
+                    status: currentBooking.status,
+                    pickup_stop_name: currentBooking.pickup_stop?.name,
+                    dropoff_stop_name: currentBooking.dropoff_stop?.name,
+                    actual_drop_stop_name: currentBooking.actual_drop_stop_name,
+                    actual_dropped_at: currentBooking.actual_dropped_at,
+                    created_at: currentBooking.created_at,
+                    fare: currentBooking.fare,
+                    // Store the complete stop objects with bus times
+                    pickup_stop: currentBooking.pickup_stop || null,
+                    dropoff_stop: currentBooking.dropoff_stop || null
+                });
+
+                console.log("Pickup Stop with Times:", currentBooking.pickup_stop);
+                console.log("Dropoff Stop with Times:", currentBooking.dropoff_stop);
+            } else {
+                // Fallback - use the first booking or create basic structure
+                const firstBooking = passengerData.booking_history?.bookings?.[0];
+                if (firstBooking) {
+                    setCurrentTripBooking({
+                        booking_id: firstBooking.booking_id,
+                        passenger_id: passenger.passenger_id,
+                        name: passenger.name,
+                        status: firstBooking.status,
+                        pickup_stop_name: firstBooking.pickup_stop?.name,
+                        dropoff_stop_name: firstBooking.dropoff_stop?.name,
+                        actual_drop_stop_name: firstBooking.actual_drop_stop_name,
+                        actual_dropped_at: firstBooking.actual_dropped_at,
+                        created_at: firstBooking.created_at,
+                        fare: firstBooking.fare,
+                        pickup_stop: firstBooking.pickup_stop || null,
+                        dropoff_stop: firstBooking.dropoff_stop || null
+                    });
+                } else {
+                    // Last resort fallback
+                    setCurrentTripBooking({
+                        booking_id: selectedTrip.trip_id,
+                        passenger_id: passenger.passenger_id,
+                        name: passenger.name,
+                        status: passenger.status,
+                        pickup_stop_name: passenger.pickup_stop_name,
+                        dropoff_stop_name: passenger.dropoff_stop_name,
+                        actual_drop_stop_name: passenger.actual_drop_stop_name,
+                        actual_dropped_at: passenger.actual_dropped_at,
+                        created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
+                        fare: null,
+                        pickup_stop: null,
+                        dropoff_stop: null
+                    });
+                }
+            }
+
+        } catch (err) {
+            console.error("Error fetching passenger booking details:", err);
+            // Fallback to basic info without bus times
+            setCurrentTripBooking({
+                booking_id: selectedTrip.trip_id,
+                passenger_id: passenger.passenger_id,
+                name: passenger.name,
+                status: passenger.status,
+                pickup_stop_name: passenger.pickup_stop_name,
+                dropoff_stop_name: passenger.dropoff_stop_name,
+                actual_drop_stop_name: passenger.actual_drop_stop_name,
+                actual_dropped_at: passenger.actual_dropped_at,
+                created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
+                fare: null,
+                pickup_stop: null,
+                dropoff_stop: null
+            });
+
+            setPassengerDetails({
+                email: passenger.email,
+                is_active: true,
+                user_id: passenger.passenger_id
+            });
+        } finally {
             setLoadingPassenger(false);
-            alert("Passenger ID not found in the response");
         }
     };
 
@@ -2243,225 +2371,223 @@ const TripDetailsPage = () => {
                                         </div>
                                     )}
 
-{/* RFID SECTION - ELEGANT REDESIGN */}
-{selectedTrip.rfid && (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-gray-100">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900">RFID Trip Details</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Seat reservations & ride information</p>
-                </div>
-                <div className="bg-indigo-100 rounded-xl p-2.5">
-                    <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 p-5 bg-gray-50/30">
-            <div className="text-center">
-                <p className="text-xs text-gray-500 mb-1">Reserved Seats</p>
-                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.reserved_seat_count || 0}</p>
-            </div>
-            <div className="text-center">
-                <p className="text-xs text-gray-500 mb-1">Total RFID Rides</p>
-                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.total_rfid_rides || 0}</p>
-            </div>
-            <div className="text-center">
-                <p className="text-xs text-gray-500 mb-1">RFID Passengers</p>
-                <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.passengers?.length || 0}</p>
-            </div>
-        </div>
-
-        {/* Passengers Section */}
-        {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
-            <div className="p-5 pt-0">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <svg className="h-3 w-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">Passengers</span>
-                        <span className="text-xs text-gray-400">{selectedTrip.rfid.passengers.length}</span>
-                    </div>
-                </div>
-
-                <div className="space-y-3">
-                    {selectedTrip.rfid.passengers.map((passenger, idx) => (
-                        <div key={idx} className="group">
-                            {/* Main Passenger Card */}
-                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
-                                {/* Header */}
-                                <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <span className="text-indigo-700 font-semibold text-sm">
-                                                    {passenger.passenger_name?.charAt(0) || "?"}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900 text-sm">{passenger.passenger_name || "N/A"}</p>
-                                                <p className="text-xs text-gray-500">{passenger.passenger_email || "No email"}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
-                                                passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
-                                                'bg-gray-100 text-gray-600'
-                                            }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                                    passenger.transfer_status === 'completed' ? 'bg-green-500' :
-                                                    passenger.transfer_status === 'withheld' ? 'bg-orange-500' :
-                                                    'bg-gray-400'
-                                                }`}></span>
-                                                {passenger.transfer_status || passenger.status || "Unknown"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Body */}
-                                <div className="p-4 space-y-3">
-                                    {/* Card & Ride Info */}
-                                    <div className="grid grid-cols-2 gap-3 text-xs">
-                                        <div className="flex items-center gap-1.5">
-                                            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                            </svg>
-                                            <span className="text-gray-500">Card:</span>
-                                            <span className="font-mono text-gray-700">{passenger.card_uid_masked || "N/A"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                            </svg>
-                                            <span className="text-gray-500">Ride ID:</span>
-                                            <span className="font-mono text-gray-700 text-xs">{passenger.rfid_ride_id?.slice(0, 12)}...</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Stops */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-2">
-                                            <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                <span className="text-green-600 text-xs">🚏</span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-xs text-gray-500">Pickup Stop</p>
-                                                <p className="text-sm font-medium text-gray-800">{passenger.pickup_stop?.name || "N/A"}</p>
-                                                {passenger.pickup_stop?.sequence && (
-                                                    <p className="text-xs text-gray-400">Stop #{passenger.pickup_stop.sequence}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="relative">
-                                            <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                                            <div className="flex items-start gap-2 ml-2">
-                                                <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5 z-10">
-                                                    <span className="text-red-600 text-xs">📍</span>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <p className="text-xs text-gray-500">Dropoff Stop</p>
-                                                    <p className="text-sm font-medium text-gray-800">{passenger.dropoff_stop?.name || "N/A"}</p>
-                                                    {passenger.dropoff_stop?.sequence && (
-                                                        <p className="text-xs text-gray-400">Stop #{passenger.dropoff_stop.sequence}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Financial Breakdown - Clean Grid */}
-                                    <div className="bg-gray-50 rounded-lg p-3 mt-2">
-                                        <p className="text-xs font-medium text-gray-700 mb-2">Financial Breakdown</p>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <p className="text-[10px] text-gray-500">Fare Net Amount</p>
-                                                <p className="text-base font-bold text-gray-900">₹{passenger.fare_net_amount?.toFixed(2) || "0"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-gray-500">Commission</p>
-                                                <p className="text-base font-bold text-purple-600">
-                                                    ₹{passenger.commission_amount?.toFixed(2) || "0"}
-                                                    <span className="text-[9px] text-gray-400 ml-1">({passenger.commission_percent_snapshot || 0}%)</span>
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-gray-500">Driver Payout (Net)</p>
-                                                <p className="text-base font-bold text-emerald-600">₹{passenger.driver_payout_net_amount?.toFixed(2) || "0"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-gray-500">Platform Net</p>
-                                                <p className="text-base font-bold text-blue-600">₹{passenger.platform_net_amount?.toFixed(2) || "0"}</p>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Additional Details - Collapsible section */}
-                                        <details className="mt-3">
-                                            <summary className="text-[10px] text-gray-400 cursor-pointer hover:text-gray-600">
-                                                Show original amounts
-                                            </summary>
-                                            <div className="mt-2 pt-2 border-t border-gray-200">
-                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    {/* RFID SECTION - ELEGANT REDESIGN */}
+                                    {selectedTrip.rfid && (
+                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                            {/* Header */}
+                                            <div className="px-5 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-gray-100">
+                                                <div className="flex items-center justify-between">
                                                     <div>
-                                                        <span className="text-gray-500">Fare Amount:</span>
-                                                        <span className="ml-1 text-gray-700">₹{passenger.fare_amount?.toFixed(2) || "0"}</span>
+                                                        <h3 className="text-lg font-semibold text-gray-900">RFID Trip Details</h3>
+                                                        <p className="text-xs text-gray-500 mt-0.5">Seat reservations & ride information</p>
                                                     </div>
-                                                    <div>
-                                                        <span className="text-gray-500">Fare Reversed:</span>
-                                                        <span className="ml-1 text-red-500">₹{passenger.fare_reversed_amount?.toFixed(2) || "0"}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-500">Driver Payout:</span>
-                                                        <span className="ml-1 text-emerald-600">₹{passenger.driver_payout_amount?.toFixed(2) || "0"}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-500">Platform Amount:</span>
-                                                        <span className="ml-1 text-gray-700">₹{passenger.platform_amount?.toFixed(2) || "0"}</span>
-                                                    </div>
-                                                    <div className="col-span-2">
-                                                        <span className="text-gray-500">Platform Reversed:</span>
-                                                        <span className="ml-1 text-red-500">₹{passenger.platform_amount_reversed?.toFixed(2) || "0"}</span>
+                                                    <div className="bg-indigo-100 rounded-xl p-2.5">
+                                                        <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                                        </svg>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </details>
-                                    </div>
 
-                                    {/* Timestamps */}
-                                    {(passenger.boarded_at || passenger.dropped_at) && (
-                                        <div className="flex items-center gap-3 text-[10px] text-gray-400 pt-1">
-                                            {passenger.boarded_at && (
-                                                <div className="flex items-center gap-1">
-                                                    <span>🚌</span>
-                                                    <span>Boarded: {new Date(passenger.boarded_at).toLocaleTimeString()}</span>
+                                            {/* Stats Cards */}
+                                            <div className="grid grid-cols-3 gap-3 p-5 bg-gray-50/30">
+                                                <div className="text-center">
+                                                    <p className="text-xs text-gray-500 mb-1">Reserved Seats</p>
+                                                    <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.reserved_seat_count || 0}</p>
                                                 </div>
-                                            )}
-                                            {passenger.dropped_at && (
-                                                <div className="flex items-center gap-1">
-                                                    <span>🏁</span>
-                                                    <span>Dropped: {new Date(passenger.dropped_at).toLocaleTimeString()}</span>
+                                                <div className="text-center">
+                                                    <p className="text-xs text-gray-500 mb-1">Total RFID Rides</p>
+                                                    <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.total_rfid_rides || 0}</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-xs text-gray-500 mb-1">RFID Passengers</p>
+                                                    <p className="text-2xl font-bold text-indigo-600">{selectedTrip.rfid.passengers?.length || 0}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Passengers Section */}
+                                            {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
+                                                <div className="p-5 pt-0">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-6 w-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                                                <svg className="h-3 w-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                                                </svg>
+                                                            </div>
+                                                            <span className="text-sm font-medium text-gray-700">Passengers</span>
+                                                            <span className="text-xs text-gray-400">{selectedTrip.rfid.passengers.length}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        {selectedTrip.rfid.passengers.map((passenger, idx) => (
+                                                            <div key={idx} className="group">
+                                                                {/* Main Passenger Card */}
+                                                                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
+                                                                    {/* Header */}
+                                                                    <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                                                                    <span className="text-indigo-700 font-semibold text-sm">
+                                                                                        {passenger.passenger_name?.charAt(0) || "?"}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="font-medium text-gray-900 text-sm">{passenger.passenger_name || "N/A"}</p>
+                                                                                    <p className="text-xs text-gray-500">{passenger.passenger_email || "No email"}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${passenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                                    passenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
+                                                                                        'bg-gray-100 text-gray-600'
+                                                                                    }`}>
+                                                                                    <span className={`w-1.5 h-1.5 rounded-full ${passenger.transfer_status === 'completed' ? 'bg-green-500' :
+                                                                                        passenger.transfer_status === 'withheld' ? 'bg-orange-500' :
+                                                                                            'bg-gray-400'
+                                                                                        }`}></span>
+                                                                                    {passenger.transfer_status || passenger.status || "Unknown"}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Body */}
+                                                                    <div className="p-4 space-y-3">
+                                                                        {/* Card & Ride Info */}
+                                                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                                                </svg>
+                                                                                <span className="text-gray-500">Card:</span>
+                                                                                <span className="font-mono text-gray-700">{passenger.card_uid_masked || "N/A"}</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                                                                </svg>
+                                                                                <span className="text-gray-500">Ride ID:</span>
+                                                                                <span className="font-mono text-gray-700 text-xs">{passenger.rfid_ride_id?.slice(0, 12)}...</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Stops */}
+                                                                        <div className="space-y-2">
+                                                                            <div className="flex items-start gap-2">
+                                                                                <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                                                    <span className="text-green-600 text-xs">🚏</span>
+                                                                                </div>
+                                                                                <div className="flex-1">
+                                                                                    <p className="text-xs text-gray-500">Pickup Stop</p>
+                                                                                    <p className="text-sm font-medium text-gray-800">{passenger.pickup_stop?.name || "N/A"}</p>
+                                                                                    {passenger.pickup_stop?.sequence && (
+                                                                                        <p className="text-xs text-gray-400">Stop #{passenger.pickup_stop.sequence}</p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="relative">
+                                                                                <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                                                                                <div className="flex items-start gap-2 ml-2">
+                                                                                    <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5 z-10">
+                                                                                        <span className="text-red-600 text-xs">📍</span>
+                                                                                    </div>
+                                                                                    <div className="flex-1">
+                                                                                        <p className="text-xs text-gray-500">Dropoff Stop</p>
+                                                                                        <p className="text-sm font-medium text-gray-800">{passenger.dropoff_stop?.name || "N/A"}</p>
+                                                                                        {passenger.dropoff_stop?.sequence && (
+                                                                                            <p className="text-xs text-gray-400">Stop #{passenger.dropoff_stop.sequence}</p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Financial Breakdown - Clean Grid */}
+                                                                        <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                                                                            <p className="text-xs font-medium text-gray-700 mb-2">Financial Breakdown</p>
+                                                                            <div className="grid grid-cols-2 gap-3">
+                                                                                <div>
+                                                                                    <p className="text-[10px] text-gray-500">Fare Net Amount</p>
+                                                                                    <p className="text-base font-bold text-gray-900">₹{passenger.fare_net_amount?.toFixed(2) || "0"}</p>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="text-[10px] text-gray-500">Commission</p>
+                                                                                    <p className="text-base font-bold text-purple-600">
+                                                                                        ₹{passenger.commission_amount?.toFixed(2) || "0"}
+                                                                                        <span className="text-[9px] text-gray-400 ml-1">({passenger.commission_percent_snapshot || 0}%)</span>
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="text-[10px] text-gray-500">Driver Payout (Net)</p>
+                                                                                    <p className="text-base font-bold text-emerald-600">₹{passenger.driver_payout_net_amount?.toFixed(2) || "0"}</p>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="text-[10px] text-gray-500">Platform Net</p>
+                                                                                    <p className="text-base font-bold text-blue-600">₹{passenger.platform_net_amount?.toFixed(2) || "0"}</p>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Additional Details - Collapsible section */}
+                                                                            <details className="mt-3">
+                                                                                <summary className="text-[10px] text-gray-400 cursor-pointer hover:text-gray-600">
+                                                                                    Show original amounts
+                                                                                </summary>
+                                                                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                                                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                                                                        <div>
+                                                                                            <span className="text-gray-500">Fare Amount:</span>
+                                                                                            <span className="ml-1 text-gray-700">₹{passenger.fare_amount?.toFixed(2) || "0"}</span>
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <span className="text-gray-500">Fare Reversed:</span>
+                                                                                            <span className="ml-1 text-red-500">₹{passenger.fare_reversed_amount?.toFixed(2) || "0"}</span>
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <span className="text-gray-500">Driver Payout:</span>
+                                                                                            <span className="ml-1 text-emerald-600">₹{passenger.driver_payout_amount?.toFixed(2) || "0"}</span>
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <span className="text-gray-500">Platform Amount:</span>
+                                                                                            <span className="ml-1 text-gray-700">₹{passenger.platform_amount?.toFixed(2) || "0"}</span>
+                                                                                        </div>
+                                                                                        <div className="col-span-2">
+                                                                                            <span className="text-gray-500">Platform Reversed:</span>
+                                                                                            <span className="ml-1 text-red-500">₹{passenger.platform_amount_reversed?.toFixed(2) || "0"}</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </details>
+                                                                        </div>
+
+                                                                        {/* Timestamps */}
+                                                                        {(passenger.boarded_at || passenger.dropped_at) && (
+                                                                            <div className="flex items-center gap-3 text-[10px] text-gray-400 pt-1">
+                                                                                {passenger.boarded_at && (
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <span>🚌</span>
+                                                                                        <span>Boarded: {new Date(passenger.boarded_at).toLocaleTimeString()}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                                {passenger.dropped_at && (
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <span>🏁</span>
+                                                                                        <span>Dropped: {new Date(passenger.dropped_at).toLocaleTimeString()}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        )}
-    </div>
-)}
 
                                     {/* STATS GRID */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -2786,114 +2912,161 @@ const TripDetailsPage = () => {
 
             {/* PASSENGER DETAILS MODAL */}
             {showPassengerModal && selectedPassenger && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowPassengerModal(false)}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <div className="h-8 w-8 sm:h-12 sm:w-12 bg-white/20 rounded-full flex items-center justify-center">
-                                    <UserGroupIcon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-base sm:text-xl font-bold text-white">Trip Booking Details</h2>
-                                    <p className="text-indigo-100 text-[10px] sm:text-sm">{selectedPassenger.name}</p>
-                                </div>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowPassengerModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Header - Clean and minimal */}
+                        <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-800">Trip Booking Details</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{selectedPassenger.name}</p>
                             </div>
-                            <button onClick={() => setShowPassengerModal(false)} className="text-white hover:bg-white/20 rounded-lg p-1 sm:p-2">
-                                <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <button onClick={() => setShowPassengerModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
-                        <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-4 sm:p-6">
+
+                        <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-5">
                             {loadingPassenger ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-gray-200 border-t-indigo-600"></div>
-                                    <p className="ml-2 text-gray-500 text-xs">Loading passenger details...</p>
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-indigo-500"></div>
+                                    <p className="ml-2 text-gray-500 text-sm">Loading details...</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4 sm:space-y-6">
-                                    {/* Passenger Profile */}
-                                    <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 sm:p-6 border border-indigo-100">
-                                        <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-6">
-                                            <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                                                <span className="text-2xl sm:text-3xl font-bold text-white">{selectedPassenger.name?.charAt(0) || "?"}</span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-lg sm:text-2xl font-bold text-gray-800">{selectedPassenger.name}</h3>
-                                                {passengerDetails?.email && (
-                                                    <div className="flex items-center gap-1 text-gray-600 mt-1">
-                                                        <EnvelopeIcon className="h-3 w-3" />
-                                                        <span className="text-[10px] sm:text-sm break-all">{passengerDetails.email}</span>
-                                                    </div>
-                                                )}
-                                                {passengerDetails?.is_active !== undefined && (
-                                                    <div className="mt-2">
-                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${passengerDetails.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                                                            {passengerDetails.is_active ? "Active" : "Inactive"}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
+                                <div className="space-y-5">
+                                    {/* Passenger Profile - Minimal */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                            <span className="text-gray-600 font-semibold text-base">{selectedPassenger.name?.charAt(0) || "?"}</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-gray-800">{selectedPassenger.name}</h3>
+                                            {passengerDetails?.email && (
+                                                <p className="text-xs text-gray-500">{passengerDetails.email}</p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Current Trip Booking Details */}
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="p-3 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                            <h3 className="font-semibold text-gray-800">Booking for This Trip</h3>
-                                            <p className="text-[10px] sm:text-xs text-gray-500">Trip: {selectedTrip?.route?.name} ({selectedTrip?.route?.code})</p>
+                                    {/* Booking Details Card */}
+                                    <div className="border border-gray-100 rounded-xl overflow-hidden">
+                                        <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
+                                            <p className="text-xs font-medium text-gray-600">Booking for This Trip</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">{selectedTrip?.route?.name} ({selectedTrip?.route?.code})</p>
                                         </div>
-                                        <div className="p-4 sm:p-6 space-y-4">
-                                            {/* Trip Status */}
-                                            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                                                <span className="text-xs text-gray-500">Trip Status</span>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(selectedTrip.status).bg} ${getStatusBadge(selectedTrip.status).text}`}>
-                                                    {getStatusBadge(selectedTrip.status).label}
-                                                </span>
+                                        <div className="p-4 space-y-4">
+                                            {/* Status Row - Two columns */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[11px] text-gray-400 uppercase tracking-wide">Trip Status</p>
+                                                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${getStatusBadge(selectedTrip.status).bg} ${getStatusBadge(selectedTrip.status).text}`}>
+                                                        {getStatusBadge(selectedTrip.status).label}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] text-gray-400 uppercase tracking-wide">Passenger Status</p>
+                                                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${currentTripBooking?.status === "completed" ? "bg-green-50 text-green-700" :
+                                                        currentTripBooking?.status === "missed" ? "bg-red-50 text-red-700" :
+                                                            currentTripBooking?.status === "cancelled" ? "bg-gray-50 text-gray-600" :
+                                                                currentTripBooking?.status === "boarded" ? "bg-blue-50 text-blue-700" :
+                                                                    "bg-gray-50 text-gray-600"
+                                                        }`}>
+                                                        {currentTripBooking?.status ? currentTripBooking.status.toUpperCase() : selectedPassenger.status?.toUpperCase() || 'N/A'}
+                                                    </span>
+                                                </div>
                                             </div>
 
-                                            {/* Pickup Stop */}
-                                            <div>
-                                                <label className="text-xs text-gray-500 uppercase tracking-wide">Pickup Stop</label>
-                                                <p className="text-sm font-medium text-gray-900 mt-1 flex items-center gap-2">
-                                                    <span className="text-green-600">🚏</span>
-                                                    {currentTripBooking?.pickup_stop_name || selectedPassenger.pickup_stop_name || 'N/A'}
-                                                </p>
-                                            </div>
-
-                                            {/* Planned Dropoff Stop */}
-                                            <div>
-                                                <label className="text-xs text-gray-500 uppercase tracking-wide">Planned Dropoff Stop</label>
-                                                <p className="text-sm font-medium text-gray-900 mt-1 flex items-center gap-2">
-                                                    <span className="text-red-600">📍</span>
-                                                    {currentTripBooking?.dropoff_stop_name || selectedPassenger.dropoff_stop_name || 'N/A'}
-                                                </p>
-                                            </div>
-
-                                            {/* Actual Dropoff Stop */}
-                                            {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) && (
-                                                <div className="mt-4 pt-3 border-t border-blue-100">
-                                                    <label className="text-xs text-blue-600 uppercase tracking-wide font-semibold">🔽 Actual Dropoff Stop</label>
-                                                    <p className="text-sm font-bold text-blue-700 mt-1 flex items-center gap-2">
-                                                        <span className="text-blue-600">📍</span>
-                                                        {currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name}
-                                                    </p>
-                                                    {(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at) && (
-                                                        <p className="text-xs text-gray-500 mt-1">
-                                                            Dropped at: {new Date(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at).toLocaleString()}
+                                            {/* Pickup Stop - Clean design */}
+                                            <div className="pt-2">
+                                                <div className="flex items-start gap-2">
+                                                    <div className="mt-0.5">
+                                                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
+                                                            <span className="text-gray-500 text-xs">🚏</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-xs text-gray-400">PICKUP STOP</p>
+                                                        <p className="text-sm font-medium text-gray-700 mt-0.5">
+                                                            {currentTripBooking?.pickup_stop?.name || currentTripBooking?.pickup_stop_name || 'N/A'}
                                                         </p>
-                                                    )}
-                                                    {(currentTripBooking?.actual_drop_stop_name !== currentTripBooking?.dropoff_stop_name) && (
-                                                        <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                                                            <span>⚠️</span>
-                                                            Passenger was dropped at a different location than planned
+                                                        {currentTripBooking?.pickup_stop?.bus_arrived_at && (
+                                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                                                <span className="text-gray-500">Arrived: <span className="font-mono text-gray-600">{new Date(currentTripBooking.pickup_stop.bus_arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></span>
+                                                                <span className="text-gray-500">Departed: <span className="font-mono text-gray-600">{new Date(currentTripBooking.pickup_stop.bus_departed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></span>
+                                                                {currentTripBooking.pickup_stop.bus_arrived_at && currentTripBooking.pickup_stop.bus_departed_at && (
+                                                                    <span className="text-gray-500">Waited: <span className="text-amber-600">{Math.round((new Date(currentTripBooking.pickup_stop.bus_departed_at) - new Date(currentTripBooking.pickup_stop.bus_arrived_at)) / 1000)} sec</span></span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Dropoff Stop - Clean design */}
+                                            <div>
+                                                <div className="flex items-start gap-2">
+                                                    <div className="mt-0.5">
+                                                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
+                                                            <span className="text-gray-500 text-xs">📍</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-xs text-gray-400">DROPOFF STOP</p>
+                                                        <p className="text-sm font-medium text-gray-700 mt-0.5">
+                                                            {currentTripBooking?.dropoff_stop?.name || currentTripBooking?.dropoff_stop_name || 'N/A'}
                                                         </p>
-                                                    )}
+                                                        {currentTripBooking?.dropoff_stop?.bus_arrived_at && (
+                                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                                                <span className="text-gray-500">Arrived: <span className="font-mono text-gray-600">{new Date(currentTripBooking.dropoff_stop.bus_arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></span>
+                                                                <span className="text-gray-500">Departed: <span className="font-mono text-gray-600">{new Date(currentTripBooking.dropoff_stop.bus_departed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Actual Dropoff - Only if different */}
+                                            {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) &&
+                                                (currentTripBooking?.actual_drop_stop_name !== currentTripBooking?.dropoff_stop?.name) && (
+                                                    <div className="pt-1">
+                                                        <div className="flex items-start gap-2">
+                                                            <div className="mt-0.5">
+                                                                <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center">
+                                                                    <span className="text-blue-500 text-xs">⬇️</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="text-xs text-blue-500">ACTUAL DROPOFF</p>
+                                                                <p className="text-sm font-medium text-blue-700 mt-0.5">
+                                                                    {currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name}
+                                                                </p>
+                                                                {(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at) && (
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        Dropped at: {new Date(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at).toLocaleString()}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            {/* Missed Bus Alert - Subtle warning */}
+                                            {(currentTripBooking?.status === "missed" || selectedPassenger.status === "missed") && (
+                                                <div className="mt-2 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
+                                                    <div className="flex gap-2">
+                                                        <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                                                        <div>
+                                                            <p className="text-sm font-medium text-amber-700">Passenger Missed the Bus</p>
+                                                            <p className="text-xs text-amber-600 mt-0.5">
+                                                                Bus was at "{currentTripBooking?.pickup_stop?.name}" from {new Date(currentTripBooking?.pickup_stop?.bus_arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to {new Date(currentTripBooking?.pickup_stop?.bus_departed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            {/* Date */}
-                                            <div>
-                                                <label className="text-xs text-gray-500 uppercase tracking-wide">Trip Date</label>
-                                                <p className="text-sm text-gray-700 mt-1">
+                                            {/* Trip Date */}
+                                            <div className="pt-2 border-t border-gray-100">
+                                                <p className="text-[11px] text-gray-400 uppercase tracking-wide">Trip Date</p>
+                                                <p className="text-sm text-gray-600 mt-1">
                                                     {currentTripBooking?.created_at ? new Date(currentTripBooking.created_at).toLocaleString() :
                                                         selectedTrip.timing?.actual_start ? new Date(selectedTrip.timing.actual_start).toLocaleString() :
                                                             selectedTrip.timing?.planned_start ? new Date(selectedTrip.timing.planned_start).toLocaleString() : 'N/A'}
@@ -2902,21 +3075,24 @@ const TripDetailsPage = () => {
                                         </div>
                                     </div>
 
-                                    {/* Note */}
-                                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-100">
-                                        <p className="text-xs text-amber-700 flex items-center gap-2">
-                                            <span>ℹ️</span>
-                                            This shows only the booking information for this specific trip.
+                                    {/* Note - Minimal */}
+                                    <div className="bg-gray-50 rounded-lg px-4 py-2">
+                                        <p className="text-xs text-gray-500">
+                                            ℹ️ Booking information for this specific trip only
                                             {passengerDetails?.user_id && (
-                                                <span className="text-amber-600"> Passenger ID: {passengerDetails.user_id?.slice(0, 13)}...</span>
+                                                <span className="text-gray-400 ml-1">· ID: {passengerDetails.user_id?.slice(0, 13)}...</span>
                                             )}
                                         </p>
                                     </div>
                                 </div>
                             )}
                         </div>
-                        <div className="border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end">
-                            <button onClick={() => setShowPassengerModal(false)} className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm">Close</button>
+
+                        {/* Footer */}
+                        <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex justify-end">
+                            <button onClick={() => setShowPassengerModal(false)} className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
