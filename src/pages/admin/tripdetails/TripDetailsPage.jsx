@@ -2365,12 +2365,12 @@ const TripDetailsPage = () => {
         const matchesSearch = trip.route_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             trip.driver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             trip.vehicle?.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         if (statusFilter === "rfid") {
             const hasRFID = trip.rfid && trip.rfid.passengers && trip.rfid.passengers.length > 0;
             return matchesSearch && hasRFID;
         }
-        
+
         const matchesStatus = statusFilter === "all" || trip.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -2478,8 +2478,8 @@ const TripDetailsPage = () => {
                                                 }}
                                                 className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${isSelected
                                                     ? "border-indigo-500 bg-gradient-to-r from-indigo-50 to-white shadow-lg"
-                                                    : hasRFID 
-                                                        ? "border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50" 
+                                                    : hasRFID
+                                                        ? "border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50"
                                                         : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
                                                     }`}
                                             >
@@ -2513,8 +2513,8 @@ const TripDetailsPage = () => {
                                                             <span>{rfidCount}</span>
                                                         </div>
                                                         <div className="w-full bg-indigo-100 rounded-full h-1">
-                                                            <div 
-                                                                className="bg-indigo-500 h-1 rounded-full" 
+                                                            <div
+                                                                className="bg-indigo-500 h-1 rounded-full"
                                                                 style={{ width: `${Math.min((rfidCount / 10) * 100, 100)}%` }}
                                                             ></div>
                                                         </div>
@@ -3301,12 +3301,12 @@ const TripDetailsPage = () => {
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-500">Transfer Status:</span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${selectedRFIDPassenger.transfer_status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                    selectedRFIDPassenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
-                                                        'bg-gray-100 text-gray-600'
+                                                selectedRFIDPassenger.transfer_status === 'withheld' ? 'bg-orange-100 text-orange-700' :
+                                                    'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${selectedRFIDPassenger.transfer_status === 'completed' ? 'bg-green-500' :
-                                                        selectedRFIDPassenger.transfer_status === 'withheld' ? 'bg-orange-500' :
-                                                            'bg-gray-400'
+                                                    selectedRFIDPassenger.transfer_status === 'withheld' ? 'bg-orange-500' :
+                                                        'bg-gray-400'
                                                     }`}></span>
                                                 {selectedRFIDPassenger.transfer_status || selectedRFIDPassenger.status || "Unknown"}
                                             </span>
