@@ -651,8 +651,6 @@
 // };
 
 // export default Dashboard;
-
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -665,7 +663,7 @@ import TopNavbar from "../../assets/components/navbar/TopNavbar";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState("week");
@@ -715,10 +713,17 @@ const Dashboard = () => {
     },
   };
 
-  // Check if mobile view
+  // Check if mobile view and handle sidebar state
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      // Close sidebar by default on mobile, open on desktop
+      if (!mobile) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -934,9 +939,10 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-slate-900">
         <Sidebar onClose={() => setSidebarOpen(false)} />
-        <div className="lg:ml-64 transition-all duration-300">
-          <TopNavbar onMenuClick={() => {}} />
-          <div className="flex items-center justify-center h-[calc(100vh-73px)]">
+        {/* Main content with proper margin based on sidebar state */}
+        <div className={`transition-all duration-300 ${!isMobile && sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+          <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <div className="flex items-center justify-center min-h-[calc(100vh-73px)]">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
               <p className="text-slate-400">Loading dashboard...</p>
@@ -951,9 +957,9 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-slate-900">
         <Sidebar onClose={() => setSidebarOpen(false)} />
-        <div className="lg:ml-64 transition-all duration-300">
-          <TopNavbar onMenuClick={() => {}} />
-          <div className="flex items-center justify-center h-[calc(100vh-73px)] p-4">
+        <div className={`transition-all duration-300 ${!isMobile && sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+          <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <div className="flex items-center justify-center min-h-[calc(100vh-73px)] p-4">
             <div className="text-center bg-slate-800 rounded-xl p-8 shadow-lg max-w-md border border-slate-700">
               <div className="text-red-500 text-5xl mb-4">⚠️</div>
               <h3 className="text-xl font-semibold text-white mb-2">Error Loading Dashboard</h3>
@@ -975,15 +981,22 @@ const Dashboard = () => {
     <div className="min-h-screen bg-slate-900">
       <Sidebar onClose={() => setSidebarOpen(false)} />
       
-      <div className="lg:ml-64 transition-all duration-300">
-        <TopNavbar onMenuClick={() => {}} />
+      {/* Main content with responsive margin that adapts to sidebar state */}
+      <div 
+        className={`
+          transition-all duration-300 ease-in-out
+          ${!isMobile && sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}
+          ${isMobile ? 'ml-0' : ''}
+        `}
+      >
+        <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         
-        <main className="p-6">
-          <div className="space-y-6">
+        <main className="p-4 md:p-6">
+          <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Header with date filter */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+                <h1 className="text-2xl md:text-3xl font-semibold text-white">Dashboard</h1>
                 <p className="text-slate-400 text-sm mt-0.5">Real-time analytics & insights</p>
               </div>
               <select 
@@ -997,9 +1010,9 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition">
+            {/* Stats Grid - Responsive grid that never overflows */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700 hover:border-slate-600 transition">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-slate-400 text-sm">Total Revenue</span>
                   <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -1008,11 +1021,11 @@ const Dashboard = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">₹{dashboardData.stats.totalRevenue.toFixed(2)}</p>
+                <p className="text-2xl md:text-3xl font-bold text-white">₹{dashboardData.stats.totalRevenue.toFixed(2)}</p>
                 <p className="text-xs text-emerald-400 mt-2">↑ +12.5% from last month</p>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700 hover:border-slate-600 transition">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-slate-400 text-sm">Total Bookings</span>
                   <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -1021,11 +1034,11 @@ const Dashboard = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">{dashboardData.stats.totalBookings}</p>
+                <p className="text-2xl md:text-3xl font-bold text-white">{dashboardData.stats.totalBookings}</p>
                 <p className="text-xs text-slate-400 mt-2">Completion rate: {dashboardData.stats.completionRate.toFixed(1)}%</p>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700 hover:border-slate-600 transition">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-slate-400 text-sm">Active Drivers</span>
                   <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
@@ -1034,11 +1047,11 @@ const Dashboard = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">{dashboardData.stats.activeVehicles}</p>
+                <p className="text-2xl md:text-3xl font-bold text-white">{dashboardData.stats.activeVehicles}</p>
                 <p className="text-xs text-slate-400 mt-2">Out of {dashboardData.stats.totalDrivers} total</p>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-5">
+              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-4 md:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-emerald-200 text-sm">Avg. Booking Value</span>
                   <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
@@ -1047,21 +1060,21 @@ const Dashboard = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">₹{dashboardData.stats.avgBookingValue.toFixed(2)}</p>
+                <p className="text-2xl md:text-3xl font-bold text-white">₹{dashboardData.stats.avgBookingValue.toFixed(2)}</p>
                 <p className="text-xs text-emerald-200 mt-2">Per completed booking</p>
               </div>
             </div>
 
-            {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
-                <div className="flex justify-between items-center mb-4">
+            {/* Charts Row 1 - Responsive */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <div>
                     <h3 className="text-white font-semibold">Booking & Revenue Trends</h3>
                     <p className="text-xs text-slate-500 mt-1">Last 30 days performance</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={dashboardData.bookingTrends.slice(-14)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
@@ -1075,21 +1088,21 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h3 className="text-white font-semibold">Trip Status Distribution</h3>
                     <p className="text-xs text-slate-500 mt-1">Current trip breakdown</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie
                       data={dashboardData.statusDistribution}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
-                      outerRadius={100}
+                      outerRadius={90}
                       paddingAngle={5}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -1114,15 +1127,15 @@ const Dashboard = () => {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h3 className="text-white font-semibold">Hourly Booking Distribution</h3>
                     <p className="text-xs text-slate-500 mt-1">Peak hours analysis</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={dashboardData.hourlyBookings}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="hour" stroke="#94a3b8" fontSize={10} interval={3} />
@@ -1133,14 +1146,14 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h3 className="text-white font-semibold">Monthly Revenue</h3>
                     <p className="text-xs text-slate-500 mt-1">Last 6 months performance</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={dashboardData.revenueTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="month" stroke="#94a3b8" fontSize={10} />
@@ -1153,8 +1166,8 @@ const Dashboard = () => {
             </div>
 
             {/* Top Routes & Stops */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1169,8 +1182,8 @@ const Dashboard = () => {
                     const percentage = (route.total_bookings / maxRoute) * 100;
                     return (
                       <div key={index}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-slate-300">{route.route_name}</span>
+                        <div className="flex justify-between text-sm mb-1 flex-wrap gap-2">
+                          <span className="text-slate-300 truncate">{route.route_name}</span>
                           <span className="text-slate-400">{route.total_bookings} bookings</span>
                         </div>
                         <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
@@ -1182,7 +1195,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+              <div className="bg-slate-800/50 rounded-xl p-4 md:p-5 border border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1198,8 +1211,8 @@ const Dashboard = () => {
                     const percentage = (stop.booking_count / maxStop) * 100;
                     return (
                       <div key={index}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-slate-300">{stop.stop_name}</span>
+                        <div className="flex justify-between text-sm mb-1 flex-wrap gap-2">
+                          <span className="text-slate-300 truncate">{stop.stop_name}</span>
                           <span className="text-slate-400">{stop.booking_count} pickups</span>
                         </div>
                         <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
@@ -1213,19 +1226,19 @@ const Dashboard = () => {
             </div>
 
             {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
               <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-700">
+                <div className="px-4 md:px-5 py-4 border-b border-slate-700">
                   <h3 className="text-white font-semibold">Recent Bookings</h3>
                   <p className="text-xs text-slate-500 mt-1">Latest transactions</p>
                 </div>
                 <div className="divide-y divide-slate-700 max-h-96 overflow-y-auto">
                   {dashboardData.recentBookings.map((booking, idx) => (
                     <div key={idx} className="p-4 hover:bg-slate-700/30 transition">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="text-white text-sm font-medium">{booking.user}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{booking.pickup} → {booking.dropoff}</p>
+                      <div className="flex justify-between items-start flex-wrap gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{booking.user}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{booking.pickup} → {booking.dropoff}</p>
                           <p className="text-xs text-slate-600 mt-1">{new Date(booking.created_at).toLocaleString()}</p>
                         </div>
                         <div className="text-right">
@@ -1245,24 +1258,24 @@ const Dashboard = () => {
               </div>
 
               <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-700">
+                <div className="px-4 md:px-5 py-4 border-b border-slate-700">
                   <h3 className="text-white font-semibold">Recent Drivers</h3>
                   <p className="text-xs text-slate-500 mt-1">Latest registrations</p>
                 </div>
                 <div className="divide-y divide-slate-700 max-h-96 overflow-y-auto">
                   {dashboardData.recentDrivers.map((driver, idx) => (
                     <div key={idx} className="p-4 hover:bg-slate-700/30 transition">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                      <div className="flex justify-between items-center flex-wrap gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {driver.name.charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="text-white text-sm font-medium">{driver.name}</p>
-                            <p className="text-xs text-slate-500">{driver.email}</p>
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{driver.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{driver.email}</p>
                           </div>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-shrink-0">
                           <span className={`px-2 py-0.5 rounded text-xs ${
                             driver.status === "verified" ? "bg-emerald-500/20 text-emerald-400" : "bg-yellow-500/20 text-yellow-400"
                           }`}>
