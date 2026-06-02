@@ -1688,7 +1688,6 @@
 // };
 
 // export default TripDetailsPage;
-
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -1737,12 +1736,11 @@ const busIcon = new L.Icon({
     shadowSize: [41, 41],
 });
 
-// Add this helper function at the top of your component (before the return statement)
+// Helper functions
 const formatLocalTime = (utcDateString) => {
     if (!utcDateString) return 'N/A';
     try {
         const date = new Date(utcDateString);
-        // Convert to local timezone
         return date.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
@@ -1781,9 +1779,7 @@ const calculateWaitTime = (arrivedAt, departedAt) => {
     return waitSeconds;
 };
 
-
-
-// Stop marker icon - different colors based on status
+// Stop marker icon
 const getStopIcon = (isCurrent = false, isPassed = false) => {
     let color = "green";
     if (isCurrent) color = "blue";
@@ -1799,7 +1795,7 @@ const getStopIcon = (isCurrent = false, isPassed = false) => {
     });
 };
 
-// Function to calculate distance between two coordinates (Haversine formula)
+// Calculate distance between coordinates
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1811,7 +1807,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     return R * c;
 };
 
-// Function to find nearest stop and determine if driver has arrived
+// Find nearest stop
 const findNearestStopWithArrival = (currentLat, currentLng, stops) => {
     if (!stops || stops.length === 0) return null;
 
@@ -1848,7 +1844,7 @@ const findNearestStopWithArrival = (currentLat, currentLng, stops) => {
     return nearestStop;
 };
 
-// Function to get location name from coordinates using reverse geocoding
+// Get location name from coordinates
 const getLocationName = async (lat, lng) => {
     try {
         const response = await fetch(
@@ -1932,6 +1928,7 @@ const TripDetailsPage = () => {
     const [loadingPassenger, setLoadingPassenger] = useState(false);
     const [passengerDetails, setPassengerDetails] = useState(null);
     const [currentTripBooking, setCurrentTripBooking] = useState(null);
+    const [passengerError, setPassengerError] = useState(null);
 
     // RFID Passenger modal states
     const [selectedRFIDPassenger, setSelectedRFIDPassenger] = useState(null);
@@ -2099,168 +2096,141 @@ const TripDetailsPage = () => {
         }
     };
 
-    const fetchPassengerProfile = async (passengerId) => {
-        if (!passengerId || passengerId === 'undefined') {
-            console.error("Invalid passenger ID:", passengerId);
-            alert("Unable to fetch passenger details: Invalid passenger ID");
+const handlePassengerClick = async (passenger) => {
+    setSelectedPassenger(passenger);
+    setShowPassengerModal(true);
+    setPassengerDetails(null);
+    setCurrentTripBooking(null);
+    setPassengerError(null);
+
+    try {
+        setLoadingPassenger(true);
+        
+        // First, get the passenger ID
+        const passengerId = passenger.passenger_id || passenger.user_id;
+        
+        if (!passengerId) {
+            console.error("No passenger_id found", passenger);
+            setPassengerError("No passenger ID found");
+            setLoadingPassenger(false);
             return;
         }
 
-        setLoadingPassenger(true);
-        try {
-            const url = `${BASE_URL}/passenger/${passengerId}`;
-            const res = await axios.get(url, axiosConfig);
-
-            const passengerData = res.data;
-
-            setPassengerDetails({
-                profile: passengerData.profile,
-                email: passengerData.email,
-                is_active: passengerData.is_active,
-                joined_at: passengerData.joined_at,
-                user_id: passengerData.user_id,
-                current_booking: passengerData.current_booking || null,
-                pickup_stop: passengerData.pickup_stop || null,
-                dropoff_stop: passengerData.dropoff_stop || null
+        // Fetch passenger profile to get their booking history
+        const passengerUrl = `${BASE_URL}/passenger/${passengerId}`;
+        console.log("Fetching passenger profile:", passengerUrl);
+        
+        const passengerResponse = await axios.get(passengerUrl, axiosConfig);
+        const passengerData = passengerResponse.data;
+        
+        console.log("Passenger data:", passengerData);
+        
+        // Find the booking for the current trip
+        // We need to match the booking with the current selected trip
+        let bookingId = null;
+        
+        if (passengerData.booking_history && passengerData.booking_history.bookings) {
+            // Look for a booking that matches the current trip's route or time
+            const currentTripStartTime = selectedTrip?.timing?.planned_start;
+            
+            // Find the most recent booking that might match this trip
+            const matchingBooking = passengerData.booking_history.bookings.find(booking => {
+                // Check if booking was created around the same time as the trip
+                if (currentTripStartTime) {
+                    const bookingDate = new Date(booking.created_at);
+                    const tripDate = new Date(currentTripStartTime);
+                    const timeDiff = Math.abs(bookingDate - tripDate);
+                    // If booking was created within 24 hours of the trip
+                    return timeDiff < 24 * 60 * 60 * 1000;
+                }
+                return false;
             });
-
-            if (passengerData.pickup_stop || passengerData.dropoff_stop) {
-                setCurrentTripBooking(prev => ({
-                    ...prev,
-                    pickup_stop_details: passengerData.pickup_stop,
-                    dropoff_stop_details: passengerData.dropoff_stop
-                }));
-            }
-
-        } catch (err) {
-            console.error("Error fetching passenger profile:", err);
-            if (err.response?.status === 401) {
-                alert("Authentication error. Please login again.");
-            } else if (err.response?.status === 404) {
-                alert("Passenger not found");
+            
+            if (matchingBooking) {
+                bookingId = matchingBooking.booking_id;
+                console.log("Found matching booking_id:", bookingId);
             } else {
-                alert("Failed to fetch passenger details. Please try again.");
-            }
-        } finally {
-            setLoadingPassenger(false);
-        }
-    };
-
-    const handlePassengerClick = async (passenger) => {
-        setSelectedPassenger(passenger);
-        setShowPassengerModal(true);
-        setPassengerDetails(null);
-        setCurrentTripBooking(null);
-
-        try {
-            setLoadingPassenger(true);
-
-            const passengerUrl = `${BASE_URL}/passenger/${passenger.passenger_id}`;
-            const response = await axios.get(passengerUrl, axiosConfig);
-
-            const passengerData = response.data;
-
-            let currentBooking = null;
-
-            if (passengerData.booking_history && passengerData.booking_history.bookings) {
-                currentBooking = passengerData.booking_history.bookings.find(
-                    booking => booking.booking_id === selectedTrip.trip_id ||
-                        booking.booking_id === passenger.booking_id
-                );
-
-                if (!currentBooking && selectedTrip.timing?.actual_start) {
-                    const tripDate = new Date(selectedTrip.timing.actual_start).toDateString();
-                    currentBooking = passengerData.booking_history.bookings.find(booking => {
-                        const bookingDate = new Date(booking.created_at).toDateString();
-                        return bookingDate === tripDate;
-                    });
+                // If no match found, use the most recent booking
+                const mostRecent = passengerData.booking_history.bookings.sort((a, b) => 
+                    new Date(b.created_at) - new Date(a.created_at)
+                )[0];
+                if (mostRecent) {
+                    bookingId = mostRecent.booking_id;
+                    console.log("Using most recent booking_id:", bookingId);
                 }
             }
-
-            setPassengerDetails({
-                email: passengerData.email,
-                is_active: passengerData.is_active,
-                joined_at: passengerData.joined_at,
-                user_id: passengerData.user_id,
-                profile: passengerData.profile
-            });
-
-            if (currentBooking) {
-                setCurrentTripBooking({
-                    booking_id: currentBooking.booking_id,
-                    passenger_id: passenger.passenger_id,
-                    name: passenger.name,
-                    status: currentBooking.status,
-                    pickup_stop_name: currentBooking.pickup_stop?.name,
-                    dropoff_stop_name: currentBooking.dropoff_stop?.name,
-                    actual_drop_stop_name: currentBooking.actual_drop_stop_name,
-                    actual_dropped_at: currentBooking.actual_dropped_at,
-                    created_at: currentBooking.created_at,
-                    fare: currentBooking.fare,
-                    pickup_stop: currentBooking.pickup_stop || null,
-                    dropoff_stop: currentBooking.dropoff_stop || null
-                });
-            } else {
-                const firstBooking = passengerData.booking_history?.bookings?.[0];
-                if (firstBooking) {
-                    setCurrentTripBooking({
-                        booking_id: firstBooking.booking_id,
-                        passenger_id: passenger.passenger_id,
-                        name: passenger.name,
-                        status: firstBooking.status,
-                        pickup_stop_name: firstBooking.pickup_stop?.name,
-                        dropoff_stop_name: firstBooking.dropoff_stop?.name,
-                        actual_drop_stop_name: firstBooking.actual_drop_stop_name,
-                        actual_dropped_at: firstBooking.actual_dropped_at,
-                        created_at: firstBooking.created_at,
-                        fare: firstBooking.fare,
-                        pickup_stop: firstBooking.pickup_stop || null,
-                        dropoff_stop: firstBooking.dropoff_stop || null
-                    });
-                } else {
-                    setCurrentTripBooking({
-                        booking_id: selectedTrip.trip_id,
-                        passenger_id: passenger.passenger_id,
-                        name: passenger.name,
-                        status: passenger.status,
-                        pickup_stop_name: passenger.pickup_stop_name,
-                        dropoff_stop_name: passenger.dropoff_stop_name,
-                        actual_drop_stop_name: passenger.actual_drop_stop_name,
-                        actual_dropped_at: passenger.actual_dropped_at,
-                        created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
-                        fare: null,
-                        pickup_stop: null,
-                        dropoff_stop: null
-                    });
-                }
-            }
-
-        } catch (err) {
-            console.error("Error fetching passenger booking details:", err);
-            setCurrentTripBooking({
-                booking_id: selectedTrip.trip_id,
-                passenger_id: passenger.passenger_id,
-                name: passenger.name,
-                status: passenger.status,
-                pickup_stop_name: passenger.pickup_stop_name,
-                dropoff_stop_name: passenger.dropoff_stop_name,
-                actual_drop_stop_name: passenger.actual_drop_stop_name,
-                actual_dropped_at: passenger.actual_dropped_at,
-                created_at: selectedTrip.timing?.actual_start || selectedTrip.timing?.planned_start,
-                fare: null,
-                pickup_stop: null,
-                dropoff_stop: null
-            });
-
-            setPassengerDetails({
-                email: passenger.email,
-                is_active: true,
-                user_id: passenger.passenger_id
-            });
-        } finally {
-            setLoadingPassenger(false);
         }
-    };
+        
+        if (!bookingId) {
+            console.error("No booking_id found for passenger");
+            setPassengerError("No active booking found for this passenger");
+            setLoadingPassenger(false);
+            return;
+        }
+
+        // Now fetch the trip details using the booking_id
+        const tripDetailUrl = `${BASE_URL}/bookings/${bookingId}/trip-detail`;
+        console.log("Calling trip-detail API:", tripDetailUrl);
+        
+        const tripDetailResponse = await axios.get(tripDetailUrl, axiosConfig);
+        console.log("Trip detail response:", tripDetailResponse.data);
+        
+        const { booking, trip, passenger: passengerInfo } = tripDetailResponse.data;
+
+        setPassengerDetails({
+            email: passengerData.email || passengerInfo?.email || null,
+            is_active: passengerData.is_active,
+            joined_at: passengerData.joined_at,
+            user_id: passengerData.user_id || passengerInfo?.user_id || null,
+            profile: passengerData.profile || {
+                full_name: passengerInfo?.full_name || passenger.name
+            }
+        });
+
+        setCurrentTripBooking({
+            booking_id: booking.booking_id,
+            passenger_id: passengerId,
+            name: passengerInfo?.full_name || passenger.name || passengerData.profile?.full_name,
+            status: booking.status,
+            booking_status: booking.booking_status,
+            trip_status: trip?.status,
+            pickup_stop_name: booking.pickup_stop?.name,
+            dropoff_stop_name: booking.dropoff_stop?.name,
+            pickup_stop: booking.pickup_stop,
+            dropoff_stop: booking.dropoff_stop,
+            actual_drop_stop_name: booking.actual_drop_stop_name,
+            actual_dropped_at: booking.actual_dropped_at,
+            created_at: booking.created_at,
+            boarded_at: booking.boarded_at,
+            completed_at: booking.completed_at,
+            cancelled_at: booking.cancelled_at,
+            fare: booking.fare,
+            fare_amount: booking.fare_amount,
+            seat_number: booking.seat_number,
+            otp: booking.otp
+        });
+
+    } catch (err) {
+        console.error("Error in handlePassengerClick:", err);
+        
+        let errorMessage = "Failed to load passenger details";
+        if (err.response?.status === 401) {
+            errorMessage = "Authentication error. Please login again.";
+        } else if (err.response?.status === 404) {
+            errorMessage = "Passenger or booking not found.";
+        } else if (err.response?.status === 403) {
+            errorMessage = "You don't have permission to view these details.";
+        } else if (err.code === 'ECONNABORTED') {
+            errorMessage = "Request timeout. Please check your connection.";
+        } else {
+            errorMessage = err.message || "Failed to load passenger details";
+        }
+        
+        setPassengerError(errorMessage);
+    } finally {
+        setLoadingPassenger(false);
+    }
+};
 
     const cancelTrip = async () => {
         if (!cancelReason) {
@@ -2340,55 +2310,53 @@ const TripDetailsPage = () => {
         }
     };
 
-const completeTripManually = async () => {
-    setCompletionError(null);
+    const completeTripManually = async () => {
+        setCompletionError(null);
 
-    // Check if trip is in progress before making API call
-    if (selectedTrip?.status !== "in_progress") {
-        setCompletionError({ 
-            title: "Cannot Complete Trip", 
-            message: `Trip is currently "${selectedTrip?.status}". Manual trip completion is only allowed when the trip status is 'in_progress'.` 
-        });
-        return;
-    }
-
-    try {
-        setCompletingTrip(true);
-        const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/complete-manually`;
-        await axios.post(url, { note: completionNote || null }, axiosConfig);
-        alert("✅ Trip completed successfully!");
-        setShowCompleteModal(false);
-        setCompletionNote("");
-        await fetchTrips();
-        if (selectedTrip) {
-            await fetchTripDetails(selectedTrip.trip_id);
+        if (selectedTrip?.status !== "in_progress") {
+            setCompletionError({
+                title: "Cannot Complete Trip",
+                message: `Trip is currently "${selectedTrip?.status?.replace("_", " ") || "N/A"}". Manual trip completion is only allowed when the trip status is 'in_progress'.`
+            });
+            return;
         }
-    } catch (err) {
-        console.error("Error completing trip:", err);
-        let errorMessage = "Failed to complete trip";
-        let errorTitle = "Cannot Complete Trip";
 
-        if (err.response) {
-            const errorData = err.response.data;
-            
-            // Handle the specific error from your API
-            if (errorData?.detail === "Manual trip completion is allowed only when the trip status is 'in_progress'.") {
-                errorTitle = "⚠️ Invalid Trip Status";
-                errorMessage = `Trip is currently "${selectedTrip?.status || 'unknown'}". Manual trip completion is only allowed when the trip status is 'in_progress'.`;
-            } else if (errorData?.detail?.error === "passengers_still_on_board") {
-                errorTitle = "⚠️ Passengers Still On Board";
-                errorMessage = errorData.detail?.message || "Cannot complete the trip while passengers are still on board.";
-            } else if (typeof errorData?.detail === "string") {
-                errorMessage = errorData.detail;
-            } else if (errorData?.message) {
-                errorMessage = errorData.message;
+        try {
+            setCompletingTrip(true);
+            const url = `${BASE_URL}/trips/${selectedTrip.trip_id}/complete-manually`;
+            await axios.post(url, { note: completionNote || null }, axiosConfig);
+            alert("✅ Trip completed successfully!");
+            setShowCompleteModal(false);
+            setCompletionNote("");
+            await fetchTrips();
+            if (selectedTrip) {
+                await fetchTripDetails(selectedTrip.trip_id);
             }
+        } catch (err) {
+            console.error("Error completing trip:", err);
+            let errorMessage = "Failed to complete trip";
+            let errorTitle = "Cannot Complete Trip";
+
+            if (err.response) {
+                const errorData = err.response.data;
+
+                if (errorData?.detail === "Manual trip completion is allowed only when the trip status is 'in_progress'.") {
+                    errorTitle = "⚠️ Invalid Trip Status";
+                    errorMessage = `Trip is currently "${selectedTrip?.status || 'unknown'}". Manual trip completion is only allowed when the trip status is 'in_progress'.`;
+                } else if (errorData?.detail?.error === "passengers_still_on_board") {
+                    errorTitle = "⚠️ Passengers Still On Board";
+                    errorMessage = errorData.detail?.message || "Cannot complete the trip while passengers are still on board.";
+                } else if (typeof errorData?.detail === "string") {
+                    errorMessage = errorData.detail;
+                } else if (errorData?.message) {
+                    errorMessage = errorData.message;
+                }
+            }
+            setCompletionError({ title: errorTitle, message: errorMessage });
+        } finally {
+            setCompletingTrip(false);
         }
-        setCompletionError({ title: errorTitle, message: errorMessage });
-    } finally {
-        setCompletingTrip(false);
-    }
-};
+    };
 
     useEffect(() => {
         fetchTrips();
@@ -2749,7 +2717,7 @@ const completeTripManually = async () => {
                                         </div>
                                     )}
 
-                                    {/* RFID SECTION - SIMPLIFIED */}
+                                    {/* RFID SECTION */}
                                     {selectedTrip.rfid && (
                                         <div className="bg-white rounded-2xl shadow-sm border border-indigo-200 overflow-hidden">
                                             <div className="px-5 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-indigo-100">
@@ -2773,7 +2741,6 @@ const completeTripManually = async () => {
                                                 </div>
                                             </div>
 
-                                            {/* Stats Cards */}
                                             <div className="grid grid-cols-3 gap-3 p-5 bg-gray-50/30">
                                                 <div className="text-center">
                                                     <p className="text-xs text-gray-500 mb-1">Reserved Seats</p>
@@ -2789,7 +2756,6 @@ const completeTripManually = async () => {
                                                 </div>
                                             </div>
 
-                                            {/* Passengers List - Simplified */}
                                             {selectedTrip.rfid.passengers && selectedTrip.rfid.passengers.length > 0 && (
                                                 <div className="p-5 pt-0">
                                                     <div className="flex items-center justify-between mb-4">
@@ -2874,7 +2840,7 @@ const completeTripManually = async () => {
                                         </div>
                                     </div>
 
-                                    {/* PASSENGERS SECTION - SIMPLIFIED LIST VIEW */}
+                                    {/* PASSENGERS SECTION */}
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                         <div className="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                                             <div className="flex items-center justify-between">
@@ -3101,87 +3067,92 @@ const completeTripManually = async () => {
                 </div>
             )}
 
-{/* COMPLETE TRIP MODAL */}
-{showCompleteModal && selectedTrip && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => {
-        setShowCompleteModal(false);
-        setCompletionError(null);
-        setCompletionNote("");
-    }}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 sm:px-6 py-3 sm:py-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <FlagIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-base sm:text-lg font-bold text-white">Complete Trip</h2>
-                        <p className="text-emerald-100 text-[10px] sm:text-xs">{selectedTrip.route?.name}</p>
-                    </div>
-                </div>
-            </div>
-            
-            {/* Error Display - Shows when completion error exists */}
-            {completionError && (
-                <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                    <div className="flex items-start gap-2">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="text-sm font-semibold text-red-700">{completionError.title}</h4>
-                            <p className="text-xs text-red-600 mt-0.5">{completionError.message}</p>
+            {/* COMPLETE TRIP MODAL */}
+            {showCompleteModal && selectedTrip && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => {
+                    setShowCompleteModal(false);
+                    setCompletionError(null);
+                    setCompletionNote("");
+                }}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 sm:px-6 py-3 sm:py-4">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-white/20 rounded-full flex items-center justify-center">
+                                    <FlagIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base sm:text-lg font-bold text-white">Complete Trip</h2>
+                                    <p className="text-emerald-100 text-[10px] sm:text-xs">{selectedTrip.route?.name}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {completionError && (
+                            <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <div className="flex items-start gap-2">
+                                    <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-red-700">{completionError.title}</h4>
+                                        <p className="text-xs text-red-600 mt-0.5">{completionError.message}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setCompletionError(null)}
+                                    className="mt-2 text-xs text-red-600 hover:text-red-700 font-medium"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="p-4 sm:p-6">
+                            <textarea
+                                className="w-full border border-gray-200 rounded-xl p-2 sm:p-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                                placeholder="Add a note about why this trip is being completed..."
+                                value={completionNote}
+                                onChange={(e) => setCompletionNote(e.target.value)}
+                                rows="3"
+                            />
+                        </div>
+                        <div className="border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end gap-2 sm:gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowCompleteModal(false);
+                                    setCompletionError(null);
+                                    setCompletionNote("");
+                                }}
+                                className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm hover:bg-gray-300 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={completeTripManually}
+                                disabled={completingTrip}
+                                className="px-3 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg text-xs sm:text-sm hover:from-emerald-700 hover:to-emerald-800 transition disabled:opacity-50"
+                            >
+                                {completingTrip ? "Processing..." : "Complete Trip"}
+                            </button>
                         </div>
                     </div>
-                    <button 
-                        onClick={() => setCompletionError(null)}
-                        className="mt-2 text-xs text-red-600 hover:text-red-700 font-medium"
-                    >
-                        Dismiss
-                    </button>
                 </div>
             )}
-            
-            <div className="p-4 sm:p-6">
-                <textarea
-                    className="w-full border border-gray-200 rounded-xl p-2 sm:p-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                    placeholder="Add a note about why this trip is being completed..."
-                    value={completionNote}
-                    onChange={(e) => setCompletionNote(e.target.value)}
-                    rows="3"
-                />
-            </div>
-            <div className="border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end gap-2 sm:gap-3">
-                <button
-                    onClick={() => {
-                        setShowCompleteModal(false);
-                        setCompletionError(null);
-                        setCompletionNote("");
-                    }}
-                    className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm hover:bg-gray-300 transition"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={completeTripManually}
-                    disabled={completingTrip}
-                    className="px-3 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg text-xs sm:text-sm hover:from-emerald-700 hover:to-emerald-800 transition disabled:opacity-50"
-                >
-                    {completingTrip ? "Processing..." : "Complete Trip"}
-                </button>
-            </div>
-        </div>
-    </div>
-)}
 
-            {/* PASSENGER DETAILS MODAL - FIXED TIME DISPLAY */}
+            {/* PASSENGER DETAILS MODAL */}
             {showPassengerModal && selectedPassenger && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowPassengerModal(false)}>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => {
+                    setShowPassengerModal(false);
+                    setPassengerError(null);
+                }}>
                     <div className="bg-white rounded-2xl shadow-xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-800">Trip Booking Details</h2>
                                 <p className="text-xs text-gray-500 mt-0.5">{selectedPassenger.name}</p>
                             </div>
-                            <button onClick={() => setShowPassengerModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                            <button onClick={() => {
+                                setShowPassengerModal(false);
+                                setPassengerError(null);
+                            }} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
@@ -3191,6 +3162,16 @@ const completeTripManually = async () => {
                                 <div className="flex items-center justify-center py-12">
                                     <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-indigo-500"></div>
                                     <p className="ml-2 text-gray-500 text-sm">Loading details...</p>
+                                </div>
+                            ) : passengerError ? (
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                                    <div className="flex items-start gap-2">
+                                        <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-red-700">Error Loading Details</p>
+                                            <p className="text-xs text-red-600 mt-0.5">{passengerError}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-5">
@@ -3225,14 +3206,30 @@ const completeTripManually = async () => {
                                                         currentTripBooking?.status === "missed" ? "bg-red-50 text-red-700" :
                                                             currentTripBooking?.status === "cancelled" ? "bg-gray-50 text-gray-600" :
                                                                 currentTripBooking?.status === "boarded" ? "bg-blue-50 text-blue-700" :
-                                                                    "bg-gray-50 text-gray-600"
+                                                                    currentTripBooking?.status === "booked" ? "bg-yellow-50 text-yellow-700" :
+                                                                        "bg-gray-50 text-gray-600"
                                                         }`}>
-                                                        {currentTripBooking?.status ? currentTripBooking.status.toUpperCase() : selectedPassenger.status?.toUpperCase() || 'N/A'}
+                                                        {currentTripBooking?.status ?
+                                                            currentTripBooking.status.toUpperCase() :
+                                                            (selectedPassenger.status?.toUpperCase() || 'BOOKED')}
                                                     </span>
                                                 </div>
                                             </div>
+                                            
+                                            {currentTripBooking?.seat_number && (
+                                                <div className="mt-2 flex items-center gap-2 text-sm">
+                                                    <span className="text-gray-500">💺 Seat Number:</span>
+                                                    <span className="font-semibold text-gray-800">{currentTripBooking.seat_number}</span>
+                                                </div>
+                                            )}
 
-                                            {/* PICKUP STOP */}
+                                            {currentTripBooking?.boarded_at && (
+                                                <div className="mt-2 flex items-center gap-2 text-sm">
+                                                    <span className="text-gray-500">🚌 Boarded at:</span>
+                                                    <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.boarded_at)}</span>
+                                                </div>
+                                            )}
+                                            
                                             <div className="pt-2">
                                                 <div className="flex items-start gap-2">
                                                     <div className="mt-0.5">
@@ -3250,13 +3247,15 @@ const completeTripManually = async () => {
                                                                 <span className="text-gray-500">
                                                                     Arrived: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.pickup_stop.bus_arrived_at)}</span>
                                                                 </span>
-                                                                <span className="text-gray-500">
-                                                                    Departed: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.pickup_stop.bus_departed_at)}</span>
-                                                                </span>
-                                                                {currentTripBooking.pickup_stop.bus_arrived_at && currentTripBooking.pickup_stop.bus_departed_at && (
-                                                                    <span className="text-gray-500">
-                                                                        Waited: <span className="text-amber-600">{calculateWaitTime(currentTripBooking.pickup_stop.bus_arrived_at, currentTripBooking.pickup_stop.bus_departed_at)} sec</span>
-                                                                    </span>
+                                                                {currentTripBooking.pickup_stop.bus_departed_at && (
+                                                                    <>
+                                                                        <span className="text-gray-500">
+                                                                            Departed: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.pickup_stop.bus_departed_at)}</span>
+                                                                        </span>
+                                                                        <span className="text-gray-500">
+                                                                            Waited: <span className="text-amber-600">{calculateWaitTime(currentTripBooking.pickup_stop.bus_arrived_at, currentTripBooking.pickup_stop.bus_departed_at)} sec</span>
+                                                                        </span>
+                                                                    </>
                                                                 )}
                                                             </div>
                                                         )}
@@ -3264,7 +3263,6 @@ const completeTripManually = async () => {
                                                 </div>
                                             </div>
 
-                                            {/* DROPOFF STOP */}
                                             <div>
                                                 <div className="flex items-start gap-2">
                                                     <div className="mt-0.5">
@@ -3291,7 +3289,6 @@ const completeTripManually = async () => {
                                                 </div>
                                             </div>
 
-                                            {/* ACTUAL DROPOFF (if different from planned) */}
                                             {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) &&
                                                 (currentTripBooking?.actual_drop_stop_name !== currentTripBooking?.dropoff_stop?.name) && (
                                                     <div className="pt-1">
@@ -3316,7 +3313,6 @@ const completeTripManually = async () => {
                                                     </div>
                                                 )}
 
-                                            {/* MISSED BUS WARNING */}
                                             {(currentTripBooking?.status === "missed" || selectedPassenger.status === "missed") && (
                                                 <div className="mt-2 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
                                                     <div className="flex gap-2">
@@ -3333,7 +3329,6 @@ const completeTripManually = async () => {
                                                 </div>
                                             )}
 
-                                            {/* TRIP DATE */}
                                             <div className="pt-2 border-t border-gray-100">
                                                 <p className="text-[11px] text-gray-400 uppercase tracking-wide">Trip Date</p>
                                                 <p className="text-sm text-gray-600 mt-1">
@@ -3358,7 +3353,10 @@ const completeTripManually = async () => {
                         </div>
 
                         <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex justify-end">
-                            <button onClick={() => setShowPassengerModal(false)} className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                            <button onClick={() => {
+                                setShowPassengerModal(false);
+                                setPassengerError(null);
+                            }} className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
                                 Close
                             </button>
                         </div>
