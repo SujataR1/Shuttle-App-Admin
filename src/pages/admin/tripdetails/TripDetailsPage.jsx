@@ -1688,6 +1688,8 @@
 // };
 
 // export default TripDetailsPage;
+
+
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../../../assets/components/sidebar/Sidebar";
@@ -2105,114 +2107,265 @@ const handlePassengerClick = async (passenger) => {
 
     try {
         setLoadingPassenger(true);
-        
-        // First, get the passenger ID
-        const passengerId = passenger.passenger_id || passenger.user_id;
-        
-        if (!passengerId) {
-            console.error("No passenger_id found", passenger);
-            setPassengerError("No passenger ID found");
+
+        // Log the entire passenger object to see what fields are available
+        console.log("Full passenger object:", passenger);
+
+        // Try multiple possible field names for the passenger ID
+        const userId = passenger.passenger_id ||
+            passenger.user_id ||
+            passenger.id ||
+            passenger.passenger_user_id ||
+            passenger.userId;
+
+        console.log("Extracted user_id:", userId);
+
+        if (!userId) {
+            console.error("No user_id found in passenger object. Available keys:", Object.keys(passenger));
+            setPassengerError(`No passenger ID found. Available data: ${JSON.stringify(passenger, null, 2)}`);
             setLoadingPassenger(false);
             return;
         }
 
-        // Fetch passenger profile to get their booking history
-        const passengerUrl = `${BASE_URL}/passenger/${passengerId}`;
+        console.log("Checking passenger with user_id:", userId);
+
+        // STEP 1: Fetch passenger profile to get all booking_ids
+        const passengerUrl = `${BASE_URL}/passenger/${userId}`;
         console.log("Fetching passenger profile:", passengerUrl);
-        
+
         const passengerResponse = await axios.get(passengerUrl, axiosConfig);
         const passengerData = passengerResponse.data;
-        
-        console.log("Passenger data:", passengerData);
-        
-        // Find the booking for the current trip
-        // We need to match the booking with the current selected trip
-        let bookingId = null;
-        
-        if (passengerData.booking_history && passengerData.booking_history.bookings) {
-            // Look for a booking that matches the current trip's route or time
-            const currentTripStartTime = selectedTrip?.timing?.planned_start;
-            
-            // Find the most recent booking that might match this trip
-            const matchingBooking = passengerData.booking_history.bookings.find(booking => {
-                // Check if booking was created around the same time as the trip
-                if (currentTripStartTime) {
-                    const bookingDate = new Date(booking.created_at);
-                    const tripDate = new Date(currentTripStartTime);
-                    const timeDiff = Math.abs(bookingDate - tripDate);
-                    // If booking was created within 24 hours of the trip
-                    return timeDiff < 24 * 60 * 60 * 1000;
-                }
-                return false;
-            });
-            
-            if (matchingBooking) {
-                bookingId = matchingBooking.booking_id;
-                console.log("Found matching booking_id:", bookingId);
-            } else {
-                // If no match found, use the most recent booking
-                const mostRecent = passengerData.booking_history.bookings.sort((a, b) => 
-                    new Date(b.created_at) - new Date(a.created_at)
-                )[0];
-                if (mostRecent) {
-                    bookingId = mostRecent.booking_id;
-                    console.log("Using most recent booking_id:", bookingId);
-                }
-            }
-        }
-        
-        if (!bookingId) {
-            console.error("No booking_id found for passenger");
-            setPassengerError("No active booking found for this passenger");
+
+        console.log("Passenger Data:", passengerData);
+
+        // Get all bookings from booking_history
+        const allBookings = passengerData.booking_history?.bookings || [];
+        console.log("Total bookings found:", allBookings.length);
+
+        if (allBookings.length === 0) {
+            setPassengerError("No booking history found for this passenger");
             setLoadingPassenger(false);
             return;
         }
 
-        // Now fetch the trip details using the booking_id
-        const tripDetailUrl = `${BASE_URL}/bookings/${bookingId}/trip-detail`;
-        console.log("Calling trip-detail API:", tripDetailUrl);
-        
-        const tripDetailResponse = await axios.get(tripDetailUrl, axiosConfig);
-        console.log("Trip detail response:", tripDetailResponse.data);
-        
-        const { booking, trip, passenger: passengerInfo } = tripDetailResponse.data;
+        // Log all booking statuses for debugging
+        console.log("All booking statuses:", allBookings.map(b => ({ id: b.booking_id, status: b.status })));
 
+        // STEP 2: Look for ACTIVE bookings (not completed or cancelled)
+        // Based on your enums, active statuses are: "booked", "boarded", "confirmed"
+        // Completed/Cancelled statuses: "completed", "cancelled", "missed"
+        const activeStatuses = ["booked", "boarded", "confirmed", "pending_payment"];
+        const inactiveStatuses = ["completed", "cancelled", "missed"];
+        
+        const activeBookings = allBookings.filter(booking => 
+            activeStatuses.includes(booking.status)
+        );
+
+        console.log("Active bookings found:", activeBookings.length, activeBookings.map(b => ({ id: b.booking_id, status: b.status })));
+
+        let ongoingBooking = null;
+        let ongoingTripData = null;
+
+        // STEP 3: If active bookings exist, check each one via /trip-detail API
+        if (activeBookings.length > 0) {
+            console.log(`Found ${activeBookings.length} active booking(s), checking /trip-detail API...`);
+
+            for (const booking of activeBookings) {
+                const bookingId = booking.booking_id;
+                console.log("Checking active booking_id:", bookingId, "with status:", booking.status);
+
+                try {
+                    // Call /trip-detail API with booking_id
+                    const tripDetailUrl = `${BASE_URL}/bookings/${bookingId}/trip-detail`;
+                    console.log("Calling trip-detail API:", tripDetailUrl);
+
+                    const tripDetailResponse = await axios.get(tripDetailUrl, axiosConfig);
+                    const tripDetailData = tripDetailResponse.data;
+
+                    console.log("Trip detail response:", tripDetailData);
+
+                    // Check if this is an ongoing trip based on ScheduledTripStatus enum
+                    const tripStatus = tripDetailData.trip?.status;
+                    const bookingStatus = tripDetailData.booking?.status;
+                    
+                    // Valid ongoing trip statuses from ScheduledTripStatus enum
+                    const ongoingTripStatuses = ["scheduled", "in_progress"];
+                    const isOngoing = ongoingTripStatuses.includes(tripStatus) &&
+                                     !inactiveStatuses.includes(bookingStatus);
+
+                    if (isOngoing) {
+                        console.log("✅ Found ongoing trip for booking:", bookingId);
+                        ongoingBooking = booking;
+                        ongoingTripData = tripDetailData;
+                        break; // Stop searching - found active trip
+                    } else {
+                        console.log(`Booking ${bookingId} is not ongoing: trip=${tripStatus}, booking=${bookingStatus}`);
+                    }
+
+                } catch (err) {
+                    console.log(`Error checking booking ${bookingId}:`, err.response?.status, err.message);
+                    continue;
+                }
+            }
+        } else {
+            console.log("No active bookings found in passenger history");
+        }
+
+        // STEP 4: Set passenger details (common for both scenarios)
         setPassengerDetails({
-            email: passengerData.email || passengerInfo?.email || null,
+            email: passengerData.email,
             is_active: passengerData.is_active,
             joined_at: passengerData.joined_at,
-            user_id: passengerData.user_id || passengerInfo?.user_id || null,
+            user_id: passengerData.user_id,
             profile: passengerData.profile || {
-                full_name: passengerInfo?.full_name || passenger.name
+                full_name: passenger.name || passenger.traveller_name
             }
         });
 
-        setCurrentTripBooking({
-            booking_id: booking.booking_id,
-            passenger_id: passengerId,
-            name: passengerInfo?.full_name || passenger.name || passengerData.profile?.full_name,
-            status: booking.status,
-            booking_status: booking.booking_status,
-            trip_status: trip?.status,
-            pickup_stop_name: booking.pickup_stop?.name,
-            dropoff_stop_name: booking.dropoff_stop?.name,
-            pickup_stop: booking.pickup_stop,
-            dropoff_stop: booking.dropoff_stop,
-            actual_drop_stop_name: booking.actual_drop_stop_name,
-            actual_dropped_at: booking.actual_dropped_at,
-            created_at: booking.created_at,
-            boarded_at: booking.boarded_at,
-            completed_at: booking.completed_at,
-            cancelled_at: booking.cancelled_at,
-            fare: booking.fare,
-            fare_amount: booking.fare_amount,
-            seat_number: booking.seat_number,
-            otp: booking.otp
+        // STEP 5: Format the response based on whether we found an ongoing trip or not
+        let formattedBooking = null;
+
+        if (ongoingBooking && ongoingTripData) {
+            // CASE A: Passenger has an ONGOING trip - Use /trip-detail API data
+            console.log("📌 Using ONGOING trip data from /trip-detail API");
+
+            formattedBooking = {
+                booking_id: ongoingTripData.booking_id,
+                passenger_id: userId,
+                name: ongoingTripData.passenger?.full_name || ongoingBooking.traveller_name || passenger.name,
+                traveller_name: ongoingTripData.passenger?.full_name || ongoingBooking.traveller_name,
+                traveller_phone: ongoingTripData.booking?.traveller_phone || ongoingBooking.traveller_phone,
+                traveller_email: ongoingTripData.booking?.traveller_email || ongoingBooking.traveller_email,
+                traveller_relationship_label: ongoingTripData.booking?.traveller_relationship_label || ongoingBooking.traveller_relationship_label,
+                status: ongoingTripData.booking?.status || ongoingBooking.status,
+                booking_status: ongoingTripData.booking?.booking_status || ongoingBooking.status,
+                trip_status: ongoingTripData.trip?.status,
+                pickup_stop_name: ongoingTripData.booking?.pickup_stop?.name || ongoingBooking.pickup_stop?.name,
+                dropoff_stop_name: ongoingTripData.booking?.dropoff_stop?.name || ongoingBooking.dropoff_stop?.name,
+                pickup_stop: ongoingTripData.booking?.pickup_stop || ongoingBooking.pickup_stop,
+                dropoff_stop: ongoingTripData.booking?.dropoff_stop || ongoingBooking.dropoff_stop,
+                actual_drop_stop_name: ongoingTripData.booking?.actual_drop_stop_name || ongoingBooking.actual_drop_stop_name,
+                actual_dropped_at: ongoingTripData.booking?.actual_dropped_at || ongoingBooking.actual_dropped_at,
+                created_at: ongoingTripData.booking?.created_at || ongoingBooking.created_at,
+                boarded_at: ongoingTripData.booking?.boarded_at || ongoingBooking.boarded_at,
+                completed_at: ongoingTripData.booking?.completed_at || ongoingBooking.completed_at,
+                cancelled_at: ongoingTripData.booking?.cancelled_at || ongoingBooking.cancelled_at,
+                fare: ongoingTripData.booking?.fare || ongoingTripData.booking?.fare_amount || ongoingBooking.fare || 0,
+                fare_amount: ongoingTripData.booking?.fare || ongoingTripData.booking?.fare_amount || ongoingBooking.fare || 0,
+                seat_number: ongoingTripData.booking?.seat_number || ongoingBooking.seat_number,
+                otp: ongoingTripData.booking?.otp,
+                timeline: {
+                    pickup_arrived_at: (ongoingTripData.booking?.pickup_stop || ongoingBooking.pickup_stop)?.bus_arrived_at,
+                    pickup_departed_at: (ongoingTripData.booking?.pickup_stop || ongoingBooking.pickup_stop)?.bus_departed_at,
+                    dropoff_arrived_at: (ongoingTripData.booking?.dropoff_stop || ongoingBooking.dropoff_stop)?.bus_arrived_at,
+                    dropoff_departed_at: (ongoingTripData.booking?.dropoff_stop || ongoingBooking.dropoff_stop)?.bus_departed_at
+                },
+                is_ongoing: true,
+                source_api: "trip-detail",
+                // Include full trip details for live tracking
+                trip: ongoingTripData.trip
+            };
+
+        } else {
+            // CASE B: Passenger has NO ongoing trip - Use /passenger API history data
+            // This includes all statuses: completed, cancelled, missed, etc.
+            console.log("📌 No ongoing trip found. Using passenger history data (any status)");
+            
+            // Find the most relevant booking for the current selected trip
+            const currentTripStartTime = selectedTrip?.timing?.actual_start || selectedTrip?.timing?.planned_start;
+            let selectedHistoryBooking = null;
+
+            // Try to find a booking that matches the current trip's timing
+            if (currentTripStartTime) {
+                const tripDate = new Date(currentTripStartTime);
+                tripDate.setHours(0, 0, 0, 0);
+
+                // Find bookings from the same day (any status)
+                const sameDayBookings = allBookings.filter(booking => {
+                    const bookingDate = new Date(booking.created_at);
+                    bookingDate.setHours(0, 0, 0, 0);
+                    return bookingDate.getTime() === tripDate.getTime();
+                });
+
+                console.log("Same day bookings (any status):", sameDayBookings.length, sameDayBookings.map(b => ({ id: b.booking_id, status: b.status })));
+
+                if (sameDayBookings.length > 0) {
+                    // Prefer the booking that matches the passenger name
+                    selectedHistoryBooking = sameDayBookings.find(b =>
+                        b.traveller_name === passenger.name || b.traveller_name === passenger.traveller_name
+                    ) || sameDayBookings[0];
+                }
+            }
+
+            // If no match by date, take the most recent booking (any status)
+            if (!selectedHistoryBooking) {
+                const sortedBookings = [...allBookings].sort((a, b) =>
+                    new Date(b.created_at) - new Date(a.created_at)
+                );
+                selectedHistoryBooking = sortedBookings[0];
+                console.log("Using most recent booking (any status):", selectedHistoryBooking.booking_id, "status:", selectedHistoryBooking.status);
+            }
+
+            if (selectedHistoryBooking) {
+                formattedBooking = {
+                    booking_id: selectedHistoryBooking.booking_id,
+                    passenger_id: userId,
+                    name: selectedHistoryBooking.traveller_name || passenger.name,
+                    traveller_name: selectedHistoryBooking.traveller_name,
+                    traveller_phone: selectedHistoryBooking.traveller_phone,
+                    traveller_email: selectedHistoryBooking.traveller_email,
+                    traveller_relationship_label: selectedHistoryBooking.traveller_relationship_label,
+                    status: selectedHistoryBooking.status,
+                    booking_status: selectedHistoryBooking.status,
+                    trip_status: selectedHistoryBooking.status === "completed" ? "completed" : 
+                                 selectedHistoryBooking.status === "cancelled" ? "cancelled" :
+                                 selectedHistoryBooking.status === "missed" ? "missed" : "unknown",
+                    pickup_stop_name: selectedHistoryBooking.pickup_stop?.name,
+                    dropoff_stop_name: selectedHistoryBooking.dropoff_stop?.name,
+                    pickup_stop: selectedHistoryBooking.pickup_stop,
+                    dropoff_stop: selectedHistoryBooking.dropoff_stop,
+                    actual_drop_stop_name: selectedHistoryBooking.actual_drop_stop_name,
+                    actual_dropped_at: selectedHistoryBooking.actual_dropped_at,
+                    created_at: selectedHistoryBooking.created_at,
+                    boarded_at: selectedHistoryBooking.boarded_at,
+                    completed_at: selectedHistoryBooking.completed_at,
+                    cancelled_at: selectedHistoryBooking.cancelled_at,
+                    fare: selectedHistoryBooking.fare || selectedHistoryBooking.fare_amount || 0,
+                    fare_amount: selectedHistoryBooking.fare || selectedHistoryBooking.fare_amount || 0,
+                    seat_number: selectedHistoryBooking.seat_number,
+                    timeline: {
+                        pickup_arrived_at: selectedHistoryBooking.pickup_stop?.bus_arrived_at,
+                        pickup_departed_at: selectedHistoryBooking.pickup_stop?.bus_departed_at,
+                        dropoff_arrived_at: selectedHistoryBooking.dropoff_stop?.bus_arrived_at,
+                        dropoff_departed_at: selectedHistoryBooking.dropoff_stop?.bus_departed_at
+                    },
+                    is_ongoing: false,
+                    source_api: "passenger-history"
+                };
+            } else {
+                setPassengerError("No booking found for this passenger");
+                setLoadingPassenger(false);
+                return;
+            }
+        }
+
+        setCurrentTripBooking(formattedBooking);
+        console.log("Final booking data:", {
+            is_ongoing: formattedBooking.is_ongoing,
+            source_api: formattedBooking.source_api,
+            booking_id: formattedBooking.booking_id,
+            status: formattedBooking.status,
+            trip_status: formattedBooking.trip_status
         });
+
+        // If it's an ongoing trip, you might want to auto-refresh live tracking
+        if (formattedBooking.is_ongoing && formattedBooking.trip?.trip_id) {
+            console.log("Ongoing trip detected - can enable live tracking for trip:", formattedBooking.trip.trip_id);
+        }
 
     } catch (err) {
         console.error("Error in handlePassengerClick:", err);
-        
+
         let errorMessage = "Failed to load passenger details";
         if (err.response?.status === 401) {
             errorMessage = "Authentication error. Please login again.";
@@ -2220,12 +2373,10 @@ const handlePassengerClick = async (passenger) => {
             errorMessage = "Passenger or booking not found.";
         } else if (err.response?.status === 403) {
             errorMessage = "You don't have permission to view these details.";
-        } else if (err.code === 'ECONNABORTED') {
-            errorMessage = "Request timeout. Please check your connection.";
         } else {
             errorMessage = err.message || "Failed to load passenger details";
         }
-        
+
         setPassengerError(errorMessage);
     } finally {
         setLoadingPassenger(false);
@@ -3137,232 +3288,313 @@ const handlePassengerClick = async (passenger) => {
                 </div>
             )}
 
-            {/* PASSENGER DETAILS MODAL */}
-            {showPassengerModal && selectedPassenger && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => {
+{/* PASSENGER DETAILS MODAL */}
+{showPassengerModal && selectedPassenger && (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => {
+        setShowPassengerModal(false);
+        setPassengerError(null);
+    }}>
+        <div className="bg-white rounded-2xl shadow-xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Trip Booking Details</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">{selectedPassenger.name}</p>
+                </div>
+                <button onClick={() => {
                     setShowPassengerModal(false);
                     setPassengerError(null);
-                }}>
-                    <div className="bg-white rounded-2xl shadow-xl w-[95%] max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                        <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <XMarkIcon className="h-5 w-5" />
+                </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-5">
+                {loadingPassenger ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-indigo-500"></div>
+                        <p className="ml-2 text-gray-500 text-sm">Loading details...</p>
+                    </div>
+                ) : passengerError ? (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <div className="flex items-start gap-2">
+                            <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-800">Trip Booking Details</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">{selectedPassenger.name}</p>
+                                <p className="text-sm font-medium text-red-700">Error Loading Details</p>
+                                <p className="text-xs text-red-600 mt-0.5">{passengerError}</p>
                             </div>
-                            <button onClick={() => {
-                                setShowPassengerModal(false);
-                                setPassengerError(null);
-                            }} className="text-gray-400 hover:text-gray-600 transition-colors">
-                                <XMarkIcon className="h-5 w-5" />
-                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {/* Passenger Header */}
+                        <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                <span className="text-gray-600 font-semibold text-base">{selectedPassenger.name?.charAt(0) || "?"}</span>
+                            </div>
+                            <div>
+                                <h3 className="font-medium text-gray-800">{selectedPassenger.name}</h3>
+                                {passengerDetails?.email && (
+                                    <p className="text-xs text-gray-500">{passengerDetails.email}</p>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-5">
-                            {loadingPassenger ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-indigo-500"></div>
-                                    <p className="ml-2 text-gray-500 text-sm">Loading details...</p>
-                                </div>
-                            ) : passengerError ? (
-                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                                    <div className="flex items-start gap-2">
-                                        <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
+                        {/* Booking Information */}
+                        <div className="border border-gray-100 rounded-xl overflow-hidden">
+                            <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
+                                <p className="text-xs font-medium text-gray-600">
+                                    {currentTripBooking?.is_ongoing ? "Current Trip Booking" : "Trip Booking Details"}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">{selectedTrip?.route?.name} ({selectedTrip?.route?.code})</p>
+                            </div>
+
+                            {currentTripBooking ? (
+                                <div className="p-4 space-y-4">
+                                    {/* Status and Traveller Info */}
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-sm font-medium text-red-700">Error Loading Details</p>
-                                            <p className="text-xs text-red-600 mt-0.5">{passengerError}</p>
+                                            <p className="text-[11px] text-gray-400 uppercase tracking-wide">Booking Status</p>
+                                            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                                                currentTripBooking?.status === "completed" ? "bg-green-50 text-green-700" :
+                                                currentTripBooking?.status === "cancelled" ? "bg-red-50 text-red-700" :
+                                                currentTripBooking?.status === "missed" ? "bg-amber-50 text-amber-700" :
+                                                currentTripBooking?.status === "boarded" ? "bg-blue-50 text-blue-700" :
+                                                currentTripBooking?.status === "booked" ? "bg-yellow-50 text-yellow-700" :
+                                                "bg-gray-50 text-gray-600"
+                                            }`}>
+                                                {currentTripBooking?.status?.toUpperCase() || "BOOKED"}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] text-gray-400 uppercase tracking-wide">Traveller</p>
+                                            <p className="text-sm font-medium text-gray-700 mt-1">
+                                                {currentTripBooking?.traveller_name || currentTripBooking?.name || "N/A"}
+                                            </p>
+                                            {currentTripBooking?.traveller_relationship_label && (
+                                                <p className="text-xs text-gray-400">{currentTripBooking.traveller_relationship_label}</p>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                            <span className="text-gray-600 font-semibold text-base">{selectedPassenger.name?.charAt(0) || "?"}</span>
+
+                                    {/* Seat Number */}
+                                    {currentTripBooking?.seat_number && (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className="text-gray-500">💺 Seat Number:</span>
+                                            <span className="font-semibold text-gray-800">{currentTripBooking.seat_number}</span>
                                         </div>
+                                    )}
+
+                                    {/* Pickup Stop - Only show if bus arrived */}
+                                    {currentTripBooking?.pickup_stop?.name && (
                                         <div>
-                                            <h3 className="font-medium text-gray-800">{selectedPassenger.name}</h3>
-                                            {passengerDetails?.email && (
-                                                <p className="text-xs text-gray-500">{passengerDetails.email}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="border border-gray-100 rounded-xl overflow-hidden">
-                                        <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
-                                            <p className="text-xs font-medium text-gray-600">Booking for This Trip</p>
-                                            <p className="text-xs text-gray-400 mt-0.5">{selectedTrip?.route?.name} ({selectedTrip?.route?.code})</p>
-                                        </div>
-                                        <div className="p-4 space-y-4">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-[11px] text-gray-400 uppercase tracking-wide">Trip Status</p>
-                                                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${getStatusBadge(selectedTrip.status).bg} ${getStatusBadge(selectedTrip.status).text}`}>
-                                                        {getStatusBadge(selectedTrip.status).label}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[11px] text-gray-400 uppercase tracking-wide">Passenger Status</p>
-                                                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${currentTripBooking?.status === "completed" ? "bg-green-50 text-green-700" :
-                                                        currentTripBooking?.status === "missed" ? "bg-red-50 text-red-700" :
-                                                            currentTripBooking?.status === "cancelled" ? "bg-gray-50 text-gray-600" :
-                                                                currentTripBooking?.status === "boarded" ? "bg-blue-50 text-blue-700" :
-                                                                    currentTripBooking?.status === "booked" ? "bg-yellow-50 text-yellow-700" :
-                                                                        "bg-gray-50 text-gray-600"
-                                                        }`}>
-                                                        {currentTripBooking?.status ?
-                                                            currentTripBooking.status.toUpperCase() :
-                                                            (selectedPassenger.status?.toUpperCase() || 'BOOKED')}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            {currentTripBooking?.seat_number && (
-                                                <div className="mt-2 flex items-center gap-2 text-sm">
-                                                    <span className="text-gray-500">💺 Seat Number:</span>
-                                                    <span className="font-semibold text-gray-800">{currentTripBooking.seat_number}</span>
-                                                </div>
-                                            )}
-
-                                            {currentTripBooking?.boarded_at && (
-                                                <div className="mt-2 flex items-center gap-2 text-sm">
-                                                    <span className="text-gray-500">🚌 Boarded at:</span>
-                                                    <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.boarded_at)}</span>
-                                                </div>
-                                            )}
-                                            
-                                            <div className="pt-2">
-                                                <div className="flex items-start gap-2">
-                                                    <div className="mt-0.5">
-                                                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
-                                                            <span className="text-gray-500 text-xs">🚏</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs text-gray-400">PICKUP STOP</p>
-                                                        <p className="text-sm font-medium text-gray-700 mt-0.5">
-                                                            {currentTripBooking?.pickup_stop?.name || currentTripBooking?.pickup_stop_name || 'N/A'}
-                                                        </p>
-                                                        {currentTripBooking?.pickup_stop?.bus_arrived_at && (
-                                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                                                                <span className="text-gray-500">
-                                                                    Arrived: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.pickup_stop.bus_arrived_at)}</span>
-                                                                </span>
-                                                                {currentTripBooking.pickup_stop.bus_departed_at && (
-                                                                    <>
-                                                                        <span className="text-gray-500">
-                                                                            Departed: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.pickup_stop.bus_departed_at)}</span>
-                                                                        </span>
-                                                                        <span className="text-gray-500">
-                                                                            Waited: <span className="text-amber-600">{calculateWaitTime(currentTripBooking.pickup_stop.bus_arrived_at, currentTripBooking.pickup_stop.bus_departed_at)} sec</span>
-                                                                        </span>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        )}
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+                                                        <span className="text-green-600 text-xs">🚏</span>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <div>
-                                                <div className="flex items-start gap-2">
-                                                    <div className="mt-0.5">
-                                                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
-                                                            <span className="text-gray-500 text-xs">📍</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs text-gray-400">DROPOFF STOP</p>
-                                                        <p className="text-sm font-medium text-gray-700 mt-0.5">
-                                                            {currentTripBooking?.dropoff_stop?.name || currentTripBooking?.dropoff_stop_name || 'N/A'}
-                                                        </p>
-                                                        {currentTripBooking?.dropoff_stop?.bus_arrived_at && (
-                                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                                                                <span className="text-gray-500">
-                                                                    Arrived: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.dropoff_stop.bus_arrived_at)}</span>
-                                                                </span>
-                                                                <span className="text-gray-500">
-                                                                    Departed: <span className="font-mono text-gray-600">{formatLocalTime(currentTripBooking.dropoff_stop.bus_departed_at)}</span>
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {(currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name) &&
-                                                (currentTripBooking?.actual_drop_stop_name !== currentTripBooking?.dropoff_stop?.name) && (
-                                                    <div className="pt-1">
-                                                        <div className="flex items-start gap-2">
-                                                            <div className="mt-0.5">
-                                                                <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center">
-                                                                    <span className="text-blue-500 text-xs">⬇️</span>
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-gray-400 uppercase">PICKUP STOP</p>
+                                                    <p className="text-sm font-medium text-gray-800 mt-0.5">
+                                                        {currentTripBooking.pickup_stop.name}
+                                                    </p>
+                                                    {currentTripBooking.pickup_stop.bus_arrived_at && (
+                                                        <div className="mt-2 text-xs text-gray-500">
+                                                            Bus arrived: {formatLocalTime(currentTripBooking.pickup_stop.bus_arrived_at)}
+                                                            {currentTripBooking.pickup_stop.bus_departed_at && ` • Departed: ${formatLocalTime(currentTripBooking.pickup_stop.bus_departed_at)}`}
+                                                            {/* Show warning if boarded before bus arrived */}
+                                                            {currentTripBooking.boarded_at && 
+                                                             new Date(currentTripBooking.boarded_at) < new Date(currentTripBooking.pickup_stop.bus_arrived_at) && (
+                                                                <div className="mt-1 text-amber-600 flex items-center gap-1">
+                                                                    <ExclamationTriangleIcon className="h-3 w-3" />
+                                                                    <span>Note: Boarding recorded before bus arrival (data inconsistency)</span>
                                                                 </div>
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className="text-xs text-blue-500">ACTUAL DROPOFF</p>
-                                                                <p className="text-sm font-medium text-blue-700 mt-0.5">
-                                                                    {currentTripBooking?.actual_drop_stop_name || selectedPassenger.actual_drop_stop_name}
-                                                                </p>
-                                                                {(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at) && (
-                                                                    <p className="text-xs text-gray-500 mt-1">
-                                                                        Dropped at: {formatLocalDateTime(currentTripBooking?.actual_dropped_at || selectedPassenger.actual_dropped_at)}
-                                                                    </p>
-                                                                )}
-                                                            </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                                    )}
+
+                                    {/* Dropoff Stop */}
+                                    {currentTripBooking?.dropoff_stop?.name && (
+                                        <div>
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center">
+                                                        <span className="text-red-600 text-xs">📍</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-gray-400 uppercase">DROPOFF STOP</p>
+                                                    <p className="text-sm font-medium text-gray-800 mt-0.5">
+                                                        {currentTripBooking.dropoff_stop.name}
+                                                    </p>
+                                                    {currentTripBooking.dropoff_stop.bus_arrived_at && (
+                                                        <div className="mt-2 text-xs text-gray-500">
+                                                            Bus arrived: {formatLocalTime(currentTripBooking.dropoff_stop.bus_arrived_at)}
+                                                            {currentTripBooking.dropoff_stop.bus_departed_at && ` • Departed: ${formatLocalTime(currentTripBooking.dropoff_stop.bus_departed_at)}`}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Actual Dropoff if different */}
+                                    {currentTripBooking?.actual_drop_stop_name &&
+                                        currentTripBooking?.actual_drop_stop_name !== (currentTripBooking?.dropoff_stop?.name || currentTripBooking?.dropoff_stop_name) && (
+                                            <div className="pt-1">
+                                                <div className="flex items-start gap-2">
+                                                    <div className="mt-0.5">
+                                                        <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center">
+                                                            <span className="text-blue-600 text-xs">⬇️</span>
                                                         </div>
                                                     </div>
-                                                )}
+                                                    <div className="flex-1">
+                                                        <p className="text-xs text-blue-600 uppercase">ACTUAL DROPOFF</p>
+                                                        <p className="text-sm font-medium text-blue-700 mt-0.5">
+                                                            {currentTripBooking.actual_drop_stop_name}
+                                                        </p>
+                                                        {currentTripBooking.actual_dropped_at && (
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                Dropped at: {formatLocalDateTime(currentTripBooking.actual_dropped_at)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                            {(currentTripBooking?.status === "missed" || selectedPassenger.status === "missed") && (
-                                                <div className="mt-2 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-                                                    <div className="flex gap-2">
-                                                        <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                                                        <div>
-                                                            <p className="text-sm font-medium text-amber-700">Passenger Missed the Bus</p>
-                                                            {currentTripBooking?.pickup_stop?.bus_arrived_at && currentTripBooking?.pickup_stop?.bus_departed_at && (
-                                                                <p className="text-xs text-amber-600 mt-0.5">
-                                                                    Bus was at "{currentTripBooking?.pickup_stop?.name}" from {formatLocalTime(currentTripBooking.pickup_stop.bus_arrived_at)} to {formatLocalTime(currentTripBooking.pickup_stop.bus_departed_at)}
+                                    {/* Boarding Information - Only show if logically valid */}
+                                    {currentTripBooking?.boarded_at && (() => {
+                                        const boardedDate = new Date(currentTripBooking.boarded_at);
+                                        const busArrivedDate = currentTripBooking.pickup_stop?.bus_arrived_at 
+                                            ? new Date(currentTripBooking.pickup_stop.bus_arrived_at) 
+                                            : null;
+                                        
+                                        // Only show boarding info if boarded after bus arrived OR if no bus arrival time
+                                        const isValidBoarding = !busArrivedDate || boardedDate >= busArrivedDate;
+                                        
+                                        if (!isValidBoarding) return null;
+                                        
+                                        return (
+                                            <div className="pt-1">
+                                                <p className="text-[11px] text-gray-400 uppercase">Boarded At</p>
+                                                <p className="text-sm text-gray-700 mt-1">{formatLocalDateTime(currentTripBooking.boarded_at)}</p>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Missed Status */}
+                                    {currentTripBooking?.status === "missed" && (
+                                        <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-100">
+                                            <div className="flex gap-2">
+                                                <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-amber-700">Passenger Missed the Bus</p>
+                                                    {currentTripBooking?.timeline?.pickup_arrived_at && currentTripBooking?.timeline?.pickup_departed_at && (
+                                                        <p className="text-xs text-amber-600 mt-0.5">
+                                                            Bus was at "{currentTripBooking?.pickup_stop?.name}" from {formatLocalTime(currentTripBooking.timeline.pickup_arrived_at)} to {formatLocalTime(currentTripBooking.timeline.pickup_departed_at)}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Cancelled Information */}
+                                    {currentTripBooking?.status === "cancelled" && (
+                                        <div className="p-3 bg-red-50/50 rounded-lg border border-red-100">
+                                            <div className="flex gap-2">
+                                                <XCircleIcon className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-medium text-red-700">Booking Cancelled</p>
+                                                    {currentTripBooking?.cancelled_at && (
+                                                        <div className="mt-2 space-y-1">
+                                                            <p className="text-xs text-red-600">
+                                                                <span className="font-medium">Cancelled at:</span> {formatLocalDateTime(currentTripBooking.cancelled_at)}
+                                                            </p>
+                                                            {currentTripBooking?.updated_at && (
+                                                                <p className="text-xs text-red-600">
+                                                                    <span className="font-medium">Last updated:</span> {formatLocalDateTime(currentTripBooking.updated_at)}
                                                                 </p>
                                                             )}
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            )}
-
-                                            <div className="pt-2 border-t border-gray-100">
-                                                <p className="text-[11px] text-gray-400 uppercase tracking-wide">Trip Date</p>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    {currentTripBooking?.created_at ? formatLocalDateTime(currentTripBooking.created_at) :
-                                                        selectedTrip.timing?.actual_start ? formatLocalDateTime(selectedTrip.timing.actual_start) :
-                                                            selectedTrip.timing?.planned_start ? formatLocalDateTime(selectedTrip.timing.planned_start) : 'N/A'}
-                                                </p>
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* Fare */}
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <div className="flex justify-between items-center">
+                                            <p className="text-[11px] text-gray-400 uppercase">Fare Amount</p>
+                                            <p className="text-lg font-bold text-gray-800">₹{currentTripBooking?.fare || 0}</p>
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg px-4 py-2">
-                                        <p className="text-xs text-gray-500">
-                                            ℹ️ Booking information for this specific trip only
-                                            {passengerDetails?.user_id && (
-                                                <span className="text-gray-400 ml-1">· ID: {passengerDetails.user_id?.slice(0, 13)}...</span>
-                                            )}
+                                    {/* Booking Date */}
+                                    <div className="pt-1">
+                                        <p className="text-[11px] text-gray-400 uppercase">Booking Date</p>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            {currentTripBooking?.created_at ? formatLocalDateTime(currentTripBooking.created_at) :
+                                                selectedTrip?.timing?.actual_start ? formatLocalDateTime(selectedTrip.timing.actual_start) :
+                                                    selectedTrip?.timing?.planned_start ? formatLocalDateTime(selectedTrip.timing.planned_start) : 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                        <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                                        <p className="text-sm text-yellow-700 font-medium">No booking found</p>
+                                        <p className="text-xs text-yellow-600 mt-1">
+                                            This passenger doesn't have any booking history for this trip.
                                         </p>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex justify-end">
-                            <button onClick={() => {
-                                setShowPassengerModal(false);
-                                setPassengerError(null);
-                            }} className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
-                                Close
-                            </button>
+                        {/* Data Quality Note - Show when there are inconsistencies */}
+                        {currentTripBooking?.boarded_at && 
+                         currentTripBooking?.pickup_stop?.bus_arrived_at && 
+                         new Date(currentTripBooking.boarded_at) < new Date(currentTripBooking.pickup_stop.bus_arrived_at) && (
+                            <div className="bg-amber-50 rounded-lg px-4 py-2 border border-amber-200">
+                                <p className="text-xs text-amber-700 flex items-center gap-1">
+                                    <ExclamationTriangleIcon className="h-3 w-3" />
+                                    ⚠️ Data inconsistency detected: Boarding time recorded before bus arrival time. This may be due to incorrect clock settings or data entry error.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Passenger ID Info */}
+                        <div className="bg-gray-50 rounded-lg px-4 py-2">
+                            <p className="text-xs text-gray-500">
+                                ℹ️ Booking information for this specific trip only
+                                {passengerDetails?.user_id && (
+                                    <span className="text-gray-400 ml-1">· ID: {passengerDetails.user_id?.slice(0, 13)}...</span>
+                                )}
+                            </p>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+
+            <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex justify-end">
+                <button onClick={() => {
+                    setShowPassengerModal(false);
+                    setPassengerError(null);
+                }} className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
             {/* RFID PASSENGER DETAILS MODAL */}
             {showRFIDPassengerModal && selectedRFIDPassenger && (
