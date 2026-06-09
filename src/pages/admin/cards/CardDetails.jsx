@@ -767,6 +767,8 @@
 // };
 
 // export default CardDetails;
+
+
 import Sidebar from '../../../assets/components/sidebar/Sidebar';
 import TopNavbar from '../../../assets/components/navbar/TopNavbar';
 import { useState, useEffect } from "react";
@@ -1202,7 +1204,7 @@ const CardDetails = () => {
                 {current_assignment ? (
                   <>
                     <p className="text-gray-900 text-sm font-medium">
-                      {getPassengerDisplayName(ecurrent_assignmnt.passenger_user_id)}
+                      {getPassengerDisplayName(current_assignment.passenger_user_id)}
                     </p>
                     <p className="text-gray-400 text-xs mt-1">
                       ID: {current_assignment.passenger_user_id?.slice(0, 12)}
