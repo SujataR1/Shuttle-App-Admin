@@ -300,6 +300,7 @@
 //         if (isSubmitting) return;
 //         setIsSubmitting(true);
 
+
 //         try {
 //             const cleanedStops = multiStops
 //                 .filter((s) => s.stop_id)
@@ -442,11 +443,6 @@
 //         }
 //     };
 
-//     const startEditingFare = (idx, currentAmount) => {
-//         setEditingFareId(idx);
-//         setTempFareAmount(currentAmount === 0 ? "" : currentAmount.toString());
-//     };
-
 //     const saveFareAmount = (idx) => {
 //         const amount = parseInt(tempFareAmount, 10);
 //         const finalAmount = isNaN(amount) ? 0 : amount;
@@ -530,7 +526,6 @@
 //         );
 //     };
 
-//     // Calculate stats for fare modal
 //     const totalConfigured = fareData.filter(f => f.amount > 0).length;
 //     const totalFares = fareData.length;
 
@@ -668,9 +663,25 @@
 //                                             <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2"><EyeIcon className="w-5 h-5 text-purple-600" /> Your Stops ({stops.length})</h3>{stops.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Step 1 Complete ✓</span>}</div>
 //                                             <div className="overflow-x-auto">
 //                                                 <table className="w-full text-sm">
-//                                                     <thead><tr className="bg-gray-50 border-b border-gray-200"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Latitude</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Longitude</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th></tr></thead>
+//                                                     <thead>
+//                                                         <tr className="bg-gray-50 border-b border-gray-200">
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Latitude</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Longitude</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th>
+//                                                         </tr>
+//                                                     </thead>
 //                                                     <tbody>
-//                                                         {stops.slice(0, 5).map((s) => (<tr key={s.stop_id} className="border-b border-gray-100 hover:bg-gray-50 transition"><td className="px-4 py-3 text-gray-700">{s.name}</td><td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.latitude).toFixed(6)}</td><td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.longitude).toFixed(6)}</td><td className="px-4 py-3"><button onClick={() => deleteStop(s.stop_id)} className="text-red-600 hover:text-red-700 text-xs font-medium bg-red-50 px-3 py-1.5 rounded-lg transition">Delete</button></td></tr>))}
+//                                                         {stops.slice(0, 5).map((s) => (
+//                                                             <tr key={s.stop_id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+//                                                                 <td className="px-4 py-3 text-gray-700">{s.name}</td>
+//                                                                 <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.latitude).toFixed(6)}</td>
+//                                                                 <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.longitude).toFixed(6)}</td>
+//                                                                 <td className="px-4 py-3">
+//                                                                     <button onClick={() => deleteStop(s.stop_id)} className="text-red-600 hover:text-red-700 text-xs font-medium bg-red-50 px-3 py-1.5 rounded-lg transition">Delete</button>
+//                                                                 </td>
+//                                                             </tr>
+//                                                         ))}
 //                                                     </tbody>
 //                                                 </table>
 //                                                 {stops.length > 5 && <div className="text-center mt-4"><button onClick={() => setShowStopsModal(true)} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">View all {stops.length} stops →</button></div>}
@@ -700,9 +711,33 @@
 //                                             <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2"><EyeIcon className="w-5 h-5 text-purple-600" /> Your Routes ({routes.length})</h3>{routes.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Step 2 Complete ✓</span>}</div>
 //                                             <div className="overflow-x-auto">
 //                                                 <table className="w-full text-sm">
-//                                                     <thead><tr className="bg-gray-50 border-b border-gray-200"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">AC</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Stops</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th></tr></thead>
+//                                                     <thead>
+//                                                         <tr className="bg-gray-50 border-b border-gray-200">
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">AC</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Stops</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+//                                                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+//                                                         </tr>
+//                                                     </thead>
 //                                                     <tbody>
-//                                                         {routes.slice(0, 5).map((r) => (<tr key={r.route_id} className="border-b border-gray-100 hover:bg-gray-50 transition"><td className="px-4 py-3 text-gray-700 font-medium cursor-pointer text-blue-600 hover:underline" onClick={() => openRouteDetails(r.route_id)}>{r.name}</td><td className="px-4 py-3 text-gray-600">{r.code}</td><td className="px-4 py-3">{r.has_ac ? '✓ Yes' : '✗ No'}</td><td className="px-4 py-3 text-gray-600">{r.total_stops}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${r.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td><td className="px-4 py-3"><div className="flex gap-2"><button onClick={() => { setSelectedRouteId(r.route_id); setShowStopModal(true); }} className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs font-medium">Add Stops</button><button onClick={() => toggleRoute(r.route_id, r.is_active)} className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs font-medium">Toggle</button><button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button></div></td></tr>))}
+//                                                         {routes.slice(0, 5).map((r) => (
+//                                                             <tr key={r.route_id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+//                                                                 <td className="px-4 py-3 text-gray-700 font-medium cursor-pointer text-blue-600 hover:underline" onClick={() => openRouteDetails(r.route_id)}>{r.name}</td>
+//                                                                 <td className="px-4 py-3 text-gray-600">{r.code}</td>
+//                                                                 <td className="px-4 py-3">{r.has_ac ? '✓ Yes' : '✗ No'}</td>
+//                                                                 <td className="px-4 py-3 text-gray-600">{r.total_stops}</td>
+//                                                                 <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${r.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td>
+//                                                                 <td className="px-4 py-3">
+//                                                                     <div className="flex gap-2">
+//                                                                         <button onClick={() => { setSelectedRouteId(r.route_id); setShowStopModal(true); }} className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs font-medium">Add Stops</button>
+//                                                                         <button onClick={() => toggleRoute(r.route_id, r.is_active)} className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs font-medium">Toggle</button>
+//                                                                         <button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button>
+//                                                                     </div>
+//                                                                 </td>
+//                                                             </tr>
+//                                                         ))}
 //                                                     </tbody>
 //                                                 </table>
 //                                                 {routes.length > 5 && <div className="text-center mt-4"><button onClick={() => setShowRoutesModal(true)} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">View all {routes.length} routes →</button></div>}
@@ -717,26 +752,129 @@
 //                 </main>
 //             </div>
 
-//             {/* Modals */}
+//             {/* All Routes Modal */}
 //             <Modal isOpen={showRoutesModal} onClose={() => setShowRoutesModal(false)} title="All Routes">
-//                 <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b border-gray-200"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">AC</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Stops</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th></tr></thead><tbody>{routes.map((r) => (<tr key={r.route_id} className="border-b border-gray-100 hover:bg-gray-50 transition"><td className="px-4 py-3 text-gray-700 font-medium cursor-pointer text-blue-600 hover:underline" onClick={() => openRouteDetails(r.route_id)}>{r.name}</td><td className="px-4 py-3 text-gray-600">{r.code}</td><td className="px-4 py-3">{r.has_ac ? '✓ Yes' : '✗ No'}</td><td className="px-4 py-3 text-gray-600">{r.total_stops}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${r.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td><td className="px-4 py-3"><div className="flex gap-2"><button onClick={() => { setSelectedRouteId(r.route_id); setShowRoutesModal(false); setShowStopModal(true); }} className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs font-medium">Add Stops</button><button onClick={() => toggleRoute(r.route_id, r.is_active)} className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs font-medium">Toggle</button><button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button></div></td></tr>))}</tbody></table></div>
+//                 <div className="overflow-x-auto">
+//                     <table className="w-full text-sm">
+//                         <thead>
+//                             <tr className="bg-gray-50 border-b border-gray-200">
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">AC</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Stops</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+//                             </tr>
+//                         </thead>
+//                         <tbody>
+//                             {routes.map((r) => (
+//                                 <tr key={r.route_id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+//                                     <td className="px-4 py-3 text-gray-700 font-medium cursor-pointer text-blue-600 hover:underline" onClick={() => openRouteDetails(r.route_id)}>{r.name}</td>
+//                                     <td className="px-4 py-3 text-gray-600">{r.code}</td>
+//                                     <td className="px-4 py-3">{r.has_ac ? '✓ Yes' : '✗ No'}</td>
+//                                     <td className="px-4 py-3 text-gray-600">{r.total_stops}</td>
+//                                     <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${r.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td>
+//                                     <td className="px-4 py-3">
+//                                         <div className="flex gap-2">
+//                                             <button onClick={() => { setSelectedRouteId(r.route_id); setShowRoutesModal(false); setShowStopModal(true); }} className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs font-medium">Add Stops</button>
+//                                             <button onClick={() => toggleRoute(r.route_id, r.is_active)} className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs font-medium">Toggle</button>
+//                                             <button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button>
+//                                         </div>
+//                                     </td>
+//                                 </tr>
+//                             ))}
+//                         </tbody>
+//                     </table>
+//                 </div>
 //             </Modal>
 
+//             {/* All Stops Modal */}
 //             <Modal isOpen={showStopsModal} onClose={() => setShowStopsModal(false)} title="All Stops">
-//                 <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b border-gray-200"><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Latitude</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Longitude</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th></tr></thead><tbody>{stops.map((s) => (<tr key={s.stop_id} className="border-b border-gray-100 hover:bg-gray-50 transition"><td className="px-4 py-3 text-gray-700">{s.name}</td><td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.latitude).toFixed(6)}</td><td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.longitude).toFixed(6)}</td><td className="px-4 py-3"><button onClick={() => deleteStop(s.stop_id)} className="text-red-600 hover:text-red-700 text-xs font-medium bg-red-50 px-3 py-1.5 rounded-lg transition">Delete</button></td></tr>))}</tbody></table></div>
+//                 <div className="overflow-x-auto">
+//                     <table className="w-full text-sm">
+//                         <thead>
+//                             <tr className="bg-gray-50 border-b border-gray-200">
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Latitude</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Longitude</th>
+//                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th>
+//                             </tr>
+//                         </thead>
+//                         <tbody>
+//                             {stops.map((s) => (
+//                                 <tr key={s.stop_id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+//                                     <td className="px-4 py-3 text-gray-700">{s.name}</td>
+//                                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.latitude).toFixed(6)}</td>
+//                                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.longitude).toFixed(6)}</td>
+//                                     <td className="px-4 py-3"><button onClick={() => deleteStop(s.stop_id)} className="text-red-600 hover:text-red-700 text-xs font-medium bg-red-50 px-3 py-1.5 rounded-lg transition">Delete</button></td>
+//                                 </tr>
+//                             ))}
+//                         </tbody>
+//                     </table>
+//                 </div>
 //             </Modal>
 
+//             {/* Add Stops to Route Modal */}
 //             <Modal isOpen={showStopModal} onClose={() => setShowStopModal(false)} title="Add Stops to Route">
-//                 <div className="space-y-4"><div className="bg-blue-50 rounded-lg p-3 mb-4"><p className="text-xs text-blue-700">Selected Route ID: <span className="font-mono">{selectedRouteId}</span></p></div>
-//                     {multiStops.map((s, i) => (<div key={i} className="border border-gray-200 rounded-xl p-4 bg-gray-50/30"><div className="flex items-center gap-2 mb-3"><div className="w-6 h-6 rounded-full bg-gray-700 text-white flex items-center justify-center text-xs font-bold">{(i + 1).toString().padStart(2, '0')}</div><span className="text-sm font-medium text-gray-700">Stop {i + 1}</span></div><select value={s.stop_id} onChange={(e) => { const updated = [...multiStops]; updated[i].stop_id = e.target.value; setMultiStops(updated); }} className="w-full border border-gray-200 rounded-lg p-2 mb-2 text-sm"><option value="">Select Stop</option>{stops.map((stop) => (<option key={stop.stop_id} value={stop.stop_id}>{stop.name}</option>))}</select><input placeholder="Time difference (minutes)" type="number" value={s.assume_time_diff_minutes} onChange={(e) => { const updated = [...multiStops]; updated[i].assume_time_diff_minutes = e.target.value; setMultiStops(updated); }} className="w-full border border-gray-200 rounded-lg p-2 mb-2 text-sm" /><div className="flex gap-4"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.boarding_allowed} onChange={(e) => { const updated = [...multiStops]; updated[i].boarding_allowed = e.target.checked; setMultiStops(updated); }} /> Boarding</label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.deboarding_allowed} onChange={(e) => { const updated = [...multiStops]; updated[i].deboarding_allowed = e.target.checked; setMultiStops(updated); }} /> Deboarding</label></div>{multiStops.length > 1 && (<button onClick={() => setMultiStops(multiStops.filter((_, idx) => idx !== i))} className="text-red-500 text-sm mt-2">Remove</button>)}</div>))}
+//                 <div className="space-y-4">
+//                     <div className="bg-blue-50 rounded-lg p-3 mb-4"><p className="text-xs text-blue-700">Selected Route ID: <span className="font-mono">{selectedRouteId}</span></p></div>
+//                     {multiStops.map((s, i) => (
+//                         <div key={i} className="border border-gray-200 rounded-xl p-4 bg-gray-50/30">
+//                             <div className="flex items-center gap-2 mb-3">
+//                                 <div className="w-6 h-6 rounded-full bg-gray-700 text-white flex items-center justify-center text-xs font-bold">{(i + 1).toString().padStart(2, '0')}</div>
+//                                 <span className="text-sm font-medium text-gray-700">Stop {i + 1}</span>
+//                             </div>
+//                             <select value={s.stop_id} onChange={(e) => { const updated = [...multiStops]; updated[i].stop_id = e.target.value; setMultiStops(updated); }} className="w-full border border-gray-200 rounded-lg p-2 mb-2 text-sm">
+//                                 <option value="">Select Stop</option>
+//                                 {stops.map((stop) => (<option key={stop.stop_id} value={stop.stop_id}>{stop.name}</option>))}
+//                             </select>
+//                             <input placeholder="Time difference (minutes)" type="number" value={s.assume_time_diff_minutes} onChange={(e) => { const updated = [...multiStops]; updated[i].assume_time_diff_minutes = e.target.value; setMultiStops(updated); }} className="w-full border border-gray-200 rounded-lg p-2 mb-2 text-sm" />
+//                             <div className="flex gap-4">
+//                                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.boarding_allowed} onChange={(e) => { const updated = [...multiStops]; updated[i].boarding_allowed = e.target.checked; setMultiStops(updated); }} /> Boarding</label>
+//                                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.deboarding_allowed} onChange={(e) => { const updated = [...multiStops]; updated[i].deboarding_allowed = e.target.checked; setMultiStops(updated); }} /> Deboarding</label>
+//                             </div>
+//                             {multiStops.length > 1 && (<button onClick={() => setMultiStops(multiStops.filter((_, idx) => idx !== i))} className="text-red-500 text-sm mt-2">Remove</button>)}
+//                         </div>
+//                     ))}
 //                     <button onClick={() => setMultiStops([...multiStops, { stop_id: "", boarding_allowed: true, deboarding_allowed: true, assume_time_diff_minutes: 0 }])} className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">+ Add Another Stop</button>
 //                     <button onClick={createMultipleStops} disabled={isSubmitting} className="w-full py-2.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50">{isSubmitting ? "Saving..." : "Save Stops"}</button>
 //                 </div>
 //             </Modal>
 
+//             {/* Route Details Modal */}
 //             <Modal isOpen={showRouteModal} onClose={() => setShowRouteModal(false)} title={routeDetails?.name || "Route Details"}>
-//                 {routeDetails && (<div><div className="flex gap-4 mb-6 pb-4 border-b border-gray-100"><span className="text-sm text-gray-500">Code: <span className="font-mono text-gray-700">{routeDetails.code}</span></span><span className={`text-xs px-2 py-1 rounded-full ${routeDetails.has_ac ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{routeDetails.has_ac ? 'AC' : 'Non-AC'}</span><span className={`text-xs px-2 py-1 rounded-full ${routeDetails.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{routeDetails.is_active ? 'Active' : 'Inactive'}</span></div>
-//                     {!routeDetails.path || routeDetails.path.length === 0 ? (<div className="text-center py-12"><MapPinIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" /><p className="text-gray-500">No stops added yet.</p><button onClick={() => { setSelectedRouteId(routeDetails.route_id); setShowRouteModal(false); setShowStopModal(true); }} className="mt-3 text-emerald-600 text-sm font-medium">+ Add Stops</button></div>) : (<div className="space-y-3">{routeDetails.path.map((stop, idx) => (<div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><div className="w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center font-bold text-sm">{stop.sequence_no}</div><div><p className="font-medium text-gray-900">{stop.stop_name}</p><p className="text-xs text-gray-500">Lat: {stop.latitude?.toFixed(4)}</p></div><div className="flex gap-1"><span className={`text-xs px-2 py-0.5 rounded-full ${stop.boarding ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200'}`}>Board</span><span className={`text-xs px-2 py-0.5 rounded-full ${stop.deboarding ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200'}`}>Deboard</span></div></div>))}</div>)}</div>)}
+//                 {routeDetails && (
+//                     <div>
+//                         <div className="flex gap-4 mb-6 pb-4 border-b border-gray-100">
+//                             <span className="text-sm text-gray-500">Code: <span className="font-mono text-gray-700">{routeDetails.code}</span></span>
+//                             <span className={`text-xs px-2 py-1 rounded-full ${routeDetails.has_ac ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{routeDetails.has_ac ? 'AC' : 'Non-AC'}</span>
+//                             <span className={`text-xs px-2 py-1 rounded-full ${routeDetails.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{routeDetails.is_active ? 'Active' : 'Inactive'}</span>
+//                         </div>
+//                         {!routeDetails.path || routeDetails.path.length === 0 ? (
+//                             <div className="text-center py-12">
+//                                 <MapPinIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+//                                 <p className="text-gray-500">No stops added yet.</p>
+//                                 <button onClick={() => { setSelectedRouteId(routeDetails.route_id); setShowRouteModal(false); setShowStopModal(true); }} className="mt-3 text-emerald-600 text-sm font-medium">+ Add Stops</button>
+//                             </div>
+//                         ) : (
+//                             <div className="space-y-3">
+//                                 {routeDetails.path.map((stop, idx) => (
+//                                     <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+//                                         <div className="w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center font-bold text-sm">{stop.sequence_no}</div>
+//                                         <div>
+//                                             <p className="font-medium text-gray-900">{stop.stop_name}</p>
+//                                             <p className="text-xs text-gray-500">Lat: {stop.latitude?.toFixed(4)}</p>
+//                                         </div>
+//                                         <div className="flex gap-1">
+//                                             <span className={`text-xs px-2 py-0.5 rounded-full ${stop.boarding ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200'}`}>Board</span>
+//                                             <span className={`text-xs px-2 py-0.5 rounded-full ${stop.deboarding ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200'}`}>Deboard</span>
+//                                         </div>
+//                                     </div>
+//                                 ))}
+//                             </div>
+//                         )}
+//                     </div>
+//                 )}
 //             </Modal>
 
 //             {/* FARE MODAL */}
@@ -770,14 +908,12 @@
 //                                 </div>
 //                             ) : (
 //                                 <>
-//                                     {/* Stats Summary */}
 //                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 //                                         <div className="bg-gray-50 rounded-xl p-4"><p className="text-gray-500 text-sm">Total Fare Segments</p><p className="text-2xl font-bold text-gray-900">{totalFares}</p></div>
 //                                         <div className="bg-gray-50 rounded-xl p-4"><p className="text-gray-500 text-sm">Configured Fares</p><p className="text-2xl font-bold text-emerald-600">{totalConfigured}</p></div>
 //                                         <div className="bg-gray-50 rounded-xl p-4"><p className="text-gray-500 text-sm">Pending Configuration</p><p className="text-2xl font-bold text-amber-600">{totalFares - totalConfigured}</p></div>
 //                                     </div>
 
-//                                     {/* Fares Table */}
 //                                     <div className="overflow-x-auto rounded-xl border border-gray-200 mb-6">
 //                                         <table className="w-full text-sm">
 //                                             <thead>
@@ -791,30 +927,87 @@
 //                                             </thead>
 //                                             <tbody className="divide-y divide-gray-100">
 //                                                 {fareData.map((f, idx) => (
-//                                                     <tr key={idx} className="hover:bg-gray-50 transition group">
+//                                                     <tr key={`${f.pickup_stop_id}-${f.dropoff_stop_id}`} className="hover:bg-gray-50 transition group">
 //                                                         <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
 //                                                         <td className="px-4 py-3 font-medium text-gray-800">{f.from}</td>
 //                                                         <td className="px-4 py-3 text-gray-600">{f.to}</td>
 //                                                         <td className="px-4 py-3">
 //                                                             {editingFareId === idx ? (
 //                                                                 <div className="flex items-center gap-2">
-//                                                                     <input type="text" value={tempFareAmount} onChange={(e) => { const val = e.target.value; if (val === '' || /^\d+$/.test(val)) setTempFareAmount(val); }} className="w-28 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" autoFocus onKeyPress={(e) => { if (e.key === 'Enter') saveFareAmount(idx); if (e.key === 'Escape') cancelEditing(); }} />
-//                                                                     <button onClick={() => saveFareAmount(idx)} className="text-emerald-600"><CheckCircleIcon className="w-5 h-5" /></button>
-//                                                                     <button onClick={cancelEditing} className="text-gray-400"><XMarkIcon className="w-5 h-5" /></button>
+//                                                                     <div className="relative">
+//                                                                         <CurrencyRupeeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+//                                                                         <input
+//                                                                             type="text"
+//                                                                             value={tempFareAmount}
+//                                                                             onChange={(e) => {
+//                                                                                 const val = e.target.value;
+//                                                                                 if (val === '' || /^\d+$/.test(val)) {
+//                                                                                     setTempFareAmount(val);
+//                                                                                 }
+//                                                                             }}
+//                                                                             className="w-32 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+//                                                                             autoFocus
+//                                                                             onKeyDown={(e) => {
+//                                                                                 if (e.key === 'Enter') saveFareAmount(idx);
+//                                                                                 if (e.key === 'Escape') cancelEditing();
+//                                                                             }}
+//                                                                             onBlur={() => {
+//                                                                                 setTimeout(() => {
+//                                                                                     if (editingFareId === idx) cancelEditing();
+//                                                                                 }, 200);
+//                                                                             }}
+//                                                                         />
+//                                                                     </div>
+//                                                                     <button onClick={() => saveFareAmount(idx)} className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition" type="button">
+//                                                                         <CheckCircleIcon className="w-4 h-4" />
+//                                                                     </button>
+//                                                                     <button onClick={cancelEditing} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition" type="button">
+//                                                                         <XMarkIcon className="w-4 h-4" />
+//                                                                     </button>
 //                                                                 </div>
 //                                                             ) : (
-//                                                                 <div onClick={() => startEditingFare(idx, f.amount)} className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer group-hover:bg-gray-100 ${f.amount === 0 ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-700'}`}>
-//                                                                     <CurrencyRupeeIcon className="w-4 h-4" />
-//                                                                     <span className="font-medium">{f.amount === 0 ? 'Set amount' : f.amount}</span>
-//                                                                     {f.amount === 0 && <span className="text-xs text-red-500">(Required)</span>}
-//                                                                 </div>
+//                                                                 <button
+//                                                                     onClick={() => {
+//                                                                         setEditingFareId(idx);
+//                                                                         setTempFareAmount(f.amount === 0 ? "" : f.amount.toString());
+//                                                                     }}
+//                                                                     className={`inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 w-full group-hover:bg-gray-100 ${f.amount === 0
+//                                                                         ? 'bg-red-50 hover:bg-red-100 border border-red-200'
+//                                                                         : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+//                                                                         }`}
+//                                                                     type="button"
+//                                                                 >
+//                                                                     <div className="flex items-center gap-2">
+//                                                                         <CurrencyRupeeIcon className={`w-4 h-4 ${f.amount === 0 ? 'text-red-400' : 'text-gray-500'}`} />
+//                                                                         <span className={`font-medium ${f.amount === 0 ? 'text-red-500' : 'text-gray-700'}`}>
+//                                                                             {f.amount === 0 ? 'Set amount' : f.amount}
+//                                                                         </span>
+//                                                                     </div>
+//                                                                     {f.amount === 0 && (
+//                                                                         <span className="text-xs text-red-400 bg-red-100 px-2 py-0.5 rounded-full">Required</span>
+//                                                                     )}
+//                                                                     {f.amount > 0 && (
+//                                                                         <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Configured</span>
+//                                                                     )}
+//                                                                 </button>
 //                                                             )}
 //                                                         </td>
 //                                                         <td className="px-4 py-3">
 //                                                             <label className="relative inline-flex items-center cursor-pointer">
-//                                                                 <input type="checkbox" className="sr-only peer" checked={f.is_active} onChange={(e) => { const updated = [...fareData]; updated[idx].is_active = e.target.checked; setFareData(updated); }} />
+//                                                                 <input
+//                                                                     type="checkbox"
+//                                                                     className="sr-only peer"
+//                                                                     checked={f.is_active}
+//                                                                     onChange={(e) => {
+//                                                                         const updated = [...fareData];
+//                                                                         updated[idx].is_active = e.target.checked;
+//                                                                         setFareData(updated);
+//                                                                     }}
+//                                                                 />
 //                                                                 <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-//                                                                 <span className={`ml-3 text-xs font-medium ${f.is_active ? 'text-emerald-600' : 'text-gray-500'}`}>{f.is_active ? 'Active' : 'Inactive'}</span>
+//                                                                 <span className={`ml-3 text-xs font-medium ${f.is_active ? 'text-emerald-600' : 'text-gray-500'}`}>
+//                                                                     {f.is_active ? 'Active' : 'Inactive'}
+//                                                                 </span>
 //                                                             </label>
 //                                                         </td>
 //                                                     </tr>
@@ -823,7 +1016,6 @@
 //                                         </table>
 //                                     </div>
 
-//                                     {/* Action Buttons */}
 //                                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
 //                                         <button onClick={() => setFareModal(false)} className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">Cancel</button>
 //                                         <button onClick={handleManageFare} disabled={totalConfigured === 0} className="px-5 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">Save Fares</button>
@@ -839,13 +1031,6 @@
 // };
 
 // export default RouteSettings;
-
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-
-
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -940,6 +1125,31 @@ const RouteSettings = () => {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    // Get sidebar state from localStorage
+    useEffect(() => {
+        const savedSidebarState = localStorage.getItem("sidebarOpen");
+        if (savedSidebarState !== null) {
+            setSidebarOpen(savedSidebarState === "true");
+        }
+        
+        const interval = setInterval(() => {
+            const savedState = localStorage.getItem("sidebarOpen");
+            if (savedState !== null) {
+                setSidebarOpen(savedState === "true");
+            }
+        }, 100);
+        
+        return () => clearInterval(interval);
+    }, []);
+
+    // Calculate sidebar width based on state
+    const getSidebarWidth = () => {
+        if (isMobile) return 0;
+        return sidebarOpen ? 288 : 96;
+    };
+
+    const sidebarWidth = getSidebarWidth();
 
     useEffect(() => {
         setCompletedSteps({
@@ -1039,9 +1249,15 @@ const RouteSettings = () => {
     if (initialLoad || loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <Sidebar onClose={() => setSidebarOpen(false)} />
-                <div className="lg:ml-64">
-                    <TopNavbar sidebarOpen={sidebarOpen} />
+                <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
+                <div 
+                    className="transition-all duration-300 ease-out"
+                    style={{
+                        marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+                        width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+                    }}
+                >
+                    <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
                     <div className="flex items-center justify-center h-screen">
                         <div className="text-center">
                             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mb-4"></div>
@@ -1380,10 +1596,17 @@ const RouteSettings = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
 
-            <div className="lg:ml-64">
-                <TopNavbar sidebarOpen={sidebarOpen} />
+            {/* Main Content - Dynamic margin based on sidebar state */}
+            <div 
+                className="transition-all duration-300 ease-out"
+                style={{
+                    marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+                    width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+                }}
+            >
+                <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
 
                 <main className="pt-20 p-8">
                     <div className="max-w-7xl mx-auto">
@@ -1584,11 +1807,11 @@ const RouteSettings = () => {
                                                                         <button onClick={() => toggleRoute(r.route_id, r.is_active)} className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs font-medium">Toggle</button>
                                                                         <button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button>
                                                                     </div>
-                                                                </td>
-                                                            </tr>
+                                                                 </td>
+                                                             </tr>
                                                         ))}
                                                     </tbody>
-                                                </table>
+                                                 </table>
                                                 {routes.length > 5 && <div className="text-center mt-4"><button onClick={() => setShowRoutesModal(true)} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">View all {routes.length} routes →</button></div>}
                                             </div>
                                             {routes.length === 0 && (<div className="text-center py-8 bg-gray-50 rounded-xl"><ArrowPathIcon className="w-12 h-12 text-gray-300 mx-auto mb-2" /><p className="text-gray-500 text-sm">No routes created yet</p></div>)}
@@ -1613,7 +1836,7 @@ const RouteSettings = () => {
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Stops</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             {routes.map((r) => (
@@ -1630,10 +1853,10 @@ const RouteSettings = () => {
                                             <button onClick={() => getFaresForRoute(r.route_id)} className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg text-xs font-medium">Fares</button>
                                         </div>
                                     </td>
-                                </tr>
+                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                     </table>
                 </div>
             </Modal>
 
@@ -1647,7 +1870,7 @@ const RouteSettings = () => {
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Latitude</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Longitude</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             {stops.map((s) => (
@@ -1656,10 +1879,10 @@ const RouteSettings = () => {
                                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.latitude).toFixed(6)}</td>
                                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{parseFloat(s.longitude).toFixed(6)}</td>
                                     <td className="px-4 py-3"><button onClick={() => deleteStop(s.stop_id)} className="text-red-600 hover:text-red-700 text-xs font-medium bg-red-50 px-3 py-1.5 rounded-lg transition">Delete</button></td>
-                                </tr>
+                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                     </table>
                 </div>
             </Modal>
 
@@ -1772,7 +1995,7 @@ const RouteSettings = () => {
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">To</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount (₹)</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                                                </tr>
+                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {fareData.map((f, idx) => (
@@ -1859,10 +2082,10 @@ const RouteSettings = () => {
                                                                 </span>
                                                             </label>
                                                         </td>
-                                                    </tr>
+                                                     </tr>
                                                 ))}
                                             </tbody>
-                                        </table>
+                                         </table>
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -1880,4 +2103,3 @@ const RouteSettings = () => {
 };
 
 export default RouteSettings;
-
