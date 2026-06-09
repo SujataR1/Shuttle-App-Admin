@@ -25,6 +25,8 @@ const RideHistory = () => {
   const [loading, setLoading] = useState(false);
   const [rideDetails, setRideDetails] = useState(null);
   const [error, setError] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Dropdown states for ride selection
   const [payoutTransfers, setPayoutTransfers] = useState([]);
@@ -36,6 +38,54 @@ const RideHistory = () => {
   // Cache for driver names and vehicle plates
   const [driverNames, setDriverNames] = useState({});
   const [vehiclePlates, setVehiclePlates] = useState({});
+
+  // Check device type and get sidebar state from localStorage
+  useEffect(() => {
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    
+    // Get sidebar state from localStorage (set by Sidebar component)
+    const savedSidebarState = localStorage.getItem("sidebarOpen");
+    if (savedSidebarState !== null) {
+      setSidebarOpen(savedSidebarState === "true");
+    }
+    
+    // Listen for sidebar state changes
+    const handleStorageChange = () => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Poll for sidebar state changes
+    const interval = setInterval(() => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Calculate sidebar width based on state (matches your Sidebar component)
+  const getSidebarWidth = () => {
+    if (isMobile) return 0;
+    return sidebarOpen ? 288 : 96;
+  };
+
+  const sidebarWidth = getSidebarWidth();
 
   // Fetch all drivers to get names
   const fetchDrivers = async () => {
@@ -331,10 +381,17 @@ const RideHistory = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar />
+      <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
       
-      <div className="lg:ml-64">
-        <TopNavbar />
+      {/* Main Content - Dynamic margin based on sidebar state */}
+      <div 
+        className="transition-all duration-300 ease-out"
+        style={{
+          marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+          width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+        }}
+      >
+        <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
         
         <main className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-7xl mx-auto">

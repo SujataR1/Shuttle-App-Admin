@@ -23,6 +23,7 @@ const TransactionLedger = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Dropdown states for card selection
   const [cards, setCards] = useState([]);
@@ -30,6 +31,54 @@ const TransactionLedger = () => {
   const [loadingCards, setLoadingCards] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCardInfo, setSelectedCardInfo] = useState("");
+
+  // Check device type and get sidebar state from localStorage
+  useEffect(() => {
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    
+    // Get sidebar state from localStorage (set by Sidebar component)
+    const savedSidebarState = localStorage.getItem("sidebarOpen");
+    if (savedSidebarState !== null) {
+      setSidebarOpen(savedSidebarState === "true");
+    }
+    
+    // Listen for sidebar state changes
+    const handleStorageChange = () => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Poll for sidebar state changes (since Sidebar doesn't dispatch storage events)
+    const interval = setInterval(() => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Calculate sidebar width based on state (matches your Sidebar component)
+  const getSidebarWidth = () => {
+    if (isMobile) return 0; // Mobile sidebar overlays
+    return sidebarOpen ? 288 : 96; // w-72 = 288px, lg:w-24 = 96px
+  };
+
+  const sidebarWidth = getSidebarWidth();
 
   // Fetch all cards with pagination
   const fetchAllCards = async () => {
@@ -205,10 +254,17 @@ const TransactionLedger = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar onClose={() => setSidebarOpen(false)} />
       
-      <div className="lg:ml-64">
+      {/* Main Content - Dynamic margin based on sidebar state */}
+      <div 
+        className="transition-all duration-300 ease-out"
+        style={{
+          marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+          width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+        }}
+      >
         <TopNavbar />
         
-        <main className="p-8">
+        <main className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">

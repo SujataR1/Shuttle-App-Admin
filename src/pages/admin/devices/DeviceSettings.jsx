@@ -38,10 +38,59 @@ const API_BASE = "https://be.shuttleapp.transev.site";
 const DeviceSettings = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState(null);
+
+  // Check device type and get sidebar state from localStorage
+  useEffect(() => {
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    
+    // Get sidebar state from localStorage (set by Sidebar component)
+    const savedSidebarState = localStorage.getItem("sidebarOpen");
+    if (savedSidebarState !== null) {
+      setSidebarOpen(savedSidebarState === "true");
+    }
+    
+    // Listen for sidebar state changes
+    const handleStorageChange = () => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Poll for sidebar state changes
+    const interval = setInterval(() => {
+      const savedState = localStorage.getItem("sidebarOpen");
+      if (savedState !== null) {
+        setSidebarOpen(savedState === "true");
+      }
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Calculate sidebar width based on state (matches your Sidebar component)
+  const getSidebarWidth = () => {
+    if (isMobile) return 0;
+    return sidebarOpen ? 288 : 96;
+  };
+
+  const sidebarWidth = getSidebarWidth();
 
   const getAuthToken = () => localStorage.getItem("access_token");
 
@@ -101,9 +150,15 @@ const DeviceSettings = () => {
   if (loading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 flex flex-col">
-          <TopNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
+        <div 
+          className="flex-1 flex flex-col transition-all duration-300 ease-out"
+          style={{
+            marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+            width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+          }}
+        >
+          <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
           <div className="flex-1 flex items-center justify-center">
             <Spin size="large" tip="Loading settings..." />
           </div>
@@ -114,10 +169,17 @@ const DeviceSettings = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      {/* Main Content - Dynamic margin based on sidebar state */}
+      <div 
+        className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-out"
+        style={{
+          marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
+          width: !isMobile ? `calc(100% - ${sidebarWidth}px)` : '100%'
+        }}
+      >
+        <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
         
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 lg:p-8">
@@ -147,7 +209,7 @@ const DeviceSettings = () => {
                 transition={{ duration: 0.4, delay: 0.1 }}
                 className="mb-8"
               >
-                <Row gutter={16}>
+                <Row gutter={[16, 16]}>
                   <Col xs={24} sm={12} lg={8}>
                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                       <div className="flex items-center justify-between">
@@ -215,8 +277,10 @@ const DeviceSettings = () => {
                         <div className="text-sm">
                           This limit applies to <strong className="text-indigo-600">future driver login attempts only</strong>. 
                           Existing active logins are <strong>not automatically removed</strong> when the limit is lowered. 
-                          You can manually remove existing sessions from the Device Management page.
-                          .
+                          You can manually remove existing sessions from the 
+                          <Button type="link" className="p-0 ml-1" onClick={goToAllDevices}>
+                            Device Management page
+                          </Button>.
                         </div>
                       }
                       type="info"
