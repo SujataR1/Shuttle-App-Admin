@@ -26,7 +26,7 @@
 //   const [activities, setActivities] = useState([]);
 //   const [loading, setLoading] = useState(false);
 //   const [searched, setSearched] = useState(false);
-  
+
 //   const [cards, setCards] = useState([]);
 //   const [showDropdown, setShowDropdown] = useState(false);
 //   const [loadingCards, setLoadingCards] = useState(false);
@@ -40,19 +40,19 @@
 //       let allCards = [];
 //       let currentPage = 1;
 //       let hasMore = true;
-      
+
 //       while (hasMore) {
 //         const response = await axios.get(`${API_BASE}/admin/rfid/cards`, {
 //           params: { page: currentPage, page_size: 100 },
 //           headers: { Authorization: `Bearer ${token}` }
 //         });
-        
+
 //         const items = response.data.items || [];
 //         allCards = [...allCards, ...items];
 //         hasMore = items.length === 100;
 //         currentPage++;
 //       }
-      
+
 //       // Get passenger names for each card
 //       const enhancedCards = [];
 //       for (const card of allCards) {
@@ -60,11 +60,11 @@
 //           const detailResponse = await axios.get(`${API_BASE}/admin/rfid/cards/${card.id}`, {
 //             headers: { Authorization: `Bearer ${token}` }
 //           });
-          
+
 //           const cardData = detailResponse.data.card;
 //           const accountData = detailResponse.data.account;
 //           const assignmentData = detailResponse.data.current_assignment;
-          
+
 //           enhancedCards.push({
 //             id: card.id,
 //             uid: cardData?.card_uid_masked || card.card_uid_masked || '****',
@@ -86,7 +86,7 @@
 //           });
 //         }
 //       }
-      
+
 //       setCards(enhancedCards);
 //     } catch (error) {
 //       console.error("Error fetching cards:", error);
@@ -101,7 +101,7 @@
 //       toast.error("Please select a card");
 //       return;
 //     }
-    
+
 //     setLoading(true);
 //     try {
 //       const token = localStorage.getItem("access_token");
@@ -113,12 +113,12 @@
 //           headers: { Authorization: `Bearer ${token}` }
 //         })
 //       ]);
-      
+
 //       const combined = [
 //         ...ledgerRes.data.items.map(item => ({ ...item, activity_type: "ledger" })),
 //         ...rechargesRes.data.items.map(item => ({ ...item, activity_type: "recharge" }))
 //       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      
+
 //       setActivities(combined);
 //       setSearched(true);
 //       toast.success(`Found ${combined.length} activities`);
@@ -233,7 +233,7 @@
 //   const totalCredit = activities
 //     .filter(a => parseFloat(a.amount_delta || a.amount) > 0)
 //     .reduce((sum, a) => sum + parseFloat(a.amount_delta || a.amount), 0);
-  
+
 //   const totalDebit = activities
 //     .filter(a => parseFloat(a.amount_delta || a.amount) < 0)
 //     .reduce((sum, a) => sum + Math.abs(parseFloat(a.amount_delta || a.amount)), 0);
@@ -241,10 +241,10 @@
 //   return (
 //     <div className="min-h-screen bg-gray-50">
 //       <Sidebar />
-      
+
 //       <div className="lg:ml-64">
 //         <TopNavbar />
-        
+
 //         <main className="px-6 py-6">
 //           <div className="max-w-7xl mx-auto">
 //             {/* Header */}
@@ -252,7 +252,7 @@
 //               <h1 className="text-xl font-medium text-gray-900">Card Activity Log</h1>
 //               <p className="text-sm text-gray-500 mt-0.5">Complete transaction and recharge history</p>
 //             </div>
-            
+
 //             {/* Card Selection */}
 //             <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
 //               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -260,7 +260,7 @@
 //                   <label className="block text-xs font-medium text-gray-600 mb-1.5">
 //                     Select Card
 //                   </label>
-                  
+
 //                   <div
 //                     onClick={() => setShowDropdown(!showDropdown)}
 //                     className="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md px-3 py-2 cursor-pointer hover:border-gray-400 transition-colors"
@@ -288,7 +288,7 @@
 //                     )}
 //                     <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
 //                   </div>
-                  
+
 //                   {showDropdown && (
 //                     <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
 //                       <div className="sticky top-0 bg-white p-2 border-b border-gray-100">
@@ -304,7 +304,7 @@
 //                           />
 //                         </div>
 //                       </div>
-                      
+
 //                       {loadingCards ? (
 //                         <div className="p-6 text-center">
 //                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mx-auto"></div>
@@ -443,7 +443,7 @@
 //                             const activityStyle = getActivityTypeStyle(activity.activity_type);
 //                             const transactionStyle = getTransactionTypeStyle(activity.entry_type);
 //                             const amount = activity.amount_delta || activity.amount;
-                            
+
 //                             return (
 //                               <tr key={idx} className="hover:bg-gray-50">
 //                                 <td className="px-4 py-2.5">
@@ -504,12 +504,12 @@ import TopNavbar from '../../../assets/components/navbar/TopNavbar';
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { 
-  DocumentTextIcon, 
-  MagnifyingGlassIcon, 
-  TagIcon, 
-  ArrowPathIcon, 
-  CreditCardIcon, 
+import {
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  TagIcon,
+  ArrowPathIcon,
+  CreditCardIcon,
   ChartBarIcon,
   ChevronDownIcon,
   UserIcon,
@@ -529,7 +529,7 @@ const CardActivityLog = () => {
   const [searched, setSearched] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   const [cards, setCards] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadingCards, setLoadingCards] = useState(false);
@@ -543,13 +543,13 @@ const CardActivityLog = () => {
     };
     checkDevice();
     window.addEventListener('resize', checkDevice);
-    
+
     // Get sidebar state from localStorage (set by Sidebar component)
     const savedSidebarState = localStorage.getItem("sidebarOpen");
     if (savedSidebarState !== null) {
       setSidebarOpen(savedSidebarState === "true");
     }
-    
+
     // Listen for sidebar state changes
     const handleStorageChange = () => {
       const savedState = localStorage.getItem("sidebarOpen");
@@ -557,9 +557,9 @@ const CardActivityLog = () => {
         setSidebarOpen(savedState === "true");
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Poll for sidebar state changes
     const interval = setInterval(() => {
       const savedState = localStorage.getItem("sidebarOpen");
@@ -567,7 +567,7 @@ const CardActivityLog = () => {
         setSidebarOpen(savedState === "true");
       }
     }, 100);
-    
+
     return () => {
       window.removeEventListener('resize', checkDevice);
       window.removeEventListener('storage', handleStorageChange);
@@ -591,19 +591,19 @@ const CardActivityLog = () => {
       let allCards = [];
       let currentPage = 1;
       let hasMore = true;
-      
+
       while (hasMore) {
         const response = await axios.get(`${API_BASE}/admin/rfid/cards`, {
           params: { page: currentPage, page_size: 100 },
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         const items = response.data.items || [];
         allCards = [...allCards, ...items];
         hasMore = items.length === 100;
         currentPage++;
       }
-      
+
       // Get passenger names for each card
       const enhancedCards = [];
       for (const card of allCards) {
@@ -611,11 +611,11 @@ const CardActivityLog = () => {
           const detailResponse = await axios.get(`${API_BASE}/admin/rfid/cards/${card.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
+
+
           const cardData = detailResponse.data.card;
           const accountData = detailResponse.data.account;
           const assignmentData = detailResponse.data.current_assignment;
-          
           enhancedCards.push({
             id: card.id,
             uid: cardData?.card_uid_masked || card.card_uid_masked || '****',
@@ -637,7 +637,7 @@ const CardActivityLog = () => {
           });
         }
       }
-      
+
       setCards(enhancedCards);
     } catch (error) {
       console.error("Error fetching cards:", error);
@@ -652,7 +652,7 @@ const CardActivityLog = () => {
       toast.error("Please select a card");
       return;
     }
-    
+
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -664,12 +664,12 @@ const CardActivityLog = () => {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
-      
+
       const combined = [
         ...ledgerRes.data.items.map(item => ({ ...item, activity_type: "ledger" })),
         ...rechargesRes.data.items.map(item => ({ ...item, activity_type: "recharge" }))
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      
+
       setActivities(combined);
       setSearched(true);
       toast.success(`Found ${combined.length} activities`);
@@ -784,7 +784,7 @@ const CardActivityLog = () => {
   const totalCredit = activities
     .filter(a => parseFloat(a.amount_delta || a.amount) > 0)
     .reduce((sum, a) => sum + parseFloat(a.amount_delta || a.amount), 0);
-  
+
   const totalDebit = activities
     .filter(a => parseFloat(a.amount_delta || a.amount) < 0)
     .reduce((sum, a) => sum + Math.abs(parseFloat(a.amount_delta || a.amount)), 0);
@@ -792,9 +792,9 @@ const CardActivityLog = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} isMobile={isMobile} />
-      
+
       {/* Main Content - Dynamic margin based on sidebar state */}
-      <div 
+      <div
         className="transition-all duration-300 ease-out"
         style={{
           marginLeft: !isMobile ? `${sidebarWidth}px` : '0px',
@@ -802,7 +802,7 @@ const CardActivityLog = () => {
         }}
       >
         <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} sidebarOpen={sidebarOpen} />
-        
+
         <main className="px-4 sm:px-6 lg:px-8 py-6">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
@@ -810,7 +810,7 @@ const CardActivityLog = () => {
               <h1 className="text-xl font-medium text-gray-900">Card Activity Log</h1>
               <p className="text-sm text-gray-500 mt-0.5">Complete transaction and recharge history</p>
             </div>
-            
+
             {/* Card Selection */}
             <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -818,7 +818,7 @@ const CardActivityLog = () => {
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">
                     Select Card
                   </label>
-                  
+
                   <div
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md px-3 py-2 cursor-pointer hover:border-gray-400 transition-colors"
@@ -846,7 +846,7 @@ const CardActivityLog = () => {
                     )}
                     <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
                   </div>
-                  
+
                   {showDropdown && (
                     <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
                       <div className="sticky top-0 bg-white p-2 border-b border-gray-100">
@@ -862,7 +862,7 @@ const CardActivityLog = () => {
                           />
                         </div>
                       </div>
-                      
+
                       {loadingCards ? (
                         <div className="p-6 text-center">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mx-auto"></div>
@@ -1001,7 +1001,7 @@ const CardActivityLog = () => {
                             const activityStyle = getActivityTypeStyle(activity.activity_type);
                             const transactionStyle = getTransactionTypeStyle(activity.entry_type);
                             const amount = activity.amount_delta || activity.amount;
-                            
+
                             return (
                               <tr key={idx} className="hover:bg-gray-50">
                                 <td className="px-4 py-2.5">
