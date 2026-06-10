@@ -1497,6 +1497,7 @@ const CardDetails = () => {
                       onClick={() => setSelectedPassenger(passenger)}
                       className={`w-full text-left p-3 rounded-lg transition ${selectedPassenger?.user_id === passenger.user_id ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50 border border-transparent"}`}
                     >
+                      {/* */}
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium">
                           {(passenger.profile?.name || "U").charAt(0).toUpperCase()}
