@@ -935,7 +935,7 @@ const menuSections = [
           { name: "All Driver List", path: "/admin/drivers/list" },
         ],
       },
-      { name: "Verify KYC Details", path: "/admin/providers", icon: UserCircleIcon, iconSolid: UserCircleIconSolid },
+      { name: "Verify Driver KYC ", path: "/admin/providers", icon: UserCircleIcon, iconSolid: UserCircleIconSolid },
       { name: "Verify Bus Details", path: "/admin/verify-drivers", icon: TruckIcon, iconSolid: TruckIconSolid },
     ],
   },

@@ -1,3 +1,4 @@
+
 // import React, { useEffect, useState, useCallback, useRef } from "react";
 // import { useNavigate, useLocation, useParams } from "react-router-dom";
 // import axios from "axios";
@@ -22,7 +23,9 @@
 //   IdentificationIcon,
 //   CalendarIcon,
 //   MapPinIcon,
-//   ClipboardDocumentListIcon
+//   ClipboardDocumentListIcon,
+//   DevicePhoneMobileIcon,
+//   ShieldCheckIcon
 // } from "@heroicons/react/24/outline";
 
 // const VerifyDriver = () => {
@@ -106,7 +109,8 @@
 //               vehicle: detailRes.data.vehicle,
 //               profile: detailRes.data.profile,
 //               account_info: detailRes.data.account_info,
-//               vehical_physical_inspection: detailRes.data.vehical_physical_inspection
+//               vehical_physical_inspection: detailRes.data.vehical_physical_inspection,
+//               rfid: detailRes.data.rfid
 //             };
 //           } catch (err) {
 //             return { ...driver, vehicle_verification: "N/A" };
@@ -210,7 +214,8 @@
 //               vehicle: detailRes.data.vehicle,
 //               profile: detailRes.data.profile,
 //               account_info: detailRes.data.account_info,
-//               vehical_physical_inspection: detailRes.data.vehical_physical_inspection
+//               vehical_physical_inspection: detailRes.data.vehical_physical_inspection,
+//               rfid: detailRes.data.rfid
 //             };
 //           } catch (err) {
 //             return { ...driver, vehicle_verification: "N/A" };
@@ -739,6 +744,60 @@
 //             </div>
 //           </div>
 
+//           {/* RFID Section - NEW */}
+//           {d.rfid && (
+//             <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl overflow-hidden">
+//               <div className="px-5 py-4 border-b border-gray-100">
+//                 <div className="flex items-center gap-2">
+//                   <DevicePhoneMobileIcon className="w-4 h-4 text-gray-400" />
+//                   <h2 className="font-semibold text-gray-900">RFID Configuration</h2>
+//                 </div>
+//               </div>
+//               <div className="p-5">
+//                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+//                   <div>
+//                     <label className="text-xs text-gray-400 uppercase tracking-wide">Vehicle ID</label>
+//                     <div className="flex items-center gap-2 mt-1">
+//                       <p className="text-gray-900 font-mono text-sm">{d.rfid.vehicle_id || "N/A"}</p>
+//                       {d.rfid.vehicle_id && (
+//                         <button onClick={() => copyToClipboard(d.rfid.vehicle_id, "Vehicle ID")} className="text-gray-400 hover:text-gray-600">
+//                           <ClipboardIcon className="w-3.5 h-3.5" />
+//                         </button>
+//                       )}
+//                     </div>
+//                   </div>
+//                   <div>
+//                     <label className="text-xs text-gray-400 uppercase tracking-wide">Default Reserved Seat Count</label>
+//                     <p className="text-gray-900 text-sm mt-1">{d.rfid.default_reserved_seat_count || 0}</p>
+//                   </div>
+//                   <div>
+//                     <label className="text-xs text-gray-400 uppercase tracking-wide">Total Devices</label>
+//                     <p className="text-gray-900 text-sm mt-1">{d.rfid.device_count || 0}</p>
+//                   </div>
+//                   <div>
+//                     <label className="text-xs text-gray-400 uppercase tracking-wide">Active Devices</label>
+//                     <p className="text-gray-900 text-sm mt-1">{d.rfid.active_device_count || 0}</p>
+//                   </div>
+//                 </div>
+                
+//                 {/* Devices List if any */}
+//                 {d.rfid.devices && d.rfid.devices.length > 0 && (
+//                   <div className="mt-4 pt-4 border-t border-gray-100">
+//                     <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Assigned Devices</label>
+//                     <div className="flex flex-wrap gap-2">
+//                       {d.rfid.devices.map((device, index) => (
+//                         <span key={index} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700">
+//                           <DevicePhoneMobileIcon className="w-3 h-3" />
+//                           {device.serial_number || device.device_id || `Device ${index + 1}`}
+//                         </span>
+//                       ))}
+//                     </div>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           )}
+
 //           {/* Physical Inspection Section */}
 //           {d.vehical_physical_inspection && (
 //             <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -1068,6 +1127,7 @@ const VerifyDriver = () => {
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   const token = localStorage.getItem("access_token");
 
@@ -1096,7 +1156,9 @@ const VerifyDriver = () => {
           `https://be.shuttleapp.transev.site/admin/driver/${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setDriver(response.data);
+        if (response.data) {
+          setDriver(response.data);
+        }
       } catch (error) {
         console.error("Error refreshing driver:", error);
       }
@@ -1104,6 +1166,8 @@ const VerifyDriver = () => {
   }, [userId, token]);
 
   const refreshDriversList = useCallback(async () => {
+    if (isFetching) return;
+    setIsFetching(true);
     try {
       const response = await axios.get(
         "https://be.shuttleapp.transev.site/admin/view/all-drivers",
@@ -1135,6 +1199,8 @@ const VerifyDriver = () => {
       setDrivers(driversWithVehicleStatus);
     } catch (error) {
       console.error("Error refreshing drivers list:", error);
+    } finally {
+      setIsFetching(false);
     }
   }, [token]);
 
@@ -1209,6 +1275,8 @@ const VerifyDriver = () => {
   }, [token, connectWebSocket]);
 
   const fetchAllDrivers = async () => {
+    if (isFetching) return;
+    setIsFetching(true);
     try {
       const response = await axios.get(
         "https://be.shuttleapp.transev.site/admin/view/all-drivers",
@@ -1240,11 +1308,18 @@ const VerifyDriver = () => {
       setDrivers(driversWithVehicleStatus);
     } catch (error) {
       console.error("Error fetching drivers:", error);
+    } finally {
+      setIsFetching(false);
     }
   };
 
+  // FIXED: Main fetch effect with proper cleanup
   useEffect(() => {
+    let isMounted = true;
+
     const fetchDriverOrList = async () => {
+      if (!isMounted) return;
+      
       setLoading(true);
       try {
         if (userId) {
@@ -1252,20 +1327,46 @@ const VerifyDriver = () => {
             `https://be.shuttleapp.transev.site/admin/driver/${userId}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          setDriver(response.data);
+          if (isMounted) {
+            setDriver(response.data);
+          }
         } else {
           await fetchAllDrivers();
+          if (isMounted) {
+            setDriver(null);
+          }
         }
       } catch (error) {
         console.error("Error fetching driver(s):", error);
+        if (isMounted && userId) {
+          alert("Failed to fetch driver details");
+          navigate('/admin/verify-drivers');
+        }
       } finally {
-        setLoading(false);
-        setInitialLoad(false);
+        if (isMounted) {
+          setLoading(false);
+          setInitialLoad(false);
+        }
       }
     };
 
     fetchDriverOrList();
-  }, [userId, token]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, token, navigate]);
+
+  // FIXED: Back button handler
+  const handleBackToList = async () => {
+    setDriver(null);
+    setLoading(true);
+    setInitialLoad(true);
+    navigate('/admin/verify-drivers');
+    await fetchAllDrivers();
+    setLoading(false);
+    setInitialLoad(false);
+  };
 
   if (initialLoad || loading) {
     return (
@@ -1356,14 +1457,10 @@ const VerifyDriver = () => {
 
     return (
       <div className="max-w-6xl mx-auto space-y-6 pb-8">
-        {/* Header with Back Button */}
+        {/* Header with Back Button - FIXED */}
         <div className="flex items-center justify-between">
           <button
-            onClick={() => {
-              setDriver(null);
-              setInitialLoad(true);
-              fetchAllDrivers().finally(() => setInitialLoad(false));
-            }}
+            onClick={handleBackToList}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-black transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4" />
@@ -1397,7 +1494,7 @@ const VerifyDriver = () => {
           </div>
         </div>
 
-        {/* Two Column Grid */}
+        {/* Two Column Grid - Rest of the content remains the same */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Personal Information */}
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
