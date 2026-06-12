@@ -887,7 +887,7 @@ const Providers = () => {
     switch (status) {
       case "verified":
         return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 cursor-default">Verified</span>;
-      case "rejected":
+      case "rejected":c
         return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 cursor-default">Rejected</span>;
       case "pending":
         return (
@@ -914,7 +914,7 @@ const Providers = () => {
           </button>
         );
       default:
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 cursor-default">Not Started</span>;
+        return <span lassName="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 cursor-default">Not Started</span>;
     }
   };
 
