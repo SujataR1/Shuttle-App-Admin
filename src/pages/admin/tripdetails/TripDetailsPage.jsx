@@ -4160,6 +4160,10 @@ const TripDetailsPage = () => {
                                                 const isSelf = booking.traveller_relationship_label === "Self";
                                                 const statusColor = booking.status === 'cancelled' ? 'red' : booking.status === 'completed' ? 'green' : 'gray';
 
+                                                // Determine if actual drop info exists and differs from planned
+                                                const hasActualDrop = booking.actual_drop_stop_name && booking.actual_drop_stop_name !== booking.dropoff_stop?.name;
+                                                const hasActualDropTime = booking.actual_dropped_at;
+
                                                 return (
                                                     <div key={booking.booking_id} className={`bg-white border rounded-xl p-4 hover:shadow-md transition-shadow ${isSelf ? 'border-indigo-200 bg-indigo-50/20' : 'border-gray-200'}`}>
                                                         {/* Header */}
@@ -4172,10 +4176,18 @@ const TripDetailsPage = () => {
                                                                     <div className="flex items-center gap-2">
                                                                         <p className="font-semibold text-gray-900">{booking.traveller_name}</p>
                                                                         {isSelf && <span className="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded">Self</span>}
+                                                                        {booking.traveller_relationship_label && !isSelf && (
+                                                                            <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{booking.traveller_relationship_label}</span>
+                                                                        )}
                                                                     </div>
                                                                     {booking.traveller_phone && (
                                                                         <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                                                                             📞 {booking.traveller_phone}
+                                                                        </p>
+                                                                    )}
+                                                                    {booking.traveller_email && booking.traveller_email !== booking.passenger_email && (
+                                                                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                                                            ✉️ {booking.traveller_email}
                                                                         </p>
                                                                     )}
                                                                 </div>
@@ -4197,18 +4209,60 @@ const TripDetailsPage = () => {
                                                                 <p className="text-xs text-gray-500">Fare</p>
                                                                 <p className="text-xl font-bold text-green-600">₹{booking.fare || booking.fare_amount}</p>
                                                             </div>
+                                                            {booking.status === "completed" && (
+                                                                <>
+                                                                    <div className="w-px h-8 bg-gray-200"></div>
+                                                                    <div className="text-center">
+                                                                        <p className="text-xs text-gray-500">Status</p>
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                                                            <CheckCircleIcon className="h-3 w-3" />
+                                                                            Completed
+                                                                        </span>
+                                                                    </div>
+                                                                </>
+                                                            )}
                                                         </div>
 
-                                                        {/* Stops - Compact */}
+                                                        {/* Stops - Enhanced with Actual Drop Info */}
                                                         <div className="space-y-2 text-sm">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs text-green-600 font-medium">🚏 Pickup</span>
                                                                 <span className="text-gray-700">{booking.pickup_stop?.name}</span>
+                                                                {booking.boarded_at && (
+                                                                    <span className="text-xs text-gray-400 ml-auto">{formatLocalTime(booking.boarded_at)}</span>
+                                                                )}
                                                             </div>
+
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs text-red-600 font-medium">📍 Dropoff</span>
                                                                 <span className="text-gray-700">{booking.dropoff_stop?.name}</span>
                                                             </div>
+
+                                                            {/* Actual Drop Information - Shows when different from planned or when completed */}
+                                                            {booking.status === "completed" && (
+                                                                <>
+                                                                    <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-2 border border-blue-100">
+                                                                        <span className="text-xs text-blue-600 font-medium">🏁 Actual Drop</span>
+                                                                        <span className="font-medium text-blue-700">
+                                                                            {booking.actual_drop_stop_name || booking.dropoff_stop?.name || "N/A"}
+                                                                        </span>
+                                                                        {booking.actual_dropped_at && (
+                                                                            <span className="text-xs text-blue-500 ml-auto">
+                                                                                {formatLocalTime(booking.actual_dropped_at)}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Show indicator if actual drop is different from planned */}
+                                                                    {hasActualDrop && (
+                                                                        <div className="flex items-center gap-2 text-xs text-orange-600 bg-orange-50 rounded px-2 py-1">
+                                                                            <ExclamationTriangleIcon className="h-3 w-3" />
+                                                                            <span>Dropped at different location than planned</span>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            )}
+
                                                             {booking.cancelled_at && (
                                                                 <div className="flex items-center gap-2 text-xs text-gray-400 pt-1 border-t border-gray-100 mt-2">
                                                                     <span>❌ Cancelled</span>
